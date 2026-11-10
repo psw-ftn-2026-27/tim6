@@ -1,0 +1,61 @@
+<div class="landing stack">
+  <section class="hero stack">
+    <p class="eyebrow">Your next adventure starts here</p>
+    <h1>Explorer</h1>
+    <p class="lead">
+      Discover tours and stories from other travelers in one place. Explorer brings together
+      exploration, games, community, and purchases to guide you from an idea to a new destination.
+    </p>
+
+    @if (!auth.isLoggedIn()) {
+      <div class="actions">
+        <a class="button button--primary" routerLink="/register">Create an account</a>
+        <a class="button" routerLink="/login">Sign in</a>
+      </div>
+    }
+  </section>
+
+  <section aria-labelledby="experiences-title" class="stack">
+    <div>
+      <p class="eyebrow">One platform, more ways to explore</p>
+      <h2 id="experiences-title">Explore in your own way</h2>
+    </div>
+
+    <div class="grid">
+      <article class="card experience">
+        <p class="status">Available</p>
+        <h3>Tours and exploration</h3>
+        <p>Browse published tours and follow their stories through carefully selected key points.</p>
+      </article>
+
+      <article class="card experience">
+        <p class="status status--planned">Coming soon</p>
+        <h3>Games and challenges</h3>
+        <p>The map will become a playground for quizzes and hidden-location challenges.</p>
+      </article>
+
+      <article class="card experience">
+        <p class="status">Available</p>
+        <h3>Traveler community</h3>
+        <p>Read published blogs and, once signed in, share stories from your own travels.</p>
+      </article>
+
+      <article class="card experience">
+        <p class="status status--planned">Coming soon</p>
+        <h3>Content marketplace</h3>
+        <p>Explorer will bring tours, games, bundles, and subscriptions together in one place.</p>
+      </article>
+    </div>
+  </section>
+
+  @if (!auth.isLoggedIn()) {
+    <section class="closing stack">
+      <h2>Ready to explore?</h2>
+      <p>Create an account or sign in to continue to the experiences already available.</p>
+      <div class="actions">
+        <a class="button button--primary" routerLink="/register">Create an account</a>
+        <a class="button" routerLink="/login">Sign in</a>
+      </div>
+    </section>
+  }
+</div>
