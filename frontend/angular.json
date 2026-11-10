@@ -30,7 +30,11 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"]
+            "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
+              "src/styles.scss",
+              "src/app/shared/geographic-map/geographic-map-leaflet.scss"
+            ]
           },
           "configurations": {
             "production": {
