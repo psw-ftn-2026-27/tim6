@@ -36,13 +36,17 @@ Projekat je u vlasništvu platformskog tima. Menja se kada se menja arhitektura 
 
 ## Shared
 
-Sadrži zajednički kod koji koriste svi moduli. Podeljen je na četiri projekta:
-- `Shared.Api` sadrži pomoćni kod za kontrolerski sloj (npr. metodu `GetUserId`, kojom kontroler čita identifikator prijavljenog korisnika iz tokena).
-- `Shared.Domain` sadrži klase `Entity` i `AggregateRoot`, koje nasleđuju domenske klase (vrednosni objekat se modeluje kroz C# record). Izuzecima `DomainException` i `NotFoundException` domen prijavljuje narušavanje pravila, odnosno nepostojanje traženog podatka. Klasa `PageResult` je oblik rezultata upita koji vraća stranicu liste.
-- `Shared.Infrastructure` sadrži pomoćni kod za sloj infrastrukture (npr. metoda `AddModuleDbContext`, koja registruje bazu podataka modula tako da modul dobije sopstvenu šemu i sopstvenu tabelu istorije migracija).
+Sadrži zajednički kod koji koriste svi moduli. Podeljen je na sledeće projekte:
+- `Shared.Api` sadrži pomoćni kod za kontrolerski sloj (npr. metodu `GetUserId`, kojom kontroler čita identifikator prijavljenog korisnika iz tokena) i kontrolere za slike pod adresom `api/shared/images`.
+- `Shared.Domain` sadrži klase `Entity` i `AggregateRoot`, koje nasleđuju domenske klase (vrednosni objekat se modeluje kroz C# record). Izuzecima `DomainException` i `NotFoundException` domen prijavljuje narušavanje pravila, odnosno nepostojanje traženog podatka. Klasa `PageResult` je oblik rezultata upita koji vraća stranicu liste. Direktorijum `Images` sadrži agregat `Image` za upload slika.
+- `Shared.Application` sadrži aplikacioni sloj upload slika: grupe `ImageUploading` i `ImageReading` i interfejse skladišta i obrade slike.
+- `Shared.Infrastructure` sadrži pomoćni kod za sloj infrastrukture (npr. metoda `AddModuleDbContext`, koja registruje bazu podataka modula tako da modul dobije sopstvenu šemu i sopstvenu tabelu istorije migracija). Uz to sadrži infrastrukturu upload slika: bazu na šemi `shared`, skladište fajlova u direktorijumu iz podešavanja `ImageStorage:Directory` i obradu slike bibliotekom Magick.NET.
 - `Shared.Tests` sadrži pomoćni kod za integracione testove: klasu `ExplorerApiFactory`, koja svakom test projektu obezbeđuje sopstvenu testnu bazu (obara je i ponovo kreira jednom po pokretanju testova), metodu `Reseed` za vraćanje podataka na početno stanje pre svakog testa, izdavanje test tokena (`CreateClientFor`), metodu `CreateContext`, kroz koju provera čita bazu, i klasu `WellKnownUsers` sa fiksnim identifikatorima korisnika koje testovi koriste.
+- `Shared.Images.Tests` sadrži jedinične i integracione testove upload slika.
 
-Sva četiri projekta su u vlasništvu platformskog tima. Menjaju se samo kada se pojavi potreba koja je zaista zajednička za više modula. Premeštanje koda u zajedničke projekte je odluka koja se donosi u dogovoru sa platformskim timom, jer svaki dodatak ovde postaje zavisnost svih modula.
+Modul koji koristi sliku čuva samo njenu referencu, tekst oblika `/api/shared/images/<ime fajla>`, i ne referencira projekte upload slika.
+
+Svi projekti su u vlasništvu platformskog tima. Menjaju se samo kada se pojavi potreba koja je zaista zajednička za više modula. Premeštanje koda u zajedničke projekte je odluka koja se donosi u dogovoru sa platformskim timom, jer svaki dodatak ovde postaje zavisnost svih modula.
 
 ## Modules
 

@@ -20,12 +20,21 @@ backend/
   Host.Tests/                      ArchUnitNET architecture tests            [platform]
   Shared/
     Shared.Domain/                 Entity, AggregateRoot, PageResult,
-                                   DomainException, NotFoundException       [platform]
-    Shared.Api/                    ClaimsPrincipal.GetUserId()               [platform]
+                                   DomainException, NotFoundException;
+                                   Images/ (Image aggregate)                 [platform]
+    Shared.Application/            image capability: ImageUploading,
+                                   ImageReading, port interfaces             [platform]
+    Shared.Api/                    ClaimsPrincipal.GetUserId(); image
+                                   controllers under api/shared/images       [platform]
     Shared.Infrastructure/         AddModuleDbContext (Npgsql, schema-per-
-                                   module, per-schema migrations history)    [platform]
+                                   module, per-schema migrations history);
+                                   image capability: Persistence/ (schema
+                                   `shared`), Images/ (file storage,
+                                   Magick.NET processing), AddSharedImages   [platform]
     Shared.Tests/                  ExplorerApiFactory (per-assembly test DB,
                                    reseed, test JWTs), WellKnownUsers        [platform]
+    Shared.Images.Tests/           Unit/ and Integration/ for the image
+                                   capability                                [platform]
   Modules/
     Identity/
       Identity/                    single project, platform-owned, see below [platform]
@@ -40,6 +49,13 @@ backend/
                                    adapters (e.g. an external API client) get sibling folders
       <Name>.Tests/                Unit/ and Integration/ folders
 ```
+
+Shared also holds one platform-owned capability with a module's layering: image upload.
+`Shared.Application` is its application layer, and it has its own `SharedDbContext` on the
+`shared` schema, migrations in `Shared.Infrastructure/Persistence/Migrations/`
+(`--context SharedDbContext`), and files stored in the directory set by
+`ImageStorage:Directory`. `Host.Api` wires it like a module, with `AddSharedImages` and
+`AddSharedImagesControllers`.
 
 Tests live inside the module folder they test, so a team's ownership is one folder. There
 is no separate tests tree; the arch tests sit in `Host.Tests` beside the host.
@@ -61,7 +77,12 @@ The compiler enforces the layering instead of a reviewer having to spot it.
 - A module may reference another module's `Contracts` project and nothing else from it.
 - No module references `Identity`. Other modules carry a `UserId` as a plain ID.
 - `Host.Api` references every module's `Infrastructure` (for DI) and `Api` (for controller
-  discovery), plus the `Identity` project.
+  discovery), plus the `Identity` project, `Shared.Infrastructure`, and `Shared.Api`.
+- The Shared image capability follows the same rules: `Shared.Application` references
+  `Shared.Domain` only, `Shared.Api` references `Shared.Application`, and
+  `Shared.Infrastructure` references `Shared.Application` and `Shared.Domain`.
+- No module depends on `Shared.Application` or `Shared.Domain.Images`. A module stores an
+  image only as its reference string, `/api/shared/images/{fileName}`.
 
 Verified by ArchUnitNET in `Host.Tests` and run in CI. If you add a project reference,
 expect the arch tests to have an opinion about it.

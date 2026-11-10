@@ -1,0 +1,52 @@
+<div class="picker">
+  <label class="button" [class.button--disabled]="remaining() <= 0">
+    Add images
+    <input
+      class="file-input"
+      type="file"
+      multiple
+      accept="image/jpeg,image/png,image/webp"
+      [disabled]="remaining() <= 0"
+      (change)="selectFiles($event)"
+    />
+  </label>
+  <span class="meta">{{ images().length + pending().length }} / {{ maxImages() }} images</span>
+</div>
+
+@if (images().length > 0 || pending().length > 0) {
+  <ul class="thumbnails">
+    @for (image of images(); track image.reference) {
+      <li class="thumbnail">
+        <img alt="Uploaded image" [src]="image.reference" />
+        <button
+          class="remove"
+          type="button"
+          aria-label="Remove image"
+          (click)="remove(image.reference)"
+        >
+          X
+        </button>
+      </li>
+    }
+    @for (file of pending(); track $index) {
+      <li class="thumbnail thumbnail--pending">
+        <span class="file-name">{{ file.name }}</span>
+        <span class="meta">Pending</span>
+      </li>
+    }
+  </ul>
+}
+
+@if (allErrors().length > 0) {
+  <ul class="errors" role="alert">
+    @for (error of allErrors(); track $index) {
+      <li class="error-item">
+        <span class="error-icon" aria-hidden="true">!</span>
+        <div class="error-text">
+          <span class="error-file">{{ error.fileName }}</span>
+          <span class="error-reason">{{ error.reason }}</span>
+        </div>
+      </li>
+    }
+  </ul>
+}
