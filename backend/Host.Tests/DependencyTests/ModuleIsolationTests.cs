@@ -21,6 +21,18 @@ public class ModuleIsolationTests : BaseArchitectureTests
         }
     }
 
+    // A module stores an image only as its reference string, so it never touches the Shared image capability's types.
+    [Theory]
+    [MemberData(nameof(ModuleNames))]
+    public void Module_does_not_depend_on_the_shared_image_capability(string module)
+    {
+        foreach (var assembly in Layers.Select(layer => $"{module}.{layer}"))
+        {
+            AssertNoDependency(assembly, "Shared.Application");
+            AssertNoNamespaceDependency(assembly, "Shared.Domain.Images");
+        }
+    }
+
     [Theory]
     [MemberData(nameof(ModuleNames))]
     public void Module_does_not_depend_on_identity(string module)

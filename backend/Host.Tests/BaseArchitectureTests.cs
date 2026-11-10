@@ -11,7 +11,7 @@ public abstract class BaseArchitectureTests
 {
     protected static readonly string[] Modules = ["Exploration", "Games", "Social", "Payment"];
     protected static readonly string[] Layers = ["Api", "Application", "Contracts", "Domain", "Infrastructure"];
-    protected static readonly string[] SharedProjects = ["Shared.Domain", "Shared.Api", "Shared.Infrastructure"];
+    protected static readonly string[] SharedProjects = ["Shared.Domain", "Shared.Application", "Shared.Api", "Shared.Infrastructure"];
 
     protected static readonly Architecture Architecture = new ArchLoader()
         .LoadAssemblies(Modules
