@@ -16,10 +16,10 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
     public TourAuthoringCommandTests(ExplorationApiFactory factory) : base(factory) { }
 
     [Fact]
-    public async Task Explorer_creates_a_draft_tour()
+    public async Task Explorer_creates_a_draft_tour_with_a_recommended_group_size()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-        var request = new CreateTourDto("Nova tura", "Opis nove ture.", TourDifficulty.Hard, ["planina"]);
+        var request = new CreateTourDto("Nova tura", "Opis nove ture.", TourDifficulty.Hard, ["planina"], new RecommendedGroupSizeDto(2, 6));
         using var arrangeContext = Factory.CreateContext<ExplorationDbContext>();
         var tourCountBefore = arrangeContext.Tours.Count();
 
@@ -28,18 +28,35 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var created = await response.Content.ReadFromJsonAsync<TourDto>(JsonOptions);
         created!.AuthorId.Should().Be(WellKnownUsers.Explorer);
+        created.RecommendedGroupSize.Should().Be(new RecommendedGroupSizeDto(2, 6));
         using var assertContext = Factory.CreateContext<ExplorationDbContext>();
         assertContext.Tours.Count().Should().Be(tourCountBefore + 1);
         var stored = assertContext.Tours.Single(tour => tour.Id == created.Id);
         stored.Status.Should().Be(TourStatus.Draft);
         stored.TransportTimes.Should().BeEmpty();
+        stored.RecommendedGroupSize.Should().Be(new RecommendedGroupSize(2, 6));
     }
 
     [Fact]
     public async Task Explorer_cannot_create_a_tour_without_a_name()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-        var request = new CreateTourDto("   ", "Opis nove ture.", TourDifficulty.Easy, ["planina"]);
+        var request = new CreateTourDto("   ", "Opis nove ture.", TourDifficulty.Easy, ["planina"], new RecommendedGroupSizeDto(2, 6));
+        using var arrangeContext = Factory.CreateContext<ExplorationDbContext>();
+        var tourCountBefore = arrangeContext.Tours.Count();
+
+        var response = await client.PostAsJsonAsync("/api/exploration/tours", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var assertContext = Factory.CreateContext<ExplorationDbContext>();
+        assertContext.Tours.Count().Should().Be(tourCountBefore);
+    }
+
+    [Fact]
+    public async Task Explorer_cannot_create_a_tour_whose_recommended_group_size_minimum_exceeds_its_maximum()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var request = new CreateTourDto("Nova tura", "Opis nove ture.", TourDifficulty.Easy, ["planina"], new RecommendedGroupSizeDto(7, 6));
         using var arrangeContext = Factory.CreateContext<ExplorationDbContext>();
         var tourCountBefore = arrangeContext.Tours.Count();
 
@@ -54,7 +71,7 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
     public async Task Anonymous_user_cannot_create_a_tour()
     {
         var client = Factory.CreateClient();
-        var request = new CreateTourDto("Nova tura", "Opis nove ture.", TourDifficulty.Easy, ["planina"]);
+        var request = new CreateTourDto("Nova tura", "Opis nove ture.", TourDifficulty.Easy, ["planina"], new RecommendedGroupSizeDto(2, 6));
 
         var response = await client.PostAsJsonAsync("/api/exploration/tours", request);
 
@@ -65,7 +82,7 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
     public async Task Administrator_cannot_create_a_tour()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
-        var request = new CreateTourDto("Nova tura", "Opis nove ture.", TourDifficulty.Easy, ["planina"]);
+        var request = new CreateTourDto("Nova tura", "Opis nove ture.", TourDifficulty.Easy, ["planina"], new RecommendedGroupSizeDto(2, 6));
 
         var response = await client.PostAsJsonAsync("/api/exploration/tours", request);
 

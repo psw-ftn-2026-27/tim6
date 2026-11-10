@@ -22,5 +22,11 @@ internal static class TourConfiguration
             transportTimes.ToJson();
             transportTimes.Property(time => time.Transport).HasConversion<string>();
         });
+
+        builder.OwnsOne(tour => tour.RecommendedGroupSize, groupSize =>
+        {
+            groupSize.Property(size => size.Min).HasDefaultValue(1);
+            groupSize.Property(size => size.Max).HasDefaultValue(10);
+        });
     }
 }

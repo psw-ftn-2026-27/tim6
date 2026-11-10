@@ -2,3 +2,12 @@
   margin-inline: auto;
   max-width: 32rem;
 }
+
+.group-size {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.group-size .field {
+  flex: 1;
+}

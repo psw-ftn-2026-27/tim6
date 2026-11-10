@@ -11,7 +11,7 @@ public class TourTests
     private static readonly string LongDescription = new('o', 100);
 
     private static Tour CreateTour(string description) =>
-        new(WellKnownUsers.Explorer, "Šetnja tvrđavom", description, TourDifficulty.Easy, ["istorija"]);
+        new(WellKnownUsers.Explorer, "Šetnja tvrđavom", description, TourDifficulty.Easy, ["istorija"], new RecommendedGroupSize(2, 6));
 
     [Fact]
     public void New_tour_starts_as_a_draft()
@@ -28,7 +28,7 @@ public class TourTests
     [InlineData("   ")]
     public void New_tour_requires_a_name(string name)
     {
-        var creation = () => new Tour(WellKnownUsers.Explorer, name, "Opis ture.", TourDifficulty.Easy, ["istorija"]);
+        var creation = () => new Tour(WellKnownUsers.Explorer, name, "Opis ture.", TourDifficulty.Easy, ["istorija"], new RecommendedGroupSize(2, 6));
 
         creation.Should().Throw<DomainException>();
     }
@@ -46,7 +46,15 @@ public class TourTests
     [Fact]
     public void New_tour_requires_tags()
     {
-        var creation = () => new Tour(WellKnownUsers.Explorer, "Šetnja tvrđavom", "Opis ture.", TourDifficulty.Easy, []);
+        var creation = () => new Tour(WellKnownUsers.Explorer, "Šetnja tvrđavom", "Opis ture.", TourDifficulty.Easy, [], new RecommendedGroupSize(2, 6));
+
+        creation.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void New_tour_requires_a_recommended_group_size()
+    {
+        var creation = () => new Tour(WellKnownUsers.Explorer, "Šetnja tvrđavom", "Opis ture.", TourDifficulty.Easy, ["istorija"], null!);
 
         creation.Should().Throw<DomainException>();
     }
