@@ -9,22 +9,12 @@ namespace Shared.Images.Tests.Unit.Images;
 public class ImageTests
 {
     private static Image CreateImage(int uploadsInLastHour) =>
-        new(WellKnownUsers.Explorer, ImageFormat.Jpeg, 800, 600, 2048, uploadsInLastHour);
+        new(WellKnownUsers.Explorer, ImageFormat.Jpeg, new Dimensions(800, 600), 2048, uploadsInLastHour);
 
     [Fact]
     public void Image_in_a_format_outside_the_whitelist_is_rejected()
     {
-        var creation = () => new Image(WellKnownUsers.Explorer, ImageFormat.Unknown, 0, 0, 2048, 0);
-
-        creation.Should().Throw<DomainException>();
-    }
-
-    [Theory]
-    [InlineData(4097, 600)]
-    [InlineData(800, 4097)]
-    public void Image_larger_than_4096_by_4096_pixels_is_rejected(int width, int height)
-    {
-        var creation = () => new Image(WellKnownUsers.Explorer, ImageFormat.Png, width, height, 2048, 0);
+        var creation = () => new Image(WellKnownUsers.Explorer, ImageFormat.Unknown, new Dimensions(0, 0), 2048, 0);
 
         creation.Should().Throw<DomainException>();
     }

@@ -20,14 +20,13 @@ public sealed class Image : AggregateRoot
         FileName = null!;
     }
 
-    public Image(Guid ownerId, ImageFormat format, int width, int height, long sizeInBytes, int uploadsInLastHour)
+    public Image(Guid ownerId, ImageFormat format, Dimensions dimensions, long sizeInBytes, int uploadsInLastHour)
         : base(Guid.NewGuid())
     {
         if (!SupportedFormats.Contains(format))
         {
             throw new DomainException("Only JPEG, PNG and WebP images are accepted.");
         }
-        var dimensions = new Dimensions(width, height);
         if (uploadsInLastHour >= MaxUploadsPerHour)
         {
             throw new DomainException($"At most {MaxUploadsPerHour} images may be uploaded in one hour.");

@@ -27,7 +27,8 @@ public sealed class ImageUploadingService
     {
         var header = _imageProcessor.ReadHeader(content);
         var uploadsInLastHour = await _imageRepository.CountByOwnerSinceAsync(userId, DateTime.UtcNow.AddHours(-1));
-        var image = new Image(userId, header.Format, header.Width, header.Height, content.Length, uploadsInLastHour);
+        var dimensions = new Dimensions(header.Width, header.Height);
+        var image = new Image(userId, header.Format, dimensions, content.Length, uploadsInLastHour);
 
         var stripped = _imageProcessor.StripMetadata(content, image.Format);
         await _imageStorage.SaveAsync(image.FileName, stripped);
