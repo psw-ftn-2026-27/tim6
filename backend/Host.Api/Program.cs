@@ -12,6 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 using Payment.Api;
 using Payment.Infrastructure;
 using Scalar.AspNetCore;
+using Shared.Api;
+using Shared.Infrastructure;
 using Social.Api;
 using Social.Infrastructure;
 
@@ -25,7 +27,8 @@ builder.Services.AddControllers()
     .AddExplorationControllers()
     .AddGamesControllers()
     .AddSocialControllers()
-    .AddPaymentControllers();
+    .AddPaymentControllers()
+    .AddSharedImagesControllers();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -45,7 +48,8 @@ builder.Services
     .AddExplorationModule(builder.Configuration)
     .AddGamesModule(builder.Configuration)
     .AddSocialModule(builder.Configuration)
-    .AddPaymentModule(builder.Configuration);
+    .AddPaymentModule(builder.Configuration)
+    .AddSharedImages(builder.Configuration);
 
 var app = builder.Build();
 

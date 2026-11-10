@@ -26,6 +26,9 @@ coverage/
 CLAUDE.local.md
 .workspace/
 
+# Uploaded images (local development storage)
+backend/Host.Api/images/
+
 # Secrets and local env
 .env
 .env.*
