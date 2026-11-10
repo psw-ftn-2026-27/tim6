@@ -22,33 +22,32 @@
       }
     </div>
 
-    @for (image of form.images; track image; let index = $index) {
-      <div class="field">
-        <label [for]="'image-' + index">Image URL</label>
-        <div class="image-row">
-          <input [id]="'image-' + index" type="text" [formField]="image" />
-          @if (form.images().value().length > 1) {
-            <button class="button" type="button" (click)="removeImage(index)">x</button>
-          }
-        </div>
-        @if (image().touched()) {
-          @for (message of image().errors(); track $index) {
-            <p class="error">{{ message.message }}</p>
-          }
-        }
-      </div>
-    }
-
-    <p>
-      <button class="button" type="button" (click)="addImage()">Add image</button>
-    </p>
+    <div class="field">
+      <app-image-upload
+        [images]="images()"
+        [pending]="pendingFiles()"
+        [errors]="imageErrors()"
+        [maxImages]="maxImages"
+        (filesSelected)="uploadFiles($event)"
+        (removeImage)="removeImage($event)"
+      />
+      @if (imageMissing() && images().length === 0) {
+        <p class="error">At least one image is required.</p>
+      }
+    </div>
 
     @if (error()) {
       <p class="error">{{ error() }}</p>
     }
 
     <div class="actions">
-      <button class="button button--primary" type="submit" [disabled]="pending()">Create</button>
+      <button
+        class="button button--primary"
+        type="submit"
+        [disabled]="pending() || pendingFiles().length > 0"
+      >
+        Create
+      </button>
       <a class="button" routerLink="/social/clubs/mine">Cancel</a>
     </div>
   </form>

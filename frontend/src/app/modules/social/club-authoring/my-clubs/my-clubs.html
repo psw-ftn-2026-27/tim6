@@ -37,36 +37,40 @@
               }
             </div>
 
-            @for (image of editForm.images; track image; let index = $index) {
-              <div class="field">
-                <label [for]="'image-' + index">Image URL</label>
-                <div class="actions">
-                  <input [id]="'image-' + index" type="text" [formField]="image" />
-                  @if (editForm.images().value().length > 1) {
-                    <button class="button" type="button" (click)="removeImage(index)">x</button>
-                  }
-                </div>
-                @if (image().touched()) {
-                  @for (message of image().errors(); track $index) {
-                    <p class="error">{{ message.message }}</p>
-                  }
-                }
-              </div>
-            }
-
-            <p>
-              <button class="button" type="button" (click)="addImage()">Add image</button>
-            </p>
+            <div class="field">
+              <app-image-upload
+                [images]="editImages()"
+                [pending]="editPendingFiles()"
+                [errors]="editImageErrors()"
+                [maxImages]="maxImages"
+                (filesSelected)="uploadFiles($event)"
+                (removeImage)="removeImage($event)"
+              />
+              @if (editImageMissing() && editImages().length === 0) {
+                <p class="error">At least one image is required.</p>
+              }
+            </div>
 
             @if (editError()) {
               <p class="error">{{ editError() }}</p>
             }
 
             <div class="actions">
-              <button class="button button--primary" type="submit" [disabled]="pending()">
+              <button
+                class="button button--primary"
+                type="submit"
+                [disabled]="pending() || editPendingFiles().length > 0"
+              >
                 Save
               </button>
-              <button class="button" type="button" (click)="cancelEdit()">Cancel</button>
+              <button
+                class="button"
+                type="button"
+                [disabled]="editPendingFiles().length > 0"
+                (click)="cancelEdit()"
+              >
+                Cancel
+              </button>
             </div>
           </form>
         } @else {
@@ -93,8 +97,22 @@
                 </div>
               } @else {
                 <div class="actions">
-                  <button class="button" type="button" (click)="startEdit(club)">Edit</button>
-                  <button class="button" type="button" (click)="startDelete(club.id)">Delete</button>
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="editPendingFiles().length > 0"
+                    (click)="startEdit(club)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="editPendingFiles().length > 0"
+                    (click)="startDelete(club.id)"
+                  >
+                    Delete
+                  </button>
                 </div>
               }
             </div>
