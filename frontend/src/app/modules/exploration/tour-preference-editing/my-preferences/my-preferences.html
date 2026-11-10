@@ -1,0 +1,74 @@
+<div class="card stack">
+  <h1>My preferences</h1>
+
+  @if (preference.isLoading()) {
+    <p>Loading your preferences...</p>
+  } @else if (preference.error()) {
+    <p class="error">Could not load your preferences. Log in and try again.</p>
+  } @else {
+    @if (preference.value(); as saved) {
+      <dl class="stack">
+        <div>
+          <dt>Difficulties</dt>
+          <dd>{{ saved.difficulties.join(', ') }}</dd>
+        </div>
+        <div>
+          <dt>Transport</dt>
+          <dd>{{ saved.transport }}</dd>
+        </div>
+        <div>
+          <dt>Tags</dt>
+          <dd>{{ saved.tags.length > 0 ? saved.tags.join(', ') : 'none' }}</dd>
+        </div>
+      </dl>
+
+      @if (deleteError()) {
+        <p class="error">{{ deleteError() }}</p>
+      }
+
+      <p class="actions">
+        <button class="button" type="button" [disabled]="pending()" (click)="startEdit(saved)">
+          Izmeni
+        </button>
+        <button class="button" type="button" [disabled]="pending()" (click)="delete()">
+          Obriši
+        </button>
+      </p>
+    } @else {
+      <p>You have no preferences yet.</p>
+    }
+
+    @if (!preference.value() || editing()) {
+      <form class="stack" (submit)="save($event)">
+        <fieldset class="field">
+          <legend>Difficulties</legend>
+          <label><input type="checkbox" [formField]="form.easy" /> Easy</label>
+          <label><input type="checkbox" [formField]="form.moderate" /> Moderate</label>
+          <label><input type="checkbox" [formField]="form.hard" /> Hard</label>
+        </fieldset>
+
+        <div class="field">
+          <label for="transport">Transport</label>
+          <select id="transport" [formField]="form.transport">
+            <option value="Walking">Walking</option>
+            <option value="Bicycle">Bicycle</option>
+            <option value="Car">Car</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="tags">Tags, separated by commas</label>
+          <input id="tags" type="text" [formField]="form.tags" />
+        </div>
+
+        @if (saveError()) {
+          <p class="error">{{ saveError() }}</p>
+        }
+
+        <button class="button button--primary" type="submit" [disabled]="pending()">
+          Sačuvaj
+        </button>
+      </form>
+    }
+  }
+</div>
