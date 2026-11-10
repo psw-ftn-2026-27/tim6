@@ -11,6 +11,9 @@ public class ClubTests
     private static Club CreateClub() =>
         new(WellKnownUsers.Explorer, "Planinari Fruške gore", "Vikend šetnje stazama Fruške gore.", ["https://example.com/fruska-gora.jpg"]);
 
+    private static List<string> CreateImages(int count) =>
+        Enumerable.Range(1, count).Select(number => $"/api/shared/images/slika-{number}.jpg").ToList();
+
     [Theory]
     [InlineData("", "Vikend šetnje.")]
     [InlineData("   ", "Vikend šetnje.")]
@@ -51,6 +54,32 @@ public class ClubTests
         var club = CreateClub();
 
         var update = () => club.Update(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", []);
+
+        update.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void New_club_may_have_five_images()
+    {
+        var club = new Club(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", CreateImages(5));
+
+        club.Images.Should().HaveCount(5);
+    }
+
+    [Fact]
+    public void New_club_has_at_most_five_images()
+    {
+        var creation = () => new Club(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", CreateImages(6));
+
+        creation.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Updated_club_keeps_at_most_five_images()
+    {
+        var club = CreateClub();
+
+        var update = () => club.Update(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", CreateImages(6));
 
         update.Should().Throw<DomainException>();
     }

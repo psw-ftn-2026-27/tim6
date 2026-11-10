@@ -5,6 +5,8 @@ namespace Social.Domain.Clubs;
 
 public sealed class Club : AggregateRoot
 {
+    private const int MaxImages = 5;
+
     public Guid OwnerId { get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
@@ -64,6 +66,10 @@ public sealed class Club : AggregateRoot
         if (images.Count == 0)
         {
             throw new DomainException("A club requires at least one image.");
+        }
+        if (images.Count > MaxImages)
+        {
+            throw new DomainException($"A club can have at most {MaxImages} images.");
         }
     }
 }
