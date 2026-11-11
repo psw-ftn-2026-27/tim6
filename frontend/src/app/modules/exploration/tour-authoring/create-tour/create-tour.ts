@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, required } from '@angular/forms/signals';
+import { FormField, form, min, required } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import { serverMessage } from '../../../../shared/util/server-message';
 import { TourDifficulty } from '../../api/exploration-api-types';
@@ -16,10 +16,21 @@ export class CreateTour {
   private readonly router = inject(Router);
 
   protected readonly form = form(
-    signal({ name: '', description: '', difficulty: 'Easy' as TourDifficulty, tags: '' }),
+    signal({
+      name: '',
+      description: '',
+      difficulty: 'Easy' as TourDifficulty,
+      tags: '',
+      groupSizeMin: 1,
+      groupSizeMax: 10,
+    }),
     (path) => {
       required(path.name, { message: 'Name is required.' });
       required(path.description, { message: 'Description is required.' });
+      required(path.groupSizeMin, { message: 'Group size from is required.' });
+      min(path.groupSizeMin, 1, { message: 'Group size from must be at least 1.' });
+      required(path.groupSizeMax, { message: 'Group size to is required.' });
+      min(path.groupSizeMax, 1, { message: 'Group size to must be at least 1.' });
     },
   );
 
@@ -41,6 +52,10 @@ export class CreateTour {
           .split(',')
           .map((tag) => tag.trim())
           .filter((tag) => tag !== ''),
+        recommendedGroupSize: {
+          min: this.form.groupSizeMin().value(),
+          max: this.form.groupSizeMax().value(),
+        },
       });
       await this.router.navigate(['/exploration/mine']);
     } catch (failure) {
