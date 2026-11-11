@@ -1,0 +1,59 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Api;
+using Social.Application.Following;
+
+namespace Social.Api;
+
+[ApiController]
+[Route("api/social")]
+[Authorize]
+public sealed class FollowingController : ControllerBase
+{
+    private readonly FollowingService _followingService;
+    private readonly FollowingQueries _followingQueries;
+
+    public FollowingController(FollowingService followingService, FollowingQueries followingQueries)
+    {
+        _followingService = followingService;
+        _followingQueries = followingQueries;
+    }
+
+    [HttpPost("users/{recipientId:guid}/follow-requests")]
+    public async Task<ActionResult<Guid>> SendFollowRequest(Guid recipientId)
+    {
+        return await _followingService.SendFollowRequestAsync(User.GetUserId(), recipientId);
+    }
+
+    [HttpDelete("follow-requests/{requestId:guid}")]
+    public async Task<ActionResult> CancelFollowRequest(Guid requestId)
+    {
+        await _followingService.CancelFollowRequestAsync(User.GetUserId(), requestId);
+        return NoContent();
+    }
+
+    [HttpDelete("following/{followedUserId:guid}")]
+    public async Task<ActionResult> UnfollowUser(Guid followedUserId)
+    {
+        await _followingService.UnfollowUserAsync(User.GetUserId(), followedUserId);
+        return NoContent();
+    }
+
+    [HttpGet("blogs/{blogId:guid}/follow-status")]
+    public async Task<ActionResult<BlogFollowStatusDto>> GetBlogFollowStatus(Guid blogId)
+    {
+        return await _followingQueries.GetBlogFollowStatusAsync(User.GetUserId(), blogId);
+    }
+
+    [HttpGet("follow-requests/sent")]
+    public async Task<ActionResult<List<SentFollowRequestDto>>> GetSentFollowRequests()
+    {
+        return await _followingQueries.GetSentRequestsAsync(User.GetUserId());
+    }
+
+    [HttpGet("following")]
+    public async Task<ActionResult<List<FollowedUserDto>>> GetFollowedUsers()
+    {
+        return await _followingQueries.GetFollowedUsersAsync(User.GetUserId());
+    }
+}

@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { CreateCommentDto, UpdateCommentDto } from '../api/social-api-types';
 
 const BASE_URL = '/api/social/blogs';
+const USERS_URL = '/api/social/users';
 
 @Injectable({ providedIn: 'root' })
 export class BlogReading {
@@ -19,5 +20,9 @@ export class BlogReading {
 
   async deleteComment(id: string, commentId: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${BASE_URL}/${id}/comments/${commentId}`));
+  }
+
+  async sendFollowRequest(recipientId: string): Promise<string> {
+    return firstValueFrom(this.http.post<string>(`${USERS_URL}/${recipientId}/follow-requests`, {}));
   }
 }

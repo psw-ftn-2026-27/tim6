@@ -1,0 +1,51 @@
+<div class="stack">
+  <p><a routerLink="/social">Back to blogs</a></p>
+
+  <h1>Sent follow requests</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (requests.isLoading()) {
+    <p>Loading your follow requests...</p>
+  } @else if (requests.error()) {
+    <p class="error">Could not load your follow requests. Log in and try again.</p>
+  } @else {
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">User</th>
+          <th scope="col">Status</th>
+          <th scope="col">Sent</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (request of requests.value() ?? []; track request.id) {
+          <tr>
+            <td>{{ request.recipientId }}</td>
+            <td>{{ request.status }}</td>
+            <td>{{ request.createdAt }}</td>
+            <td>
+              @if (request.status === 'Pending') {
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending()"
+                  (click)="cancel(request.id)"
+                >
+                  Cancel request
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4">You have not sent any follow requests.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
