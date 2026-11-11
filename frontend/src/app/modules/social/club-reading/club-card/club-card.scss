@@ -1,0 +1,22 @@
+.club {
+  color: inherit;
+  display: flex;
+  gap: var(--space-4);
+  text-decoration: none;
+}
+
+.club-image {
+  border-radius: var(--radius);
+  flex-shrink: 0;
+  height: 8rem;
+  object-fit: cover;
+  width: 8rem;
+}
+
+// Only the beginning of the description: at most three lines.
+.description {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  display: -webkit-box;
+  overflow: hidden;
+}

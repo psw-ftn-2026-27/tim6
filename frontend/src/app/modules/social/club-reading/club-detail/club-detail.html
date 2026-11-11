@@ -1,0 +1,21 @@
+<div class="stack">
+  <p><a routerLink="/social/clubs">Back to clubs</a></p>
+
+  @if (detail.isLoading()) {
+    <p>Loading club...</p>
+  } @else if (detail.error()) {
+    <p class="error">Club not found.</p>
+  } @else {
+    @if (detail.value(); as club) {
+      <h1>{{ club.name }}</h1>
+
+      <p>{{ club.description }}</p>
+
+      <div class="images">
+        @for (image of club.images; track image) {
+          <img [src]="image" alt="" />
+        }
+      </div>
+    }
+  }
+</div>

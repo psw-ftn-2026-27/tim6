@@ -11,6 +11,7 @@ public sealed class Club : AggregateRoot
     public string Name { get; private set; }
     public string Description { get; private set; }
     public List<string> Images { get; private set; }
+    public DateTime CreatedAt { get; private set; }
 
     private Club()
     {
@@ -19,7 +20,7 @@ public sealed class Club : AggregateRoot
         Images = null!;
     }
 
-    public Club(Guid ownerId, string name, string description, List<string> images)
+    public Club(Guid ownerId, string name, string description, List<string> images, DateTime createdAt)
         : base(Guid.NewGuid())
     {
         Validate(name, description, images);
@@ -28,6 +29,7 @@ public sealed class Club : AggregateRoot
         Name = name;
         Description = description;
         Images = images;
+        CreatedAt = createdAt;
     }
 
     public void Update(Guid userId, string name, string description, List<string> images)

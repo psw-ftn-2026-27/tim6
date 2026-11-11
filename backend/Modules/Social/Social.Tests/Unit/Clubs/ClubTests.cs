@@ -9,7 +9,7 @@ namespace Social.Tests.Unit.Clubs;
 public class ClubTests
 {
     private static Club CreateClub() =>
-        new(WellKnownUsers.Explorer, "Planinari Fruške gore", "Vikend šetnje stazama Fruške gore.", ["https://example.com/fruska-gora.jpg"]);
+        new(WellKnownUsers.Explorer, "Planinari Fruške gore", "Vikend šetnje stazama Fruške gore.", ["https://example.com/fruska-gora.jpg"], DateTime.UtcNow);
 
     private static List<string> CreateImages(int count) =>
         Enumerable.Range(1, count).Select(number => $"/api/shared/images/slika-{number}.jpg").ToList();
@@ -21,7 +21,7 @@ public class ClubTests
     [InlineData("Planinari", "   ")]
     public void New_club_requires_a_name_and_a_description(string name, string description)
     {
-        var creation = () => new Club(WellKnownUsers.Explorer, name, description, ["https://example.com/slika.jpg"]);
+        var creation = () => new Club(WellKnownUsers.Explorer, name, description, ["https://example.com/slika.jpg"], DateTime.UtcNow);
 
         creation.Should().Throw<DomainException>();
     }
@@ -29,7 +29,7 @@ public class ClubTests
     [Fact]
     public void New_club_requires_at_least_one_image()
     {
-        var creation = () => new Club(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", []);
+        var creation = () => new Club(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", [], DateTime.UtcNow);
 
         creation.Should().Throw<DomainException>();
     }
@@ -61,7 +61,7 @@ public class ClubTests
     [Fact]
     public void New_club_may_have_five_images()
     {
-        var club = new Club(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", CreateImages(5));
+        var club = new Club(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", CreateImages(5), DateTime.UtcNow);
 
         club.Images.Should().HaveCount(5);
     }
@@ -69,7 +69,7 @@ public class ClubTests
     [Fact]
     public void New_club_has_at_most_five_images()
     {
-        var creation = () => new Club(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", CreateImages(6));
+        var creation = () => new Club(WellKnownUsers.Explorer, "Planinari", "Vikend šetnje.", CreateImages(6), DateTime.UtcNow);
 
         creation.Should().Throw<DomainException>();
     }
