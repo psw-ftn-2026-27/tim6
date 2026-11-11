@@ -17,6 +17,10 @@ export class BlogAuthoring {
     await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/publish`, {}));
   }
 
+  async archive(id: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/archive`, {}));
+  }
+
   async update(id: string, dto: UpdateBlogDto): Promise<void> {
     await firstValueFrom(this.http.put<void>(`${BASE_URL}/${id}`, dto));
   }

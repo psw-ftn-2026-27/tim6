@@ -21,7 +21,14 @@
         }
       </div>
 
-      <p class="meta">Status: {{ blog.status }}</p>
+      <p class="meta">
+        Status:
+        @if (blog.status === 'Closed') {
+          Archived
+        } @else {
+          {{ blog.status }}
+        }
+      </p>
 
       <p class="meta">
         Created: {{ blog.createdAt.slice(0, 10) }}, last modified:
@@ -31,6 +38,7 @@
       <app-blog-comments
         [comments]="blog.comments"
         [currentUserId]="auth.user()?.id ?? null"
+        [commentsOpen]="blog.status === 'Published'"
         (addComment)="add($event)"
         (editComment)="edit($event)"
         (deleteComment)="remove($event)"
