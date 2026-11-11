@@ -18,6 +18,9 @@ public class BlogTests
         return blog;
     }
 
+    private static List<string> CreateImages(int count) =>
+        Enumerable.Range(1, count).Select(number => $"https://example.com/slika-{number}.jpg").ToList();
+
     [Fact]
     public void New_blog_starts_as_a_draft()
     {
@@ -30,11 +33,11 @@ public class BlogTests
     }
 
     [Fact]
-    public void New_blog_without_images_has_no_images()
+    public void Blog_cannot_be_created_without_any_image()
     {
-        var blog = new Blog(WellKnownUsers.Explorer, "Utisci sa tvrđave", "Opis obilaska tvrđave.", null);
+        var creation = () => new Blog(WellKnownUsers.Explorer, "Utisci sa tvrđave", "Opis obilaska tvrđave.", []);
 
-        blog.Images.Should().BeEmpty();
+        creation.Should().Throw<DomainException>();
     }
 
     [Theory]
@@ -42,7 +45,7 @@ public class BlogTests
     [InlineData("   ")]
     public void New_blog_requires_a_title(string title)
     {
-        var creation = () => new Blog(WellKnownUsers.Explorer, title, "Opis obilaska tvrđave.", []);
+        var creation = () => new Blog(WellKnownUsers.Explorer, title, "Opis obilaska tvrđave.", ["https://example.com/tvrdjava.jpg"]);
 
         creation.Should().Throw<DomainException>();
     }
@@ -52,9 +55,43 @@ public class BlogTests
     [InlineData("   ")]
     public void New_blog_requires_a_description(string description)
     {
-        var creation = () => new Blog(WellKnownUsers.Explorer, "Utisci sa tvrđave", description, []);
+        var creation = () => new Blog(WellKnownUsers.Explorer, "Utisci sa tvrđave", description, ["https://example.com/tvrdjava.jpg"]);
 
         creation.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Author_updates_the_title_description_and_images_of_a_blog()
+    {
+        var blog = CreatePublishedBlog();
+        var createdAt = blog.CreatedAt;
+        var updateStartedAt = DateTime.UtcNow;
+
+        blog.Update("Novi utisci sa tvrđave", "Dopunjen opis obilaska.", ["https://example.com/kula.jpg"]);
+
+        blog.Title.Should().Be("Novi utisci sa tvrđave");
+        blog.Description.Should().Be("Dopunjen opis obilaska.");
+        blog.Images.Should().Equal("https://example.com/kula.jpg");
+        blog.LastModifiedAt.Should().BeOnOrAfter(updateStartedAt);
+        blog.CreatedAt.Should().Be(createdAt);
+        blog.AuthorId.Should().Be(WellKnownUsers.Explorer);
+        blog.Status.Should().Be(BlogStatus.Published);
+    }
+
+    [Theory]
+    [InlineData("", "Dopunjen opis obilaska.", 1)]
+    [InlineData("   ", "Dopunjen opis obilaska.", 1)]
+    [InlineData("Novi utisci sa tvrđave", "", 1)]
+    [InlineData("Novi utisci sa tvrđave", "   ", 1)]
+    [InlineData("Novi utisci sa tvrđave", "Dopunjen opis obilaska.", 0)]
+    [InlineData("Novi utisci sa tvrđave", "Dopunjen opis obilaska.", 11)]
+    public void Update_without_required_content_or_with_too_many_images_is_rejected(string title, string description, int imageCount)
+    {
+        var blog = CreateBlog();
+
+        var update = () => blog.Update(title, description, CreateImages(imageCount));
+
+        update.Should().Throw<DomainException>();
     }
 
     [Fact]

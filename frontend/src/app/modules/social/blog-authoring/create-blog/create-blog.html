@@ -22,11 +22,30 @@
       }
     </div>
 
+    <div class="field">
+      <span>Images</span>
+      <app-image-upload
+        [images]="images()"
+        [pending]="pendingFiles()"
+        [errors]="imageErrors()"
+        [maxImages]="10"
+        (filesSelected)="uploadFiles($event)"
+        (removeImage)="removeImage($event)"
+      />
+      @if (images().length === 0) {
+        <p class="error">At least one image is required.</p>
+      }
+    </div>
+
     @if (error()) {
       <p class="error">{{ error() }}</p>
     }
 
-    <button class="button button--primary" type="submit" [disabled]="!form().valid() || pending()">
+    <button
+      class="button button--primary"
+      type="submit"
+      [disabled]="!form().valid() || images().length === 0 || pendingFiles().length > 0 || pending()"
+    >
       Create
     </button>
   </form>

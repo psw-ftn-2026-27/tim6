@@ -17,6 +17,8 @@
         <tr>
           <th scope="col">Title</th>
           <th scope="col">Status</th>
+          <th scope="col">Created</th>
+          <th scope="col">Last modified</th>
           <th scope="col">Comments</th>
           <th scope="col">Actions</th>
         </tr>
@@ -26,8 +28,20 @@
           <tr>
             <td>{{ blog.title }}</td>
             <td>{{ blog.status }}</td>
+            <td>{{ blog.createdAt.slice(0, 10) }}</td>
+            <td>{{ blog.lastModifiedAt.slice(0, 10) }}</td>
             <td>{{ blog.comments.length }}</td>
-            <td>
+            <td class="actions">
+              @if (blog.status === 'Draft' || blog.status === 'Published') {
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending() || pendingFiles().length > 0"
+                  (click)="startEdit(blog)"
+                >
+                  Edit
+                </button>
+              }
               @if (blog.status === 'Draft') {
                 <button
                   class="button button--primary"
@@ -40,9 +54,81 @@
               }
             </td>
           </tr>
+
+          @if (selectedBlogId() === blog.id) {
+            <tr>
+              <td colspan="6">
+                <form class="stack" (submit)="saveEdit($event)">
+                  <h2>Edit blog</h2>
+
+                  <div class="field">
+                    <label for="edit-title">Title</label>
+                    <input id="edit-title" type="text" [formField]="form.title" />
+                    @for (message of form.title().errors(); track $index) {
+                      <p class="error">{{ message.message }}</p>
+                    }
+                  </div>
+
+                  <div class="field">
+                    <label for="edit-description">Description</label>
+                    <textarea
+                      id="edit-description"
+                      rows="6"
+                      [formField]="form.description"
+                    ></textarea>
+                    @for (message of form.description().errors(); track $index) {
+                      <p class="error">{{ message.message }}</p>
+                    }
+                  </div>
+
+                  <div class="field">
+                    <span>Images</span>
+                    <app-image-upload
+                      [images]="images()"
+                      [pending]="pendingFiles()"
+                      [errors]="imageErrors()"
+                      [maxImages]="10"
+                      (filesSelected)="uploadFiles($event)"
+                      (removeImage)="removeImage($event)"
+                    />
+                    @if (images().length === 0) {
+                      <p class="error">At least one image is required.</p>
+                    }
+                  </div>
+
+                  @if (editError()) {
+                    <p class="error">{{ editError() }}</p>
+                  }
+
+                  <div class="actions">
+                    <button
+                      class="button button--primary"
+                      type="submit"
+                      [disabled]="
+                        !form().valid() ||
+                        images().length === 0 ||
+                        pendingFiles().length > 0 ||
+                        pending()
+                      "
+                    >
+                      Save
+                    </button>
+                    <button
+                      class="button"
+                      type="button"
+                      [disabled]="pendingFiles().length > 0"
+                      (click)="cancelEdit()"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          }
         } @empty {
           <tr>
-            <td colspan="4">You have no blogs yet.</td>
+            <td colspan="6">You have no blogs yet.</td>
           </tr>
         }
       </tbody>
