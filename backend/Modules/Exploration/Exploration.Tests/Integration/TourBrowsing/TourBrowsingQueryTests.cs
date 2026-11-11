@@ -23,6 +23,7 @@ public class TourBrowsingQueryTests : BaseIntegrationTest
         tours!.Items.Should().OnlyContain(tour => tour.Status == TourStatus.Published);
         tours.Items.Should().Contain(tour => tour.Id == TourSeed.PublishedVineyards.Id);
         tours.Items.Should().NotContain(tour => tour.Id == TourSeed.FortressWalk.Id);
+        tours.Items.Should().NotContain(tour => tour.Id == TourSeed.ArchivedSalashes.Id);
         tours.TotalCount.Should().Be(TourSeed.All.Count(tour => tour.Status == TourStatus.Published));
     }
 
