@@ -16,6 +16,9 @@ export interface CommentEdit {
 export class BlogComments {
   readonly comments = input.required<CommentDto[]>();
   readonly currentUserId = input<string | null>(null);
+  // False when the blog no longer accepts comments (it is not published): the comments
+  // are shown, but there is no form for a new one and no edit or delete buttons.
+  readonly commentsOpen = input.required<boolean>();
 
   readonly addComment = output<string>();
   readonly editComment = output<CommentEdit>();
