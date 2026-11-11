@@ -17,7 +17,7 @@ internal sealed class TourPreferenceReadRepository : ITourPreferenceReadReposito
     {
         return _dbContext.TourPreferences
             .Where(preference => preference.TouristId == touristId)
-            .Select(preference => new TourPreferenceDto(preference.Difficulties, preference.Transport, preference.Tags))
+            .Select(preference => new TourPreferenceDto(preference.Difficulties, preference.Transport, preference.Tags, preference.ApplyToSearch))
             .FirstOrDefaultAsync();
     }
 }

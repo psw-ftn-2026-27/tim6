@@ -20,6 +20,10 @@
           <dt>Tags</dt>
           <dd>{{ saved.tags.length > 0 ? saved.tags.join(', ') : 'none' }}</dd>
         </div>
+        <div>
+          <dt>Search opens with my preferences</dt>
+          <dd>{{ saved.applyToSearch ? 'Yes' : 'No' }}</dd>
+        </div>
       </dl>
 
       @if (deleteError()) {
@@ -59,6 +63,12 @@
         <div class="field">
           <label for="tags">Tags, separated by commas</label>
           <input id="tags" type="text" [formField]="form.tags" />
+        </div>
+
+        <div class="field">
+          <label>
+            <input type="checkbox" [formField]="form.applyToSearch" /> Search opens with my preferences
+          </label>
         </div>
 
         @if (saveError()) {

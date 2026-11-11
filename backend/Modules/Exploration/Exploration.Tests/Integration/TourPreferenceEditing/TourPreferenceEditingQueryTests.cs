@@ -22,6 +22,7 @@ public class TourPreferenceEditingQueryTests : BaseIntegrationTest
         preference!.Difficulties.Should().Equal(TourPreferenceSeed.ExplorersPreference.Difficulties);
         preference.Transport.Should().Be(TourPreferenceSeed.ExplorersPreference.Transport);
         preference.Tags.Should().Equal(TourPreferenceSeed.ExplorersPreference.Tags);
+        preference.ApplyToSearch.Should().Be(TourPreferenceSeed.ExplorersPreference.ApplyToSearch);
     }
 
     [Fact]

@@ -20,11 +20,11 @@ public sealed class TourPreferenceEditingService
         var preference = await _preferenceRepository.GetByTouristIdAsync(touristId);
         if (preference is null)
         {
-            _preferenceRepository.Add(new TourPreference(touristId, dto.Difficulties, dto.Transport, dto.Tags));
+            _preferenceRepository.Add(new TourPreference(touristId, dto.Difficulties, dto.Transport, dto.Tags, dto.ApplyToSearch));
         }
         else
         {
-            preference.Update(dto.Difficulties, dto.Transport, dto.Tags);
+            preference.Update(dto.Difficulties, dto.Transport, dto.Tags, dto.ApplyToSearch);
         }
 
         await _unitOfWork.SaveChangesAsync();

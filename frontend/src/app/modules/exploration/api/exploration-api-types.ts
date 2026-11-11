@@ -32,4 +32,5 @@ export interface TourPreferenceDto {
   difficulties: TourDifficulty[];
   transport: TransportMode;
   tags: string[];
+  applyToSearch: boolean;
 }

@@ -30,6 +30,9 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("ApplyToSearch")
+                        .HasColumnType("boolean");
+
                     b.PrimitiveCollection<string[]>("Difficulties")
                         .IsRequired()
                         .HasColumnType("text[]");

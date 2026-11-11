@@ -18,7 +18,7 @@ public class TourPreferenceEditingCommandTests : BaseIntegrationTest
     public async Task Tourist_saves_preferences_for_the_first_time()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
-        var request = new TourPreferenceDto([TourDifficulty.Hard], TransportMode.Bicycle, ["planina"]);
+        var request = new TourPreferenceDto([TourDifficulty.Hard], TransportMode.Bicycle, ["planina"], true);
         using var arrangeContext = Factory.CreateContext<ExplorationDbContext>();
         var preferenceCountBefore = arrangeContext.TourPreferences.Count();
 
@@ -31,13 +31,14 @@ public class TourPreferenceEditingCommandTests : BaseIntegrationTest
         stored.Difficulties.Should().Equal(TourDifficulty.Hard);
         stored.Transport.Should().Be(TransportMode.Bicycle);
         stored.Tags.Should().Equal("planina");
+        stored.ApplyToSearch.Should().BeTrue();
     }
 
     [Fact]
     public async Task Saving_again_changes_the_existing_preference()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-        var request = new TourPreferenceDto([TourDifficulty.Hard], TransportMode.Car, []);
+        var request = new TourPreferenceDto([TourDifficulty.Hard], TransportMode.Car, [], false);
         using var arrangeContext = Factory.CreateContext<ExplorationDbContext>();
         var preferenceCountBefore = arrangeContext.TourPreferences.Count();
 
@@ -51,13 +52,14 @@ public class TourPreferenceEditingCommandTests : BaseIntegrationTest
         stored.Difficulties.Should().Equal(TourDifficulty.Hard);
         stored.Transport.Should().Be(TransportMode.Car);
         stored.Tags.Should().BeEmpty();
+        stored.ApplyToSearch.Should().BeFalse();
     }
 
     [Fact]
     public async Task Tourist_cannot_save_preferences_without_a_difficulty()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
-        var request = new TourPreferenceDto([], TransportMode.Walking, ["grad"]);
+        var request = new TourPreferenceDto([], TransportMode.Walking, ["grad"], false);
         using var arrangeContext = Factory.CreateContext<ExplorationDbContext>();
         var preferenceCountBefore = arrangeContext.TourPreferences.Count();
 
@@ -73,7 +75,7 @@ public class TourPreferenceEditingCommandTests : BaseIntegrationTest
     public async Task Anonymous_user_cannot_save_preferences()
     {
         var client = Factory.CreateClient();
-        var request = new TourPreferenceDto([TourDifficulty.Easy], TransportMode.Walking, []);
+        var request = new TourPreferenceDto([TourDifficulty.Easy], TransportMode.Walking, [], false);
 
         var response = await client.PutAsJsonAsync("/api/exploration/tour-preferences/mine", request);
 

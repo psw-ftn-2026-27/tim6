@@ -31,6 +31,7 @@ export class MyPreferences {
       hard: false,
       transport: 'Walking' as TransportMode,
       tags: '',
+      applyToSearch: false,
     }),
   );
 
@@ -44,6 +45,7 @@ export class MyPreferences {
       hard: preference.difficulties.includes('Hard'),
       transport: preference.transport,
       tags: preference.tags.join(', '),
+      applyToSearch: preference.applyToSearch,
     });
   }
 
@@ -62,6 +64,7 @@ export class MyPreferences {
           .split(',')
           .map((tag) => tag.trim())
           .filter((tag) => tag !== ''),
+        applyToSearch: this.form.applyToSearch().value(),
       });
       this.editing.set(false);
       this.preference.reload();
@@ -79,7 +82,7 @@ export class MyPreferences {
     try {
       await this.tourPreferenceEditing.delete();
       this.editing.set(false);
-      this.form().reset({ easy: false, moderate: false, hard: false, transport: 'Walking', tags: '' });
+      this.form().reset({ easy: false, moderate: false, hard: false, transport: 'Walking', tags: '', applyToSearch: false });
       this.preference.reload();
     } catch (failure) {
       this.deleteError.set(serverMessage(failure, 'Could not delete your preferences.'));

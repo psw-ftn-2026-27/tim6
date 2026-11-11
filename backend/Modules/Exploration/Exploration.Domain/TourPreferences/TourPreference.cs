@@ -10,6 +10,7 @@ public sealed class TourPreference : AggregateRoot
     public List<TourDifficulty> Difficulties { get; private set; }
     public TransportMode Transport { get; private set; }
     public List<string> Tags { get; private set; }
+    public bool ApplyToSearch { get; private set; }
 
     private TourPreference()
     {
@@ -17,7 +18,7 @@ public sealed class TourPreference : AggregateRoot
         Tags = null!;
     }
 
-    public TourPreference(Guid touristId, List<TourDifficulty> difficulties, TransportMode transport, List<string> tags)
+    public TourPreference(Guid touristId, List<TourDifficulty> difficulties, TransportMode transport, List<string> tags, bool applyToSearch)
         : base(Guid.NewGuid())
     {
         Validate(difficulties, tags);
@@ -26,15 +27,17 @@ public sealed class TourPreference : AggregateRoot
         Difficulties = difficulties;
         Transport = transport;
         Tags = tags;
+        ApplyToSearch = applyToSearch;
     }
 
-    public void Update(List<TourDifficulty> difficulties, TransportMode transport, List<string> tags)
+    public void Update(List<TourDifficulty> difficulties, TransportMode transport, List<string> tags, bool applyToSearch)
     {
         Validate(difficulties, tags);
 
         Difficulties = difficulties;
         Transport = transport;
         Tags = tags;
+        ApplyToSearch = applyToSearch;
     }
 
     private static void Validate(List<TourDifficulty> difficulties, List<string> tags)
