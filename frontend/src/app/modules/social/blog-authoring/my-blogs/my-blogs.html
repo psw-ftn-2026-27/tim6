@@ -33,7 +33,13 @@
               }
             </td>
             <td class="middle">{{ blog.title }}</td>
-            <td>{{ blog.status }}</td>
+            <td>
+              @if (blog.status === 'Closed') {
+                Archived
+              } @else {
+                {{ blog.status }}
+              }
+            </td>
             <td>{{ blog.createdAt.slice(0, 10) }}</td>
             <td>{{ blog.lastModifiedAt.slice(0, 10) }}</td>
             <td>{{ blog.comments.length }}</td>
@@ -59,9 +65,47 @@
                     Publish
                   </button>
                 }
+                @if (blog.status === 'Published') {
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="pending() || pendingFiles().length > 0"
+                    (click)="startArchive(blog.id)"
+                  >
+                    Archive
+                  </button>
+                }
               </div>
             </td>
           </tr>
+
+          @if (archivingBlogId() === blog.id) {
+            <tr>
+              <td colspan="7">
+                <div class="stack">
+                  <p>After archiving, the blog can no longer be changed.</p>
+                  <div class="actions">
+                    <button
+                      class="button button--primary"
+                      type="button"
+                      [disabled]="pending()"
+                      (click)="confirmArchive(blog.id)"
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      class="button"
+                      type="button"
+                      [disabled]="pending()"
+                      (click)="cancelArchive()"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
 
           @if (selectedBlogId() === blog.id) {
             <tr>

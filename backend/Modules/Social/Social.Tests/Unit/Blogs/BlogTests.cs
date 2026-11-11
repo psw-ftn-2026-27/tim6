@@ -18,6 +18,13 @@ public class BlogTests
         return blog;
     }
 
+    private static Blog CreateArchivedBlog()
+    {
+        var blog = CreatePublishedBlog();
+        blog.Archive();
+        return blog;
+    }
+
     private static List<string> CreateImages(int count) =>
         Enumerable.Range(1, count).Select(number => $"https://example.com/slika-{number}.jpg").ToList();
 
@@ -173,4 +180,65 @@ public class BlogTests
         blog.Comments.Should().BeEmpty();
     }
 
+    [Fact]
+    public void Published_blog_is_archived_without_changing_its_modification_date()
+    {
+        var blog = CreatePublishedBlog();
+        var lastModifiedAt = blog.LastModifiedAt;
+
+        blog.Archive();
+
+        blog.Status.Should().Be(BlogStatus.Closed);
+        blog.LastModifiedAt.Should().Be(lastModifiedAt);
+    }
+
+    [Fact]
+    public void Draft_blog_cannot_be_archived()
+    {
+        var blog = CreateBlog();
+
+        var archiving = () => blog.Archive();
+
+        archiving.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_blog_cannot_be_archived_again()
+    {
+        var blog = CreateArchivedBlog();
+
+        var archiving = () => blog.Archive();
+
+        archiving.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_blog_cannot_be_updated()
+    {
+        var blog = CreateArchivedBlog();
+
+        var update = () => blog.Update("Novi utisci sa tvrđave", "Dopunjen opis obilaska.", ["https://example.com/kula.jpg"]);
+
+        update.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_blog_cannot_be_published_again()
+    {
+        var blog = CreateArchivedBlog();
+
+        var publishing = () => blog.Publish();
+
+        publishing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_blog_cannot_receive_a_comment()
+    {
+        var blog = CreateArchivedBlog();
+
+        var addition = () => blog.AddComment(WellKnownUsers.Administrator, "Odlična tura!");
+
+        addition.Should().Throw<DomainException>();
+    }
 }

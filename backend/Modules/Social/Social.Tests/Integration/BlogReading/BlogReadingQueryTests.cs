@@ -28,6 +28,28 @@ public class BlogReadingQueryTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task Archived_blog_is_not_listed()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var blogs = await client.GetFromJsonAsync<PageResult<BlogDto>>("/api/social/blogs/published", JsonOptions);
+
+        blogs!.Items.Should().NotContain(blog => blog.Id == BlogSeed.ArchivedLakeTrip.Id);
+    }
+
+    [Fact]
+    public async Task Archived_blog_can_be_read()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var blog = await client.GetFromJsonAsync<BlogDto>(
+            $"/api/social/blogs/{BlogSeed.ArchivedLakeTrip.Id}", JsonOptions);
+
+        blog!.Id.Should().Be(BlogSeed.ArchivedLakeTrip.Id);
+        blog.Status.Should().Be(BlogStatus.Closed);
+    }
+
+    [Fact]
     public async Task Published_blog_is_shown_with_its_comments()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");

@@ -33,6 +33,9 @@ export class MyBlogs {
   protected readonly selectedBlogId = signal<string | null>(null);
   protected readonly editError = signal<string | null>(null);
 
+  // The blog whose archive confirmation is open under its row, or null when none is open.
+  protected readonly archivingBlogId = signal<string | null>(null);
+
   protected readonly form = form(signal({ title: '', description: '' }), (path) => {
     // required rejects only an empty value; pattern also rejects one made of spaces only,
     // as the server does. pattern skips an empty value, so only one message shows.
@@ -73,9 +76,35 @@ export class MyBlogs {
     }
   }
 
+  // Opens the archive confirmation under the blog's row. An open edit section is cancelled
+  // first, so only one section is open at a time.
+  protected startArchive(blogId: string): void {
+    this.cancelEdit();
+    this.archivingBlogId.set(blogId);
+  }
+
+  protected cancelArchive(): void {
+    this.archivingBlogId.set(null);
+  }
+
+  protected async confirmArchive(blogId: string): Promise<void> {
+    this.pending.set(true);
+    this.error.set(null);
+    try {
+      await this.blogAuthoring.archive(blogId);
+      this.blogs.reload();
+    } catch (failure) {
+      this.error.set(serverMessage(failure, 'Could not archive the blog.'));
+    } finally {
+      this.archivingBlogId.set(null);
+      this.pending.set(false);
+    }
+  }
+
   // Opens the edit section under the blog's row, filled from the row. An edit open on
-  // another row is cancelled first.
+  // another row and an open archive confirmation are cancelled first.
   protected startEdit(blog: BlogDto): void {
+    this.archivingBlogId.set(null);
     this.discardUploads();
     this.selectedBlogId.set(blog.id);
     this.editError.set(null);
