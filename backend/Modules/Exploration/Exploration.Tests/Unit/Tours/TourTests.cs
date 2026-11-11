@@ -13,6 +13,21 @@ public class TourTests
     private static Tour CreateTour(string description) =>
         new(WellKnownUsers.Explorer, "Šetnja tvrđavom", description, TourDifficulty.Easy, ["istorija"], new RecommendedGroupSize(2, 6));
 
+    private static Tour CreatePublishedTour()
+    {
+        var tour = CreateTour(LongDescription);
+        tour.AddTransportTime(TransportMode.Walking, 120);
+        tour.Publish();
+        return tour;
+    }
+
+    private static Tour CreateArchivedTour()
+    {
+        var tour = CreatePublishedTour();
+        tour.Archive();
+        return tour;
+    }
+
     [Fact]
     public void New_tour_starts_as_a_draft()
     {
@@ -121,6 +136,70 @@ public class TourTests
         var tour = CreateTour(LongDescription);
         tour.AddTransportTime(TransportMode.Car, 30);
         tour.Publish();
+
+        var publishing = () => tour.Publish();
+
+        publishing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_tour_is_archived_with_an_archiving_time()
+    {
+        var tour = CreatePublishedTour();
+
+        tour.Archive();
+
+        tour.Status.Should().Be(TourStatus.Archived);
+        tour.ArchivedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Draft_tour_cannot_be_archived()
+    {
+        var tour = CreateTour(LongDescription);
+
+        var archiving = () => tour.Archive();
+
+        archiving.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_tour_is_activated_as_published_without_an_archiving_time_and_with_its_original_publishing_time()
+    {
+        var tour = CreateArchivedTour();
+        var originalPublishedAt = tour.PublishedAt;
+
+        tour.Activate();
+
+        tour.Status.Should().Be(TourStatus.Published);
+        tour.ArchivedAt.Should().BeNull();
+        tour.PublishedAt.Should().Be(originalPublishedAt);
+    }
+
+    [Fact]
+    public void Published_tour_cannot_be_activated()
+    {
+        var tour = CreatePublishedTour();
+
+        var activation = () => tour.Activate();
+
+        activation.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_tour_cannot_get_a_transport_time()
+    {
+        var tour = CreateArchivedTour();
+
+        var addition = () => tour.AddTransportTime(TransportMode.Bicycle, 45);
+
+        addition.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_tour_cannot_be_published()
+    {
+        var tour = CreateArchivedTour();
 
         var publishing = () => tour.Publish();
 
