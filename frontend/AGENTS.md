@@ -32,8 +32,12 @@ frontend/src/
                              app.routes.ts                                    [platform]
     shared/
       util/
-      api/                   shared types (PageResult, ProblemDetails),
-                             mirror the server, no client-only fields          [platform]
+      api/                   shared types (PageResult, ProblemDetails,
+                             ImageReferenceDto), mirror the server, no
+                             client-only fields                                [platform]
+      image-uploading/       image upload, see "Shared image upload" below     [platform]
+        image-upload/        presentational section: thumbnails, picker, errors
+        image-uploading.ts   service: upload, delete, deleteAll
     modules/
       <name>/
         api/                 this module's DTO types, mirror the server, no client-only fields
@@ -116,7 +120,10 @@ construct means adding a lesson, so treat it as a platform decision.
   `firstValueFrom` in the group's service for writes. Functional interceptors
   (`HttpInterceptorFn`, `withInterceptors`) in `core/`.
 - Forms: Signal Forms (`form()`, `FormField`, validators from
-  `@angular/forms/signals`). No Reactive Forms, no template-driven forms.
+  `@angular/forms/signals`). No Reactive Forms, no template-driven forms. A file input
+  is not typed text: the component reads `files` from the `(change)` event's target.
+- Leaving a page: `inject(DestroyRef).onDestroy(...)` and a `host` listener
+  `'(window:pagehide)'`, only to delete images the page uploaded and did not save.
 - Routing: `router-outlet`, `routerLink`, `loadChildren`, route parameters bound as
   signal inputs via `withComponentInputBinding`; `inject(Router)` only for navigation
   after a command.
@@ -158,5 +165,43 @@ assigned to the platform team, and misalignment is an accepted learning experien
 - A page component owns the interaction: it declares its read resource, injects its
   group's service for commands, and passes plain values down to presentational
   components, which take `input()`s and raise `output()`s and inject nothing.
+- An image is stored by a module as its reference string, `/api/shared/images/{fileName}`,
+  and shown with `<img [src]="reference">`.
 - Do not produce Vitest tests unless specifically instructed. Frontend testing is not
   taught; it is a platform-team assignment.
+
+## Shared image upload
+
+`shared/image-uploading/` is the one way a module form accepts images. The section
+`<app-image-upload>` is presentational: inputs `images` (`UploadedImage`: reference and
+`fileKey`, the key of the file it was uploaded from, or `null` for an image of saved
+content), `pending` (`File[]` being uploaded), `errors` (`ImageUploadError`: file name and
+reason) and `maxImages`; outputs `filesSelected` (`File[]`) and `removeImage` (a
+reference). It rejects files over 5 MB and files beyond `maxImages` itself and lists them
+with the other errors, so those never reach the page. It skips, silently, a file already
+in `images` or `pending` (same name, size and last change, see the exported `fileKey`).
+`ImageUploading` is a plain command service:
+`upload(file)` returns the reference, `delete(reference)`, and `deleteAll(references, keepalive)`,
+which fires one delete per reference without waiting and ignores failures, for leaving the
+page; with `keepalive` the request survives a closed tab (needs `withFetch()`, set in
+`app.config.ts`).
+
+The page that embeds the section wires it:
+
+- It injects `ImageUploading` and keeps `images`, `pending` and `errors` in its own signals,
+  plus the list of references uploaded from this form (on a create form, that is `images`).
+- Errors describe the latest action only: the section clears its own rejections on every
+  selection and removal, and the page empties `errors` at the start of both handlers.
+- On `filesSelected`, for each file: add the file to `pending`, `await upload(file)`, then
+  remove that file from `pending` and add `{ reference, fileKey: fileKey(file) }` to
+  `images`, or on failure add `{ fileName, reason: serverMessage(failure, ...) }` to
+  `errors`. Images of already saved content enter `images` with `fileKey: null`.
+- On `removeImage`: `await delete(reference)`, then remove it from `images`; on failure add
+  an error and keep the thumbnail. An image the form did not upload is only removed from
+  the list.
+- The save button is disabled while `pending` is not empty. After a successful save the
+  page empties the uploaded list, then navigates.
+- `inject(DestroyRef).onDestroy(...)` calls `deleteAll(uploaded, false)`; "Cancel" only
+  navigates away. Closing or reloading the tab does not destroy the page, so the page's
+  `host` listens to `'(window:pagehide)': 'onPageHide()'`, which calls
+  `deleteAll(uploaded, true)`.
