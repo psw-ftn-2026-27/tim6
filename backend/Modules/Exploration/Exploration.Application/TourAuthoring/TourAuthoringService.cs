@@ -37,12 +37,15 @@ public sealed class TourAuthoringService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task PublishAsync(Guid tourId, Guid authorId)
+    public async Task<TourPriceDto> PublishAsync(Guid tourId, Guid authorId, PublishTourDto dto)
     {
         var tour = await GetOwnedTourAsync(tourId, authorId);
+        var price = dto.Price is null ? null : new TourPrice(dto.Price.IsFree, dto.Price.Amount);
 
-        tour.Publish();
+        tour.Publish(price);
         await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<TourPriceDto>(price);
     }
 
     public async Task ArchiveAsync(Guid tourId, Guid authorId)

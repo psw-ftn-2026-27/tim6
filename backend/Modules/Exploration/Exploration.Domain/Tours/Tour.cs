@@ -72,11 +72,15 @@ public sealed class Tour : AggregateRoot
         _transportTimes.Add(new TransportTime(transport, minutes));
     }
 
-    public void Publish()
+    public void Publish(TourPrice? price)
     {
         if (Status != TourStatus.Draft)
         {
             throw new DomainException("Only a draft tour can be published.");
+        }
+        if (price is null)
+        {
+            throw new DomainException("A tour can be published only after choosing whether it is free or paid.");
         }
         if (Description.Length < MinimumDescriptionLengthForPublishing)
         {

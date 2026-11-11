@@ -1,4 +1,5 @@
 using AutoMapper;
+using Exploration.Application.TourAuthoring;
 using Exploration.Application.Tours;
 using Exploration.Domain.Tours;
 
@@ -11,5 +12,6 @@ public sealed class ExplorationMapperProfile : Profile
         CreateMap<Tour, TourDto>();
         CreateMap<TransportTime, TransportTimeDto>();
         CreateMap<RecommendedGroupSize, RecommendedGroupSizeDto>();
+        CreateMap<TourPrice, TourPriceDto>();
     }
 }

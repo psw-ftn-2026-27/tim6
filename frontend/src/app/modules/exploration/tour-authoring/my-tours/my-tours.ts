@@ -28,18 +28,59 @@ export class MyTours {
     min(path.minutes, 1, { message: 'Minutes must be at least 1.' });
   });
 
+  protected readonly publishingTourId = signal<string | null>(null);
+  protected readonly confirmation = signal<string | null>(null);
+
+  private readonly publishModel = signal({
+    pricing: '' as '' | 'Free' | 'Paid',
+    amount: null as number | null,
+  });
+
+  protected readonly publishForm = form(this.publishModel, (path) => {
+    required(path.pricing, { message: 'Choose Free or Paid.' });
+    required(path.amount, {
+      message: 'Amount is required.',
+      when: ({ valueOf }) => valueOf(path.pricing) === 'Paid',
+    });
+    min(path.amount, 0.01, {
+      message: 'Amount must be greater than 0.',
+      when: ({ valueOf }) => valueOf(path.pricing) === 'Paid',
+    });
+  });
+
   protected select(tourId: string): void {
     this.error.set(null);
+    this.publishingTourId.set(null);
     this.selectedTourId.set(tourId);
     this.form().reset({ transport: 'Walking', minutes: 30 });
   }
 
-  protected async publish(tourId: string): Promise<void> {
+  protected selectForPublishing(tourId: string): void {
+    this.error.set(null);
+    this.selectedTourId.set(null);
+    this.publishingTourId.set(tourId);
+    this.publishForm().reset({ pricing: '', amount: null });
+  }
+
+  protected async publish(event: Event): Promise<void> {
+    event.preventDefault();
+    const tourId = this.publishingTourId();
+    if (tourId === null) {
+      return;
+    }
+    const isFree = this.publishForm.pricing().value() === 'Free';
     this.pending.set(true);
     this.error.set(null);
+    this.confirmation.set(null);
     try {
-      await this.tourAuthoring.publish(tourId);
+      const price = await this.tourAuthoring.publish(tourId, {
+        price: { isFree, amount: isFree ? null : this.publishForm.amount().value() },
+      });
       this.tours.reload();
+      this.publishingTourId.set(null);
+      this.confirmation.set(
+        price.isFree ? 'Tour published. Free' : `Tour published. Price: ${price.amount}`,
+      );
     } catch (failure) {
       this.error.set(serverMessage(failure, 'Could not publish the tour.'));
     } finally {
