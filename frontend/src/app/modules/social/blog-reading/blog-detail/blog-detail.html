@@ -15,7 +15,18 @@
 
       <p>{{ blog.description }}</p>
 
+      <div class="images">
+        @for (image of blog.images; track image) {
+          <img [src]="image" alt="" />
+        }
+      </div>
+
       <p class="meta">Status: {{ blog.status }}</p>
+
+      <p class="meta">
+        Created: {{ blog.createdAt.slice(0, 10) }}, last modified:
+        {{ blog.lastModifiedAt.slice(0, 10) }}
+      </p>
 
       <app-blog-comments
         [comments]="blog.comments"

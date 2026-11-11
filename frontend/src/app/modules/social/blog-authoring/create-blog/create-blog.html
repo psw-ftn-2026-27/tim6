@@ -5,20 +5,31 @@
     <div class="field">
       <label for="title">Title</label>
       <input id="title" type="text" [formField]="form.title" />
-      @if (form.title().touched()) {
-        @for (message of form.title().errors(); track $index) {
-          <p class="error">{{ message.message }}</p>
-        }
+      @for (message of form.title().errors(); track $index) {
+        <p class="error">{{ message.message }}</p>
       }
     </div>
 
     <div class="field">
       <label for="description">Description</label>
       <textarea id="description" rows="6" [formField]="form.description"></textarea>
-      @if (form.description().touched()) {
-        @for (message of form.description().errors(); track $index) {
-          <p class="error">{{ message.message }}</p>
-        }
+      @for (message of form.description().errors(); track $index) {
+        <p class="error">{{ message.message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <span>Images</span>
+      <app-image-upload
+        [images]="images()"
+        [pending]="pendingFiles()"
+        [errors]="imageErrors()"
+        [maxImages]="10"
+        (filesSelected)="uploadFiles($event)"
+        (removeImage)="removeImage($event)"
+      />
+      @if (images().length === 0) {
+        <p class="error">At least one image is required.</p>
       }
     </div>
 
@@ -26,8 +37,15 @@
       <p class="error">{{ error() }}</p>
     }
 
-    <button class="button button--primary" type="submit" [disabled]="!form().valid() || pending()">
-      Create
-    </button>
+    <div class="actions">
+      <button
+        class="button button--primary"
+        type="submit"
+        [disabled]="!form().valid() || images().length === 0 || pendingFiles().length > 0 || pending()"
+      >
+        Create
+      </button>
+      <a class="button" routerLink="/social/mine">Cancel</a>
+    </div>
   </form>
 </div>
