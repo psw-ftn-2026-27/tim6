@@ -24,6 +24,39 @@ namespace Exploration.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Exploration.Domain.TourPreferences.TourPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ApplyToSearch")
+                        .HasColumnType("boolean");
+
+                    b.PrimitiveCollection<string[]>("Difficulties")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<List<string>>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<Guid>("TouristId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Transport")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TouristId")
+                        .IsUnique();
+
+                    b.ToTable("TourPreferences", "exploration");
+                });
+
             modelBuilder.Entity("Exploration.Domain.Tours.Tour", b =>
                 {
                     b.Property<Guid>("Id")

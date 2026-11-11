@@ -34,3 +34,10 @@ export interface CreateTourDto {
   tags: string[];
   recommendedGroupSize: RecommendedGroupSizeDto;
 }
+
+export interface TourPreferenceDto {
+  difficulties: TourDifficulty[];
+  transport: TransportMode;
+  tags: string[];
+  applyToSearch: boolean;
+}
