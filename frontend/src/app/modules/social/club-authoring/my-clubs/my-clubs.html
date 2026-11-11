@@ -1,0 +1,126 @@
+<div class="stack">
+  <div class="page-header">
+    <h1>My clubs</h1>
+    <a class="button button--primary" routerLink="/social/clubs/create">Create club</a>
+  </div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (clubs.isLoading()) {
+    <p>Loading your clubs...</p>
+  } @else if (clubs.error()) {
+    <p class="error">Could not load your clubs. Log in and try again.</p>
+  } @else {
+    @for (club of clubs.value() ?? []; track club.id) {
+      <article class="card">
+        @if (editingClubId() === club.id) {
+          <form class="stack" (submit)="save($event, club)">
+            <div class="field">
+              <label for="name">Name</label>
+              <input id="name" type="text" [formField]="editForm.name" />
+              @if (editForm.name().touched()) {
+                @for (message of editForm.name().errors(); track $index) {
+                  <p class="error">{{ message.message }}</p>
+                }
+              }
+            </div>
+
+            <div class="field">
+              <label for="description">Description</label>
+              <textarea id="description" rows="4" [formField]="editForm.description"></textarea>
+              @if (editForm.description().touched()) {
+                @for (message of editForm.description().errors(); track $index) {
+                  <p class="error">{{ message.message }}</p>
+                }
+              }
+            </div>
+
+            <div class="field">
+              <app-image-upload
+                [images]="editImages()"
+                [pending]="editPendingFiles()"
+                [errors]="editImageErrors()"
+                [maxImages]="maxImages"
+                (filesSelected)="uploadFiles($event)"
+                (removeImage)="removeImage($event)"
+              />
+              @if (editImageMissing() && editImages().length === 0) {
+                <p class="error">At least one image is required.</p>
+              }
+            </div>
+
+            @if (editError()) {
+              <p class="error">{{ editError() }}</p>
+            }
+
+            <div class="actions">
+              <button
+                class="button button--primary"
+                type="submit"
+                [disabled]="pending() || editPendingFiles().length > 0"
+              >
+                Save
+              </button>
+              <button
+                class="button"
+                type="button"
+                [disabled]="editPendingFiles().length > 0"
+                (click)="cancelEdit()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        } @else {
+          <div class="club">
+            <img class="club-image" [src]="club.images[0]" [alt]="club.name" />
+            <div class="stack">
+              <h2>{{ club.name }}</h2>
+              <p>{{ club.description }}</p>
+
+              @if (confirmingClubId() === club.id) {
+                <p>Are you sure?</p>
+                <div class="actions">
+                  <button
+                    class="button button--primary"
+                    type="button"
+                    [disabled]="pending()"
+                    (click)="remove(club)"
+                  >
+                    Confirm
+                  </button>
+                  <button class="button" type="button" (click)="confirmingClubId.set(null)">
+                    Cancel
+                  </button>
+                </div>
+              } @else {
+                <div class="actions">
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="editPendingFiles().length > 0"
+                    (click)="startEdit(club)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="editPendingFiles().length > 0"
+                    (click)="startDelete(club.id)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </article>
+    } @empty {
+      <p>You have no clubs yet.</p>
+    }
+  }
+</div>

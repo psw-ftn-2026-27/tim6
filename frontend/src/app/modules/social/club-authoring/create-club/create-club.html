@@ -1,0 +1,54 @@
+<div class="card stack">
+  <h1>Create club</h1>
+
+  <form class="stack" (submit)="submit($event)">
+    <div class="field">
+      <label for="name">Name</label>
+      <input id="name" type="text" [formField]="form.name" />
+      @if (form.name().touched()) {
+        @for (message of form.name().errors(); track $index) {
+          <p class="error">{{ message.message }}</p>
+        }
+      }
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" rows="6" [formField]="form.description"></textarea>
+      @if (form.description().touched()) {
+        @for (message of form.description().errors(); track $index) {
+          <p class="error">{{ message.message }}</p>
+        }
+      }
+    </div>
+
+    <div class="field">
+      <app-image-upload
+        [images]="images()"
+        [pending]="pendingFiles()"
+        [errors]="imageErrors()"
+        [maxImages]="maxImages"
+        (filesSelected)="uploadFiles($event)"
+        (removeImage)="removeImage($event)"
+      />
+      @if (imageMissing() && images().length === 0) {
+        <p class="error">At least one image is required.</p>
+      }
+    </div>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <div class="actions">
+      <button
+        class="button button--primary"
+        type="submit"
+        [disabled]="pending() || pendingFiles().length > 0"
+      >
+        Create
+      </button>
+      <a class="button" routerLink="/social/clubs/mine">Cancel</a>
+    </div>
+  </form>
+</div>

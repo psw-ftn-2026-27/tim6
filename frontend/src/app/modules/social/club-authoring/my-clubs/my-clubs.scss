@@ -1,0 +1,26 @@
+.page-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+a.button {
+  text-decoration: none;
+}
+
+.club {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.club-image {
+  border-radius: var(--radius);
+  height: 8rem;
+  object-fit: cover;
+  width: 8rem;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
