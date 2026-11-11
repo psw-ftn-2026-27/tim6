@@ -15,49 +15,57 @@
     <table class="table">
       <thead>
         <tr>
-          <th scope="col">Title</th>
+          <th scope="col">Image</th>
+          <th class="middle" scope="col">Title</th>
           <th scope="col">Status</th>
           <th scope="col">Created</th>
           <th scope="col">Last modified</th>
           <th scope="col">Comments</th>
-          <th scope="col">Actions</th>
+          <th class="centered" scope="col">Actions</th>
         </tr>
       </thead>
       <tbody>
         @for (blog of blogs.value() ?? []; track blog.id) {
           <tr>
-            <td>{{ blog.title }}</td>
+            <td>
+              @if (blog.images.length > 0) {
+                <img class="thumbnail" [src]="blog.images[0]" alt="" />
+              }
+            </td>
+            <td class="middle">{{ blog.title }}</td>
             <td>{{ blog.status }}</td>
             <td>{{ blog.createdAt.slice(0, 10) }}</td>
             <td>{{ blog.lastModifiedAt.slice(0, 10) }}</td>
             <td>{{ blog.comments.length }}</td>
-            <td class="actions">
-              @if (blog.status === 'Draft' || blog.status === 'Published') {
-                <button
-                  class="button"
-                  type="button"
-                  [disabled]="pending() || pendingFiles().length > 0"
-                  (click)="startEdit(blog)"
-                >
-                  Edit
-                </button>
-              }
-              @if (blog.status === 'Draft') {
-                <button
-                  class="button button--primary"
-                  type="button"
-                  [disabled]="pending()"
-                  (click)="publish(blog.id)"
-                >
-                  Publish
-                </button>
-              }
+            <td class="centered">
+              <div class="row-actions">
+                @if (blog.status === 'Draft' || blog.status === 'Published') {
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="pending() || pendingFiles().length > 0"
+                    (click)="startEdit(blog)"
+                  >
+                    Edit
+                  </button>
+                }
+                @if (blog.status === 'Draft') {
+                  <button
+                    class="button button--primary"
+                    type="button"
+                    [disabled]="pending()"
+                    (click)="publish(blog.id)"
+                  >
+                    Publish
+                  </button>
+                }
+              </div>
             </td>
           </tr>
 
           @if (selectedBlogId() === blog.id) {
             <tr>
-              <td colspan="6">
+              <td colspan="7">
                 <form class="stack" (submit)="saveEdit($event)">
                   <h2>Edit blog</h2>
 
@@ -128,7 +136,7 @@
           }
         } @empty {
           <tr>
-            <td colspan="6">You have no blogs yet.</td>
+            <td colspan="7">You have no blogs yet.</td>
           </tr>
         }
       </tbody>

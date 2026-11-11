@@ -2,3 +2,29 @@
   display: flex;
   gap: var(--space-2);
 }
+
+.thumbnail {
+  border-radius: var(--radius);
+  display: block;
+  height: 3rem;
+  object-fit: cover;
+  width: 4rem;
+}
+
+// The Title column, header and cells: left-aligned, centred vertically in the row.
+.middle {
+  vertical-align: middle;
+}
+
+// The Actions column, header and cells: centred both ways.
+.centered {
+  text-align: center;
+  vertical-align: middle;
+}
+
+// The buttons of a row, centred in their cell as one group, one button or two.
+.row-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}

@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { FormField, form, required } from '@angular/forms/signals';
-import { Router } from '@angular/router';
+import { FormField, form, pattern, required } from '@angular/forms/signals';
+import { Router, RouterLink } from '@angular/router';
 import {
   ImageUpload,
   ImageUploadError,
@@ -13,7 +13,7 @@ import { BlogAuthoring } from '../blog-authoring';
 
 @Component({
   host: { '(window:pagehide)': 'onPageHide()' },
-  imports: [FormField, ImageUpload],
+  imports: [FormField, ImageUpload, RouterLink],
   selector: 'app-create-blog',
   styleUrl: './create-blog.scss',
   templateUrl: './create-blog.html',
@@ -24,8 +24,12 @@ export class CreateBlog {
   private readonly router = inject(Router);
 
   protected readonly form = form(signal({ title: '', description: '' }), (path) => {
+    // required rejects only an empty value; pattern also rejects one made of spaces only,
+    // as the server does. pattern skips an empty value, so only one message shows.
     required(path.title, { message: 'Title is required.' });
+    pattern(path.title, /\S/, { message: 'Title is required.' });
     required(path.description, { message: 'Description is required.' });
+    pattern(path.description, /\S/, { message: 'Description is required.' });
   });
 
   protected readonly pending = signal(false);

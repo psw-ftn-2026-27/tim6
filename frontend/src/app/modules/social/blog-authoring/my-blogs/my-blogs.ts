@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { FormField, form, required } from '@angular/forms/signals';
+import { FormField, form, pattern, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import {
   ImageUpload,
@@ -34,8 +34,12 @@ export class MyBlogs {
   protected readonly editError = signal<string | null>(null);
 
   protected readonly form = form(signal({ title: '', description: '' }), (path) => {
+    // required rejects only an empty value; pattern also rejects one made of spaces only,
+    // as the server does. pattern skips an empty value, so only one message shows.
     required(path.title, { message: 'Title is required.' });
+    pattern(path.title, /\S/, { message: 'Title is required.' });
     required(path.description, { message: 'Description is required.' });
+    pattern(path.description, /\S/, { message: 'Description is required.' });
   });
 
   // The image section of the edit form.
