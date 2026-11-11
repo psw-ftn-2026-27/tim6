@@ -16,7 +16,7 @@
     @for (club of clubs.value() ?? []; track club.id) {
       <article class="card">
         @if (editingClubId() === club.id) {
-          <form class="stack" (submit)="save($event, club.id)">
+          <form class="stack" (submit)="save($event, club)">
             <div class="field">
               <label for="name">Name</label>
               <input id="name" type="text" [formField]="editForm.name" />
@@ -87,7 +87,7 @@
                     class="button button--primary"
                     type="button"
                     [disabled]="pending()"
-                    (click)="remove(club.id)"
+                    (click)="remove(club)"
                   >
                     Confirm
                   </button>

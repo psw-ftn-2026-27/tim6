@@ -93,8 +93,9 @@ export class MyClubs {
     }
   }
 
-  // An image of the saved club is only taken off the list; one this form uploaded is
-  // also deleted from the server.
+  // An image of the saved club is only taken off the list, because Cancel must be able to
+  // bring it back; its file is deleted after a successful save. One this form uploaded is
+  // deleted from the server right away.
   protected async removeImage(reference: string): Promise<void> {
     this.editImageErrors.set([]);
     if (this.uploaded.includes(reference)) {
@@ -110,7 +111,7 @@ export class MyClubs {
     this.editImages.update((images) => images.filter((image) => image.reference !== reference));
   }
 
-  protected async save(event: Event, clubId: string): Promise<void> {
+  protected async save(event: Event, club: ClubDto): Promise<void> {
     event.preventDefault();
     const imageMissing = this.editImages().length === 0;
     this.editImageMissing.set(imageMissing);
@@ -122,9 +123,12 @@ export class MyClubs {
     this.editError.set(null);
     try {
       const images = this.editImages().map((image) => image.reference);
-      await this.clubAuthoring.update(clubId, { ...this.editForm().value(), images });
+      await this.clubAuthoring.update(club.id, { ...this.editForm().value(), images });
       // The club now owns the images, so closing the form must not delete them.
       this.uploaded = [];
+      // The images taken off the club are no longer used by anyone.
+      const removed = club.images.filter((reference) => !images.includes(reference));
+      this.imageUploading.deleteAll(removed, false);
       this.cancelEdit();
       this.clubs.reload();
     } catch (failure) {
@@ -139,11 +143,13 @@ export class MyClubs {
     this.confirmingClubId.set(clubId);
   }
 
-  protected async remove(clubId: string): Promise<void> {
+  protected async remove(club: ClubDto): Promise<void> {
     this.pending.set(true);
     this.error.set(null);
     try {
-      await this.clubAuthoring.delete(clubId);
+      await this.clubAuthoring.delete(club.id);
+      // Only after the club is gone are its images no longer used.
+      this.imageUploading.deleteAll(club.images, false);
       this.confirmingClubId.set(null);
       this.clubs.reload();
     } catch (failure) {
