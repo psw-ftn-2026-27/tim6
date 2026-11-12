@@ -34,7 +34,8 @@
               "node_modules/leaflet/dist/leaflet.css",
               "src/styles.scss",
               "src/app/shared/geographic-map/geographic-map-leaflet.scss"
-            ]
+            ],
+            "externalDependencies": ["marked-katex-extension"]
           },
           "configurations": {
             "production": {
