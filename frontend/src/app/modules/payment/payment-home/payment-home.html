@@ -1,0 +1,18 @@
+<div class="stack">
+  <h1>Payment</h1>
+
+  @if (error()) {
+    <p class="notice notice--danger" role="alert">{{ error() }}</p>
+  }
+
+  <p>
+    <button
+      class="button button--primary"
+      type="button"
+      [disabled]="pending()"
+      (click)="openWallet()"
+    >
+      Moj novčanik
+    </button>
+  </p>
+</div>

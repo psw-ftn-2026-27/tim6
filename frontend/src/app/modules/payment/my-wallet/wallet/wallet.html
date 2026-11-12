@@ -1,0 +1,62 @@
+<div class="stack">
+  <p><a routerLink="/payment">Nazad</a></p>
+
+  <h1>Moj novčanik</h1>
+
+  @if (wallet.isLoading()) {
+    <p>Učitavanje novčanika...</p>
+  } @else if (notFound()) {
+    <div class="empty">
+      <p>Novčanik ne postoji.</p>
+      <a class="button button--primary" routerLink="/payment">Idi na Payment</a>
+    </div>
+  } @else if (wallet.error()) {
+    <p class="notice notice--danger" role="alert">
+      Novčanik nije moguće učitati. Prijavite se i pokušajte ponovo.
+    </p>
+  } @else {
+    @if (wallet.value(); as current) {
+      <div class="card balance">
+        <p class="meta">Stanje</p>
+        <p class="balance__amount">{{ current.balance }} EC</p>
+      </div>
+
+      <h2>Transakcije</h2>
+
+      @if (current.transactions.length === 0) {
+        <div class="empty">
+          <p>Još nema transakcija.</p>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Iznos</th>
+                <th>Vreme uplate</th>
+                <th>Storniranje</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (transaction of current.transactions; track transaction.id) {
+                <tr [class.cancelled]="transaction.isCancelled">
+                  <td>{{ transaction.amount }} EC</td>
+                  <td>{{ time(transaction.createdAt) }}</td>
+                  <td>
+                    @if (transaction.isCancelled) {
+                      <span class="badge badge--danger">stornirana</span>
+                      @if (transaction.cancelledAt) {
+                        <p class="meta">{{ time(transaction.cancelledAt) }}</p>
+                      }
+                      <p class="meta">{{ transaction.cancellationReason }}</p>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</div>
