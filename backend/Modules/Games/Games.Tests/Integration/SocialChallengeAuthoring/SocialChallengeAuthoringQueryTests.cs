@@ -18,7 +18,10 @@ public class SocialChallengeAuthoringQueryTests : BaseIntegrationTest
 
         var challenges = await client.GetFromJsonAsync<List<SocialChallengeDto>>("/api/games/social-challenges", JsonOptions);
 
-        var expected = SocialChallengeSeed.All.OrderByDescending(challenge => challenge.CreatedAt).Select(challenge => new SocialChallengeDto(
+        var expected = SocialChallengeSeed.All
+            .OrderByDescending(challenge => challenge.CreatedAt.Ticks / TimeSpan.TicksPerMicrosecond)
+            .ThenBy(challenge => challenge.Id)
+            .Select(challenge => new SocialChallengeDto(
             challenge.Id,
             challenge.Name,
             challenge.Status,
@@ -26,7 +29,20 @@ public class SocialChallengeAuthoringQueryTests : BaseIntegrationTest
             challenge.RequiredPeople,
             challenge.RangeInMeters,
             challenge.Xp,
-            challenge.ExitMessage));
+            challenge.ExitMessage,
+            challenge.Location is null ? null : new LocationDto(challenge.Location.Latitude, challenge.Location.Longitude)));
         challenges.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering());
+    }
+
+    [Fact]
+    public async Task Administrator_sees_the_location_of_a_social_challenge()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var challenges = await client.GetFromJsonAsync<List<SocialChallengeDto>>("/api/games/social-challenges", JsonOptions);
+
+        var seeded = SocialChallengeSeed.LocatedDraftFortressSunset;
+        challenges!.Single(challenge => challenge.Id == seeded.Id).Location
+            .Should().Be(new LocationDto(seeded.Location!.Latitude, seeded.Location.Longitude));
     }
 }

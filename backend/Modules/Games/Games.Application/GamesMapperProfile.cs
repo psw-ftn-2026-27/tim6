@@ -10,5 +10,6 @@ public sealed class GamesMapperProfile : Profile
     {
         CreateMap<SocialChallenge, SocialChallengeDto>();
         CreateMap<DailyTimeWindow, DailyTimeWindowDto>();
+        CreateMap<Location, LocationDto>();
     }
 }

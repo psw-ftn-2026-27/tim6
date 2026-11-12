@@ -91,6 +91,15 @@
               }
             </div>
 
+            <div class="field">
+              <span class="field-label">Lokacija</span>
+              <app-geographic-map
+                [pins]="editSavedPins()"
+                [selectionEnabled]="true"
+                (locationSelected)="onLocationSelected($event)"
+              />
+            </div>
+
             @if (editError()) {
               <p class="error">{{ editError() }}</p>
             }
@@ -111,12 +120,12 @@
         } @else {
           <app-challenge-card
             [challenge]="challenge"
-            [confirming]="confirmingChallengeId() === challenge.id"
+            [confirming]="confirmingChallengeId() === challenge.id ? confirmingAction() : null"
             [pending]="pending()"
             (edit)="startEdit(challenge)"
-            (startDelete)="startDelete(challenge.id)"
-            (confirmDelete)="remove(challenge)"
-            (cancelDelete)="confirmingChallengeId.set(null)"
+            (startAction)="startAction(challenge.id, $event)"
+            (confirmAction)="runAction(challenge, $event)"
+            (cancelAction)="cancelAction()"
           />
         }
       } @empty {

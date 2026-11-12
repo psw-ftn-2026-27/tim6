@@ -1,5 +1,6 @@
 using Games.Application;
 using Games.Application.SocialChallengeAuthoring;
+using Games.Application.SocialChallengePublishing;
 using Games.Application.SocialChallenges;
 using Games.Infrastructure.Persistence;
 using Games.Infrastructure.Persistence.SocialChallenges;
@@ -23,6 +24,7 @@ public static class GamesModuleExtensions
 
         services.AddScoped<SocialChallengeAuthoringService>();
         services.AddScoped<SocialChallengeAuthoringQueries>();
+        services.AddScoped<SocialChallengePublishingService>();
 
         return services;
     }

@@ -10,4 +10,5 @@ public sealed record SocialChallengeDto(
     int RequiredPeople,
     int RangeInMeters,
     int Xp,
-    string ExitMessage);
+    string ExitMessage,
+    LocationDto? Location);

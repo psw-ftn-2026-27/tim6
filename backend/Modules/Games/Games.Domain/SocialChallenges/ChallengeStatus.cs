@@ -2,5 +2,8 @@ namespace Games.Domain.SocialChallenges;
 
 public enum ChallengeStatus
 {
-    Draft
+    Draft,
+    Published,
+    Retired,
+    Archived
 }

@@ -81,6 +81,14 @@
         }
       </div>
 
+      <div class="field">
+        <span class="field-label">Lokacija</span>
+        <app-geographic-map
+          [selectionEnabled]="true"
+          (locationSelected)="onLocationSelected($event)"
+        />
+      </div>
+
       <div class="actions">
         <button
           class="button button--primary"

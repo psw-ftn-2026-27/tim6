@@ -1,8 +1,13 @@
-export type ChallengeStatus = 'Draft';
+export type ChallengeStatus = 'Draft' | 'Published' | 'Retired' | 'Archived';
 
 export interface DailyTimeWindowDto {
   start: string;
   end: string;
+}
+
+export interface LocationDto {
+  latitude: number;
+  longitude: number;
 }
 
 export interface SocialChallengeDto {
@@ -14,6 +19,7 @@ export interface SocialChallengeDto {
   rangeInMeters: number;
   xp: number;
   exitMessage: string;
+  location: LocationDto | null;
 }
 
 export interface CreateSocialChallengeDto {
@@ -23,6 +29,7 @@ export interface CreateSocialChallengeDto {
   rangeInMeters: number;
   xp: number;
   exitMessage: string;
+  location: LocationDto | null;
 }
 
 export interface UpdateSocialChallengeDto {
@@ -32,4 +39,5 @@ export interface UpdateSocialChallengeDto {
   rangeInMeters: number;
   xp: number;
   exitMessage: string;
+  location: LocationDto | null;
 }

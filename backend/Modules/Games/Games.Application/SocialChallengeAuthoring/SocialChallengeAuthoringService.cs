@@ -22,8 +22,9 @@ public sealed class SocialChallengeAuthoringService
     public async Task<SocialChallengeDto> CreateAsync(CreateSocialChallengeDto dto)
     {
         var timeWindow = new DailyTimeWindow(dto.TimeWindow.Start, dto.TimeWindow.End);
+        var location = dto.Location is null ? null : new Location(dto.Location.Latitude, dto.Location.Longitude);
         var challenge = new SocialChallenge(dto.Name, timeWindow, dto.RequiredPeople, dto.RangeInMeters, dto.Xp,
-            dto.ExitMessage);
+            dto.ExitMessage, location);
 
         _challengeRepository.Add(challenge);
         await _unitOfWork.SaveChangesAsync();
@@ -36,7 +37,9 @@ public sealed class SocialChallengeAuthoringService
         var challenge = await GetChallengeAsync(challengeId);
 
         var timeWindow = new DailyTimeWindow(dto.TimeWindow.Start, dto.TimeWindow.End);
-        challenge.Edit(dto.Name, timeWindow, dto.RequiredPeople, dto.RangeInMeters, dto.Xp, dto.ExitMessage);
+        var location = dto.Location is null ? null : new Location(dto.Location.Latitude, dto.Location.Longitude);
+        challenge.Edit(dto.Name, timeWindow, dto.RequiredPeople, dto.RangeInMeters, dto.Xp, dto.ExitMessage,
+            location);
         await _unitOfWork.SaveChangesAsync();
     }
 
