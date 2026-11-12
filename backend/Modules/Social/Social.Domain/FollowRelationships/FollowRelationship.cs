@@ -45,15 +45,7 @@ public sealed class FollowRelationship : AggregateRoot
         var request = new FollowRequest(senderId, recipientId);
         _requests.Add(request);
 
-        var crossedRequest = _requests.FirstOrDefault(other =>
-            other.SenderId == recipientId && other.Status == FollowRequestStatus.Pending);
-        if (crossedRequest is not null)
-        {
-            crossedRequest.Accept();
-            SetFollows(recipientId, true);
-        }
-
-        if (crossedRequest is not null || Follows(recipientId))
+        if (Follows(recipientId))
         {
             request.Accept();
             SetFollows(senderId, true);

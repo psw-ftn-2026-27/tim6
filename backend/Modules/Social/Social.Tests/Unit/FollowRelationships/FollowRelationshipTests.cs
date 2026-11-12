@@ -14,7 +14,8 @@ public class FollowRelationshipTests
     private static FollowRelationship CreateMutualFollow()
     {
         var relationship = CreateRelationship();
-        relationship.SendRequest(WellKnownUsers.Explorer);
+        var request = relationship.SendRequest(WellKnownUsers.Explorer);
+        relationship.AcceptRequest(request.Id, WellKnownUsers.SecondExplorer);
         relationship.SendRequest(WellKnownUsers.SecondExplorer);
         return relationship;
     }
@@ -76,16 +77,16 @@ public class FollowRelationshipTests
     }
 
     [Fact]
-    public void Crossed_pending_requests_are_both_accepted_and_both_users_follow_each_other()
+    public void Crossed_pending_requests_stay_pending_because_neither_user_follows_the_other()
     {
         var relationship = CreateRelationship();
         relationship.SendRequest(WellKnownUsers.Explorer);
 
         relationship.SendRequest(WellKnownUsers.SecondExplorer);
 
-        relationship.Requests.Should().OnlyContain(request => request.Status == FollowRequestStatus.Accepted);
-        relationship.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Following);
-        relationship.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Following);
+        relationship.Requests.Should().OnlyContain(request => request.Status == FollowRequestStatus.Pending);
+        relationship.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Pending);
+        relationship.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Pending);
     }
 
     [Fact]

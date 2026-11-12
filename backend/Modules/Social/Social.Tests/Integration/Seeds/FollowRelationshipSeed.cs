@@ -14,7 +14,9 @@ internal static class FollowRelationshipSeed
         SecondExplorerRequestedExplorer.SendRequest(WellKnownUsers.SecondExplorer);
 
         AdministratorAndSecondExplorerFollowEachOther = new(WellKnownUsers.Administrator, WellKnownUsers.SecondExplorer);
-        AdministratorAndSecondExplorerFollowEachOther.SendRequest(WellKnownUsers.Administrator);
+        var administratorRequest =
+            AdministratorAndSecondExplorerFollowEachOther.SendRequest(WellKnownUsers.Administrator);
+        AdministratorAndSecondExplorerFollowEachOther.AcceptRequest(administratorRequest.Id, WellKnownUsers.SecondExplorer);
         AdministratorAndSecondExplorerFollowEachOther.SendRequest(WellKnownUsers.SecondExplorer);
     }
 

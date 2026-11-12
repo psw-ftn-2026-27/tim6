@@ -45,7 +45,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Crossed_requests_sent_through_HTTP_accept_both()
+    public async Task Crossed_requests_sent_through_HTTP_stay_pending()
     {
         var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
@@ -57,9 +57,9 @@ public class FollowingCommandTests : BaseIntegrationTest
         using var assertContext = Factory.CreateContext<SocialDbContext>();
         var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
         stored.Requests.Should().HaveCount(relationship.Requests.Count + 1);
-        stored.Requests.Should().OnlyContain(request => request.Status == FollowRequestStatus.Accepted);
-        stored.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Following);
-        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Following);
+        stored.Requests.Should().OnlyContain(request => request.Status == FollowRequestStatus.Pending);
+        stored.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Pending);
+        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Pending);
     }
 
     [Fact]
