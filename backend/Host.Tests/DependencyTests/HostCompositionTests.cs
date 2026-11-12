@@ -12,6 +12,7 @@ public class HostCompositionTests : BaseArchitectureTests
         var forbidden = Modules
             .SelectMany(module => new[] { $"{module}.Domain", $"{module}.Application", $"{module}.Contracts" })
             .Append("Shared.Application")
+            .Append("Identity.Contracts")
             .ToArray();
         AssertNoDependency("Host.Api", forbidden);
     }

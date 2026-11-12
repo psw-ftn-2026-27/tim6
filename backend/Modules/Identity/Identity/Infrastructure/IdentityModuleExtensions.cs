@@ -1,4 +1,5 @@
 using Identity.Core;
+using Identity.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ public static class IdentityModuleExtensions
         services.AddModuleDbContext<IdentityModuleDbContext>(configuration, "identity");
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.AddScoped<JwtTokenFactory>();
+        services.AddScoped<IIdentityApi, IdentityApi>();
         services.AddHostedService<IdentityModuleInitializer>();
 
         services.AddIdentityCore<ApplicationUser>(options => options.User.RequireUniqueEmail = true)
