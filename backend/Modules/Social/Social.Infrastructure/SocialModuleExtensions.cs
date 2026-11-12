@@ -8,11 +8,12 @@ using Social.Application.BlogReading;
 using Social.Application.Blogs;
 using Social.Application.FollowRelationships;
 using Social.Application.Following;
+using Social.Application.ClubAuthoring;
+using Social.Application.ClubReading;
+using Social.Application.Clubs;
 using Social.Infrastructure.Persistence;
 using Social.Infrastructure.Persistence.Blogs;
 using Social.Infrastructure.Persistence.FollowRelationships;
-using Social.Application.ClubAuthoring;
-using Social.Application.Clubs;
 using Social.Infrastructure.Persistence.Clubs;
 
 namespace Social.Infrastructure;
@@ -41,6 +42,7 @@ public static class SocialModuleExtensions
         services.AddScoped<FollowingQueries>();
         services.AddScoped<ClubAuthoringService>();
         services.AddScoped<ClubAuthoringQueries>();
+        services.AddScoped<ClubReadingQueries>();
 
         return services;
     }
