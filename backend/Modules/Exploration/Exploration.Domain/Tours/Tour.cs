@@ -16,16 +16,20 @@ public sealed class Tour : AggregateRoot
     public List<string> Tags { get; private set; }
     public TourStatus Status { get; private set; }
     public DateTime? PublishedAt { get; private set; }
+    public DateTime? ArchivedAt { get; private set; }
     public IReadOnlyList<TransportTime> TransportTimes => _transportTimes;
+    public RecommendedGroupSize RecommendedGroupSize { get; private set; }
 
     private Tour()
     {
         Name = null!;
         Description = null!;
         Tags = null!;
+        RecommendedGroupSize = null!;
     }
 
-    public Tour(Guid authorId, string name, string description, TourDifficulty difficulty, List<string> tags)
+    public Tour(Guid authorId, string name, string description, TourDifficulty difficulty, List<string> tags,
+        RecommendedGroupSize recommendedGroupSize)
         : base(Guid.NewGuid())
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -40,17 +44,26 @@ public sealed class Tour : AggregateRoot
         {
             throw new DomainException("A tour requires at least one tag.");
         }
+        if (recommendedGroupSize is null)
+        {
+            throw new DomainException("A tour requires a recommended group size.");
+        }
 
         AuthorId = authorId;
         Name = name;
         Description = description;
         Difficulty = difficulty;
         Tags = tags;
+        RecommendedGroupSize = recommendedGroupSize;
         Status = TourStatus.Draft;
     }
 
     public void AddTransportTime(TransportMode transport, int minutes)
     {
+        if (Status == TourStatus.Archived)
+        {
+            throw new DomainException("An archived tour cannot get a new transport time.");
+        }
         if (_transportTimes.Any(time => time.Transport == transport))
         {
             throw new DomainException($"The tour already has a time for {transport}.");
@@ -61,9 +74,9 @@ public sealed class Tour : AggregateRoot
 
     public void Publish()
     {
-        if (Status == TourStatus.Published)
+        if (Status != TourStatus.Draft)
         {
-            throw new DomainException("The tour is already published.");
+            throw new DomainException("Only a draft tour can be published.");
         }
         if (Description.Length < MinimumDescriptionLengthForPublishing)
         {
@@ -76,5 +89,27 @@ public sealed class Tour : AggregateRoot
 
         Status = TourStatus.Published;
         PublishedAt = DateTime.UtcNow;
+    }
+
+    public void Archive()
+    {
+        if (Status != TourStatus.Published)
+        {
+            throw new DomainException("Only a published tour can be archived.");
+        }
+
+        Status = TourStatus.Archived;
+        ArchivedAt = DateTime.UtcNow;
+    }
+
+    public void Activate()
+    {
+        if (Status != TourStatus.Archived)
+        {
+            throw new DomainException("Only an archived tour can be activated.");
+        }
+
+        Status = TourStatus.Published;
+        ArchivedAt = null;
     }
 }

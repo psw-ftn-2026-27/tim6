@@ -11,6 +11,9 @@ using Social.Application.Following;
 using Social.Infrastructure.Persistence;
 using Social.Infrastructure.Persistence.Blogs;
 using Social.Infrastructure.Persistence.FollowRelationships;
+using Social.Application.ClubAuthoring;
+using Social.Application.Clubs;
+using Social.Infrastructure.Persistence.Clubs;
 
 namespace Social.Infrastructure;
 
@@ -27,6 +30,8 @@ public static class SocialModuleExtensions
         services.AddScoped<IBlogReadRepository, BlogReadRepository>();
         services.AddScoped<IFollowRelationshipRepository, FollowRelationshipRepository>();
         services.AddScoped<IFollowRelationshipReadRepository, FollowRelationshipReadRepository>();
+        services.AddScoped<IClubRepository, ClubRepository>();
+        services.AddScoped<IClubReadRepository, ClubReadRepository>();
 
         services.AddScoped<BlogAuthoringService>();
         services.AddScoped<BlogAuthoringQueries>();
@@ -34,6 +39,8 @@ public static class SocialModuleExtensions
         services.AddScoped<BlogCommentingService>();
         services.AddScoped<FollowingService>();
         services.AddScoped<FollowingQueries>();
+        services.AddScoped<ClubAuthoringService>();
+        services.AddScoped<ClubAuthoringQueries>();
 
         return services;
     }

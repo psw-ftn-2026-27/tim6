@@ -5,10 +5,13 @@ namespace Social.Domain.Blogs;
 
 public sealed class Blog : AggregateRoot
 {
+    private const int MaxImages = 10;
+
     public Guid AuthorId { get; private set; }
     public string Title { get; private set; }
     public string Description { get; private set; }
     public DateTime CreatedAt { get; private set; }
+    public DateTime LastModifiedAt { get; private set; }
     public List<string> Images { get; private set; }
     public BlogStatus Status { get; private set; }
     private readonly List<Comment> _comments = [];
@@ -24,21 +27,29 @@ public sealed class Blog : AggregateRoot
     public Blog(Guid authorId, string title, string description, List<string>? images)
         : base(Guid.NewGuid())
     {
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            throw new DomainException("A blog requires a title.");
-        }
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            throw new DomainException("A blog requires a description.");
-        }
+        EnsureValidContent(title, description, images);
 
         AuthorId = authorId;
         Title = title;
         Description = description;
         CreatedAt = DateTime.UtcNow;
-        Images = images ?? [];
+        LastModifiedAt = CreatedAt;
+        Images = [.. images!];
         Status = BlogStatus.Draft;
+    }
+
+    public void Update(string title, string description, List<string>? images)
+    {
+        if (Status != BlogStatus.Draft && Status != BlogStatus.Published)
+        {
+            throw new DomainException("Only a draft or published blog can be updated.");
+        }
+        EnsureValidContent(title, description, images);
+
+        Title = title;
+        Description = description;
+        Images = [.. images!];
+        LastModifiedAt = DateTime.UtcNow;
     }
 
     public void Publish()
@@ -49,6 +60,16 @@ public sealed class Blog : AggregateRoot
         }
 
         Status = BlogStatus.Published;
+    }
+
+    public void Archive()
+    {
+        if (Status != BlogStatus.Published)
+        {
+            throw new DomainException("Only a published blog can be archived.");
+        }
+
+        Status = BlogStatus.Closed;
     }
 
     public void AddComment(Guid userId, string text)
@@ -70,6 +91,26 @@ public sealed class Blog : AggregateRoot
         EnsurePublished();
 
         _comments.Remove(GetOwnComment(commentId, userId));
+    }
+
+    private static void EnsureValidContent(string title, string description, List<string>? images)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new DomainException("A blog requires a title.");
+        }
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new DomainException("A blog requires a description.");
+        }
+        if (images is null || images.Count == 0)
+        {
+            throw new DomainException("A blog requires at least one image.");
+        }
+        if (images.Count > MaxImages)
+        {
+            throw new DomainException($"A blog can have at most {MaxImages} images.");
+        }
     }
 
     private void EnsurePublished()

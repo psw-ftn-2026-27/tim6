@@ -6,6 +6,8 @@ using Social.Domain.Blogs;
 using Social.Domain.FollowRelationships;
 using Social.Infrastructure.Persistence.Blogs;
 using Social.Infrastructure.Persistence.FollowRelationships;
+using Social.Domain.Clubs;
+using Social.Infrastructure.Persistence.Clubs;
 
 namespace Social.Infrastructure.Persistence;
 
@@ -28,11 +30,13 @@ internal sealed class SocialDbContext : DbContext, IUnitOfWork
             throw new DomainException("The data was changed by another request. Reload and try again.");
         }
     }
+    public DbSet<Club> Clubs => Set<Club>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasDefaultSchema("social");
         builder.ConfigureBlogs();
         builder.ConfigureFollowRelationships();
+        builder.ConfigureClubs();
     }
 }

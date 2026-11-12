@@ -7,6 +7,8 @@ import { FollowedUsers } from './following/followed-users/followed-users';
 import { Followers } from './following/followers/followers';
 import { ReceivedFollowRequests } from './following/received-follow-requests/received-follow-requests';
 import { SentFollowRequests } from './following/sent-follow-requests/sent-follow-requests';
+import { CreateClub } from './club-authoring/create-club/create-club';
+import { MyClubs } from './club-authoring/my-clubs/my-clubs';
 
 export const socialRoutes: Routes = [
   { path: '', component: BlogList },
@@ -16,5 +18,7 @@ export const socialRoutes: Routes = [
   { path: 'following', component: FollowedUsers },
   { path: 'followers/requests', component: ReceivedFollowRequests },
   { path: 'followers', component: Followers },
+  { path: 'clubs/mine', component: MyClubs },
+  { path: 'clubs/create', component: CreateClub },
   { path: ':id', component: BlogDetail },
 ];

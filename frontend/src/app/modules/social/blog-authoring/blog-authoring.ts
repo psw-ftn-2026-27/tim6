@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { BlogDto, CreateBlogDto } from '../api/social-api-types';
+import { BlogDto, CreateBlogDto, UpdateBlogDto } from '../api/social-api-types';
 
 const BASE_URL = '/api/social/blogs';
 
@@ -15,5 +15,13 @@ export class BlogAuthoring {
 
   async publish(id: string): Promise<void> {
     await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/publish`, {}));
+  }
+
+  async archive(id: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/archive`, {}));
+  }
+
+  async update(id: string, dto: UpdateBlogDto): Promise<void> {
+    await firstValueFrom(this.http.put<void>(`${BASE_URL}/${id}`, dto));
   }
 }

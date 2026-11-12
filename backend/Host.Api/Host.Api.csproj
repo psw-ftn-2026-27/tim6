@@ -10,6 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Shared\Shared.Api\Shared.Api.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity\Identity.csproj" />
     <ProjectReference Include="..\Modules\Exploration\Exploration.Api\Exploration.Api.csproj" />
     <ProjectReference Include="..\Modules\Exploration\Exploration.Infrastructure\Exploration.Infrastructure.csproj" />

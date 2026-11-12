@@ -19,6 +19,8 @@
           <th scope="col">Difficulty</th>
           <th scope="col">Status</th>
           <th scope="col">Transport times</th>
+          <th scope="col">Group size</th>
+          <th scope="col">Archived at</th>
           <th scope="col">Actions</th>
         </tr>
       </thead>
@@ -35,8 +37,11 @@
                 <span class="meta">none</span>
               }
             </td>
+            <td>{{ tour.recommendedGroupSize.min }}–{{ tour.recommendedGroupSize.max }}</td>
             <td class="actions">
-              <button class="button" type="button" (click)="select(tour.id)">Add time</button>
+              @if (tour.status !== 'Archived') {
+                <button class="button" type="button" (click)="select(tour.id)">Add time</button>
+              }
               @if (tour.status === 'Draft') {
                 <button
                   class="button button--primary"
@@ -47,11 +52,31 @@
                   Publish
                 </button>
               }
+              @if (tour.status === 'Published') {
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending()"
+                  (click)="archive(tour.id)"
+                >
+                  Archive
+                </button>
+              }
+              @if (tour.status === 'Archived') {
+                <button
+                  class="button button--primary"
+                  type="button"
+                  [disabled]="pending()"
+                  (click)="activate(tour.id)"
+                >
+                  Activate
+                </button>
+              }
             </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="5">You have no tours yet.</td>
+            <td colspan="7">You have no tours yet.</td>
           </tr>
         }
       </tbody>

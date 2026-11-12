@@ -42,6 +42,20 @@ public sealed class TourAuthoringController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:guid}/archive")]
+    public async Task<ActionResult> Archive(Guid id)
+    {
+        await _authoringService.ArchiveAsync(id, User.GetUserId());
+        return NoContent();
+    }
+
+    [HttpPost("{id:guid}/activate")]
+    public async Task<ActionResult> Activate(Guid id)
+    {
+        await _authoringService.ActivateAsync(id, User.GetUserId());
+        return NoContent();
+    }
+
     [HttpGet("mine")]
     public async Task<ActionResult<List<TourDto>>> GetMine()
     {

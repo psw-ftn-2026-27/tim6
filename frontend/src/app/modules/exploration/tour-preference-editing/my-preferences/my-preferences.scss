@@ -1,0 +1,9 @@
+.card {
+  margin-inline: auto;
+  max-width: 32rem;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}

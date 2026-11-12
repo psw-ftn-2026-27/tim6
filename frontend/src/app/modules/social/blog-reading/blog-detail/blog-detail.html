@@ -15,7 +15,25 @@
 
       <p>{{ blog.description }}</p>
 
-      <p class="meta">Status: {{ blog.status }}</p>
+      <div class="images">
+        @for (image of blog.images; track image) {
+          <img [src]="image" alt="" />
+        }
+      </div>
+
+      <p class="meta">
+        Status:
+        @if (blog.status === 'Closed') {
+          Archived
+        } @else {
+          {{ blog.status }}
+        }
+      </p>
+
+      <p class="meta">
+        Created: {{ blog.createdAt.slice(0, 10) }}, last modified:
+        {{ blog.lastModifiedAt.slice(0, 10) }}
+      </p>
 
       <p class="meta">Author: {{ blog.authorId }}</p>
 
@@ -32,6 +50,7 @@
       <app-blog-comments
         [comments]="blog.comments"
         [currentUserId]="auth.user()?.id ?? null"
+        [commentsOpen]="blog.status === 'Published'"
         (addComment)="add($event)"
         (editComment)="edit($event)"
         (deleteComment)="remove($event)"
