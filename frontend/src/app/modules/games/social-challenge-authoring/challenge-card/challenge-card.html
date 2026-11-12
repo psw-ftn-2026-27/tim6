@@ -1,0 +1,57 @@
+<article class="card stack">
+  <div class="header">
+    <h2>{{ challenge().name }}</h2>
+    <span class="meta">
+      @switch (challenge().status) {
+        @case ('Draft') {
+          Nacrt
+        }
+      }
+    </span>
+  </div>
+
+  <dl class="details">
+    <div>
+      <dt>Doba dana</dt>
+      <dd>
+        {{ shortTime(challenge().timeWindow.start) }}–{{ shortTime(challenge().timeWindow.end) }}
+      </dd>
+    </div>
+    <div>
+      <dt>Potreban broj ljudi</dt>
+      <dd>{{ challenge().requiredPeople }}</dd>
+    </div>
+    <div>
+      <dt>XP</dt>
+      <dd>{{ challenge().xp }}</dd>
+    </div>
+  </dl>
+
+  @if (challenge().status === 'Draft') {
+    @if (confirming()) {
+      <p>Da li sigurno želiš da obrišeš izazov „{{ challenge().name }}”?</p>
+      <div class="actions">
+        <button class="button" type="button" [disabled]="pending()" (click)="cancelDelete.emit()">
+          Otkaži
+        </button>
+        <button
+          class="button button--primary"
+          type="button"
+          [disabled]="pending()"
+          (click)="confirmDelete.emit()"
+        >
+          Potvrdi
+        </button>
+      </div>
+    } @else {
+      <div class="actions">
+        <button class="button" type="button" [disabled]="pending()" (click)="edit.emit()">
+          Izmeni
+        </button>
+        <button class="button" type="button" [disabled]="pending()" (click)="startDelete.emit()">
+          Obriši
+        </button>
+      </div>
+    }
+  }
+</article>
