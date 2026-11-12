@@ -1,0 +1,66 @@
+<div class="stack">
+  <h1>Requests</h1>
+
+  <app-follow-tabs active="requests" />
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (sent.isLoading() || received.isLoading()) {
+    <p>Loading follow requests...</p>
+  } @else if (sent.error() || received.error()) {
+    <p class="error">Could not load your follow requests. Log in and try again.</p>
+  } @else {
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">User</th>
+          <th scope="col">Type</th>
+          <th scope="col">Date</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (request of rows(); track request.direction + request.id) {
+          <tr>
+            <td>{{ request.userId }}</td>
+            <td>{{ request.direction === 'sent' ? 'Sent' : 'Received' }}</td>
+            <td>{{ request.createdAt }}</td>
+            <td>
+              @if (request.direction === 'sent') {
+                <button class="button" type="button" [disabled]="pending()" (click)="cancel(request.id)">
+                  Cancel
+                </button>
+              } @else {
+                <button
+                  class="button button--primary"
+                  type="button"
+                  [disabled]="pending()"
+                  (click)="accept(request.id)"
+                >
+                  Accept
+                </button>
+                <button class="button" type="button" [disabled]="pending()" (click)="reject(request.id)">
+                  Reject
+                </button>
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending()"
+                  (click)="acceptAndFollowBack(request.id)"
+                >
+                  Accept &amp; follow back
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4">You have no follow requests.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

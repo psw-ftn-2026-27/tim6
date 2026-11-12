@@ -1,3 +1,3 @@
 namespace Social.Application.Following;
 
-public sealed record FollowerDto(Guid UserId, bool IsFollowedBack);
+public sealed record FollowerDto(Guid UserId, bool IsFollowedBack, bool HasPendingRequest);

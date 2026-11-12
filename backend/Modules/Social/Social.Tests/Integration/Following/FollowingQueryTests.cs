@@ -102,4 +102,22 @@ public class FollowingQueryTests : BaseIntegrationTest
         followers!.Should().ContainSingle(follower => follower.UserId == WellKnownUsers.Explorer)
             .Which.IsFollowedBack.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task Followers_list_flags_a_pending_request_the_user_sent_to_a_follower()
+    {
+        var explorerClient = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var sendResponse = await explorerClient.PostAsync(
+            $"/api/social/users/{WellKnownUsers.SecondExplorer}/follow-requests", null);
+        var requestId = await sendResponse.Content.ReadFromJsonAsync<Guid>();
+        var secondExplorerClient = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+        await secondExplorerClient.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
+
+        var followers = await secondExplorerClient.GetFromJsonAsync<List<FollowerDto>>(
+            "/api/social/followers", JsonOptions);
+
+        var follower = followers!.Should().ContainSingle(candidate => candidate.UserId == WellKnownUsers.Explorer).Subject;
+        follower.IsFollowedBack.Should().BeFalse();
+        follower.HasPendingRequest.Should().BeTrue();
+    }
 }

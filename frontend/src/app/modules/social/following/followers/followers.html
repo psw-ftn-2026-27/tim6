@@ -1,7 +1,7 @@
 <div class="stack">
-  <p><a routerLink="/social">Back to blogs</a></p>
-
   <h1>Followers</h1>
+
+  <app-follow-tabs active="followers" />
 
   @if (error()) {
     <p class="error">{{ error() }}</p>
@@ -24,7 +24,11 @@
           <tr>
             <td>{{ follower.userId }}</td>
             <td>
-              @if (!follower.isFollowedBack) {
+              @if (follower.isFollowedBack) {
+                <span class="meta">Following</span>
+              } @else if (follower.hasPendingRequest) {
+                <span class="meta">Request sent</span>
+              } @else {
                 <button
                   class="button button--primary"
                   type="button"

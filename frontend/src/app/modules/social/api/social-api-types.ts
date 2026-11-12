@@ -67,6 +67,7 @@ export interface ReceivedFollowRequestDto {
 export interface FollowerDto {
   userId: string;
   isFollowedBack: boolean;
+  hasPendingRequest: boolean;
 }
   export interface ClubDto {
   id: string;

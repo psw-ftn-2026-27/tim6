@@ -55,14 +55,28 @@ internal sealed class FollowRelationshipReadRepository : IFollowRelationshipRead
     {
         var followersAsFirstUser = _dbContext.FollowRelationships
             .Where(relationship => relationship.FirstUserId == followedUserId && relationship.SecondFollowsFirst)
-            .Select(relationship => new { UserId = relationship.SecondUserId, IsFollowedBack = relationship.FirstFollowsSecond });
+            .Select(relationship => new
+            {
+                UserId = relationship.SecondUserId,
+                IsFollowedBack = relationship.FirstFollowsSecond,
+                HasPendingRequest = relationship.Requests.Any(request =>
+                    request.SenderId == followedUserId && request.Status == FollowRequestStatus.Pending)
+            });
 
         var followersAsSecondUser = _dbContext.FollowRelationships
             .Where(relationship => relationship.SecondUserId == followedUserId && relationship.FirstFollowsSecond)
-            .Select(relationship => new { UserId = relationship.FirstUserId, IsFollowedBack = relationship.SecondFollowsFirst });
+            .Select(relationship => new
+            {
+                UserId = relationship.FirstUserId,
+                IsFollowedBack = relationship.SecondFollowsFirst,
+                HasPendingRequest = relationship.Requests.Any(request =>
+                    request.SenderId == followedUserId && request.Status == FollowRequestStatus.Pending)
+            });
 
         var followers = await followersAsFirstUser.Concat(followersAsSecondUser).ToListAsync();
 
-        return followers.Select(follower => new FollowerDto(follower.UserId, follower.IsFollowedBack)).ToList();
+        return followers
+            .Select(follower => new FollowerDto(follower.UserId, follower.IsFollowedBack, follower.HasPendingRequest))
+            .ToList();
     }
 }

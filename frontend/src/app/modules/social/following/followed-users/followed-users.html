@@ -1,7 +1,7 @@
 <div class="stack">
-  <p><a routerLink="/social">Back to blogs</a></p>
+  <h1>Following</h1>
 
-  <h1>People I follow</h1>
+  <app-follow-tabs active="following" />
 
   @if (error()) {
     <p class="error">{{ error() }}</p>
@@ -30,7 +30,7 @@
                 [disabled]="pending()"
                 (click)="unfollow(user.userId)"
               >
-                Stop following
+                Unfollow
               </button>
             </td>
           </tr>

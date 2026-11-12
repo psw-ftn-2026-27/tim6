@@ -1,12 +1,12 @@
 import { httpResource } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { serverMessage } from '../../../../shared/util/server-message';
 import { FollowerDto } from '../../api/social-api-types';
+import { FollowTabs } from '../follow-tabs/follow-tabs';
 import { Following } from '../following';
 
 @Component({
-  imports: [RouterLink],
+  imports: [FollowTabs],
   selector: 'app-followers',
   styleUrl: './followers.scss',
   templateUrl: './followers.html',
