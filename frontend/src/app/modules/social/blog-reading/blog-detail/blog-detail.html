@@ -13,7 +13,7 @@
     @if (detail.value(); as blog) {
       <h1>{{ blog.title }}</h1>
 
-      <p>{{ blog.description }}</p>
+      <markdown [data]="blog.description" />
 
       <div class="images">
         @for (image of blog.images; track image) {
