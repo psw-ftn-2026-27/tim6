@@ -1,0 +1,19 @@
+.page-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+a.button {
+  text-decoration: none;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
