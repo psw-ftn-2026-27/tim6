@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { Component, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { MarkdownComponent } from 'ngx-markdown';
 import { Auth } from '../../../../core/auth/auth';
 import { serverMessage } from '../../../../shared/util/server-message';
 import { BlogDto, BlogFollowStatusDto } from '../../api/social-api-types';
@@ -10,7 +11,7 @@ import { BlogReading } from '../blog-reading';
 import { FollowButton } from '../follow-button/follow-button';
 
 @Component({
-  imports: [BlogComments, FollowButton, RouterLink],
+  imports: [BlogComments, FollowButton, MarkdownComponent, RouterLink],
   selector: 'app-blog-detail',
   styleUrl: './blog-detail.scss',
   templateUrl: './blog-detail.html',

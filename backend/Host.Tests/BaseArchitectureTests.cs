@@ -16,6 +16,7 @@ public abstract class BaseArchitectureTests
     protected static readonly Architecture Architecture = new ArchLoader()
         .LoadAssemblies(Modules
             .SelectMany(module => Layers.Select(layer => Assembly.Load($"{module}.{layer}")))
+            .Append(Assembly.Load("Identity.Contracts"))
             .Append(Assembly.Load("Identity"))
             .Append(Assembly.Load("Host.Api"))
             .Concat(SharedProjects.Select(Assembly.Load))

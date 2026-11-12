@@ -37,7 +37,8 @@ backend/
                                    capability                                [platform]
   Modules/
     Identity/
-      Identity/                    single project, platform-owned, see below [platform]
+      Identity/                    implementation project, platform-owned, see below [platform]
+      Identity.Contracts/          inter-module user lookup contract         [platform]
       Identity.Tests/                                                        [platform]
     <Name>/
       <Name>.Api/                  API controllers, speaking Application DTOs
@@ -75,7 +76,9 @@ The compiler enforces the layering instead of a reviewer having to spot it.
   `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 - `Infrastructure` references `Application`, `Domain`, and `Shared.Infrastructure`.
 - A module may reference another module's `Contracts` project and nothing else from it.
-- No module references `Identity`. Other modules carry a `UserId` as a plain ID.
+- No module references the `Identity` implementation project. Other modules carry a
+  `UserId` as a plain ID and may reference `Identity.Contracts` when they need the
+  user's basic identity data.
 - `Host.Api` references every module's `Infrastructure` (for DI) and `Api` (for controller
   discovery), plus the `Identity` project, `Shared.Infrastructure`, and `Shared.Api`.
 - The Shared image capability follows the same rules: `Shared.Application` references
@@ -103,16 +106,20 @@ platform decision. Do not change the version or add a license key.
 
 ## Identity
 
-Identity is a deliberate exception to the module structure: one platform-owned project
-that students use but never modify or reference. It holds ASP.NET Core Identity on the
-`identity` schema, register/login endpoints issuing JWTs, and role seeding at startup
+Identity is a deliberate exception to the module structure: one platform-owned
+implementation project plus the minimal `Identity.Contracts` project that other modules
+may reference. Students never modify or reference the implementation project. It holds
+ASP.NET Core Identity on the `identity` schema, register/login endpoints issuing JWTs,
+the `IIdentityApi` implementation for basic user lookup, and role seeding at startup
 (`administrator`, `explorer`); the details live in the project itself.
 
 What matters outside it: token validation is configured in `Host.Api`; role checks are
 `[Authorize(Roles = ...)]` attributes on controllers or actions. Controllers read the
 caller's ID with `User.GetUserId()` from `Shared.Api` and pass it to application
 services as an explicit `Guid userId` parameter. There is no ambient current-user
-abstraction.
+abstraction. When a module needs the email associated with a stored `UserId`, its server
+code calls `IIdentityApi` from `Identity.Contracts`; the contract is not exposed to the
+frontend.
 
 Migrations are added with `dotnet ef` (tool manifest in `.config/`), e.g.
 `dotnet ef migrations add X --project Modules/Identity/Identity --startup-project Host.Api --context IdentityModuleDbContext`.
