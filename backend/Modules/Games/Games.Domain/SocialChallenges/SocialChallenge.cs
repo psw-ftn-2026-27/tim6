@@ -5,6 +5,7 @@ namespace Games.Domain.SocialChallenges;
 
 public sealed class SocialChallenge : AggregateRoot
 {
+    private const int MaxNameLength = 200;
     private const int MinRequiredPeople = 2;
     private const int MaxRequiredPeople = 30;
     private const int MinRangeInMeters = 20;
@@ -75,6 +76,10 @@ public sealed class SocialChallenge : AggregateRoot
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new DomainException("A social challenge requires a name.");
+        }
+        if (name.Length > MaxNameLength)
+        {
+            throw new DomainException($"A social challenge name has at most {MaxNameLength} characters.");
         }
         if (string.IsNullOrWhiteSpace(exitMessage))
         {

@@ -1,123 +1,127 @@
-<div class="stack">
-  <div class="page-header">
-    <h1>Društveni izazovi</h1>
-    <a class="button button--primary" routerLink="/games/challenges/create">Nov izazov</a>
-  </div>
+@if (!isAdministrator()) {
+  <p class="error">Nemaš pristup ovoj stranici. Društvenim izazovima upravlja administrator.</p>
+} @else {
+  <div class="stack">
+    <div class="page-header">
+      <h1>Društveni izazovi</h1>
+      <a class="button button--primary" routerLink="/games/challenges/create">Nov izazov</a>
+    </div>
 
-  @if (error()) {
-    <p class="error">{{ error() }}</p>
-  }
-
-  @if (challenges.isLoading()) {
-    <p>Učitavanje izazova...</p>
-  } @else if (challenges.error()) {
-    <p class="error">Izazovi nisu učitani. Prijavite se kao administrator i pokušajte ponovo.</p>
-  } @else {
-    @for (challenge of challenges.value() ?? []; track challenge.id) {
-      @if (editingChallengeId() === challenge.id) {
-        <form class="card stack" (submit)="save($event, challenge)">
-          <div class="field">
-            <label for="name">Naziv</label>
-            <input id="name" type="text" [formField]="editForm.name" />
-            @if (editForm.name().touched()) {
-              @for (message of editForm.name().errors(); track $index) {
-                <p class="error">{{ message.message }}</p>
-              }
-            }
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label for="start">Početak</label>
-              <input id="start" type="time" step="1" [formField]="editForm.start" />
-              @if (editForm.start().touched()) {
-                @for (message of editForm.start().errors(); track $index) {
-                  <p class="error">{{ message.message }}</p>
-                }
-              }
-            </div>
-
-            <div class="field">
-              <label for="end">Kraj</label>
-              <input id="end" type="time" step="1" [formField]="editForm.end" />
-              @if (editForm.end().touched()) {
-                @for (message of editForm.end().errors(); track $index) {
-                  <p class="error">{{ message.message }}</p>
-                }
-              }
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="required-people">Potreban broj ljudi</label>
-            <input id="required-people" type="number" [formField]="editForm.requiredPeople" />
-            @if (editForm.requiredPeople().touched()) {
-              @for (message of editForm.requiredPeople().errors(); track $index) {
-                <p class="error">{{ message.message }}</p>
-              }
-            }
-          </div>
-
-          <div class="field">
-            <label for="range">Opseg u metrima</label>
-            <input id="range" type="number" [formField]="editForm.rangeInMeters" />
-            @if (editForm.rangeInMeters().touched()) {
-              @for (message of editForm.rangeInMeters().errors(); track $index) {
-                <p class="error">{{ message.message }}</p>
-              }
-            }
-          </div>
-
-          <div class="field">
-            <label for="xp">XP</label>
-            <input id="xp" type="number" [formField]="editForm.xp" />
-            @if (editForm.xp().touched()) {
-              @for (message of editForm.xp().errors(); track $index) {
-                <p class="error">{{ message.message }}</p>
-              }
-            }
-          </div>
-
-          <div class="field">
-            <label for="exit-message">Izlazna poruka</label>
-            <textarea id="exit-message" rows="3" [formField]="editForm.exitMessage"></textarea>
-            @if (editForm.exitMessage().touched()) {
-              @for (message of editForm.exitMessage().errors(); track $index) {
-                <p class="error">{{ message.message }}</p>
-              }
-            }
-          </div>
-
-          @if (editError()) {
-            <p class="error">{{ editError() }}</p>
-          }
-
-          <div class="actions">
-            <button
-              class="button button--primary"
-              type="submit"
-              [disabled]="!editForm().valid() || pending()"
-            >
-              Sačuvaj
-            </button>
-            <button class="button" type="button" [disabled]="pending()" (click)="cancelEdit()">
-              Otkaži
-            </button>
-          </div>
-        </form>
-      } @else {
-        <app-challenge-card
-          [challenge]="challenge"
-          [confirming]="confirmingChallengeId() === challenge.id"
-          [pending]="pending()"
-          (edit)="startEdit(challenge)"
-          (startDelete)="startDelete(challenge.id)"
-          (confirmDelete)="remove(challenge)"
-          (cancelDelete)="confirmingChallengeId.set(null)"
-        />
-      }
-    } @empty {
-      <p>Još nema izazova.</p>
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
     }
-  }
-</div>
+
+    @if (challenges.isLoading()) {
+      <p>Učitavanje izazova...</p>
+    } @else if (challenges.error()) {
+      <p class="error">Izazovi nisu učitani. Prijavite se kao administrator i pokušajte ponovo.</p>
+    } @else {
+      @for (challenge of challenges.value() ?? []; track challenge.id) {
+        @if (editingChallengeId() === challenge.id) {
+          <form class="card stack" (submit)="save($event, challenge)">
+            <div class="field">
+              <label for="name">Naziv</label>
+              <input id="name" type="text" [formField]="editForm.name" />
+              @if (editForm.name().touched()) {
+                @for (message of editForm.name().errors(); track $index) {
+                  <p class="error">{{ message.message }}</p>
+                }
+              }
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="start">Početak</label>
+                <input id="start" type="time" step="1" [formField]="editForm.start" />
+                @if (editForm.start().touched()) {
+                  @for (message of editForm.start().errors(); track $index) {
+                    <p class="error">{{ message.message }}</p>
+                  }
+                }
+              </div>
+
+              <div class="field">
+                <label for="end">Kraj</label>
+                <input id="end" type="time" step="1" [formField]="editForm.end" />
+                @if (editForm.end().touched()) {
+                  @for (message of editForm.end().errors(); track $index) {
+                    <p class="error">{{ message.message }}</p>
+                  }
+                }
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="required-people">Potreban broj ljudi</label>
+              <input id="required-people" type="number" [formField]="editForm.requiredPeople" />
+              @if (editForm.requiredPeople().touched()) {
+                @for (message of editForm.requiredPeople().errors(); track $index) {
+                  <p class="error">{{ message.message }}</p>
+                }
+              }
+            </div>
+
+            <div class="field">
+              <label for="range">Opseg u metrima</label>
+              <input id="range" type="number" [formField]="editForm.rangeInMeters" />
+              @if (editForm.rangeInMeters().touched()) {
+                @for (message of editForm.rangeInMeters().errors(); track $index) {
+                  <p class="error">{{ message.message }}</p>
+                }
+              }
+            </div>
+
+            <div class="field">
+              <label for="xp">XP</label>
+              <input id="xp" type="number" [formField]="editForm.xp" />
+              @if (editForm.xp().touched()) {
+                @for (message of editForm.xp().errors(); track $index) {
+                  <p class="error">{{ message.message }}</p>
+                }
+              }
+            </div>
+
+            <div class="field">
+              <label for="exit-message">Izlazna poruka</label>
+              <textarea id="exit-message" rows="3" [formField]="editForm.exitMessage"></textarea>
+              @if (editForm.exitMessage().touched()) {
+                @for (message of editForm.exitMessage().errors(); track $index) {
+                  <p class="error">{{ message.message }}</p>
+                }
+              }
+            </div>
+
+            @if (editError()) {
+              <p class="error">{{ editError() }}</p>
+            }
+
+            <div class="actions">
+              <button
+                class="button button--primary"
+                type="submit"
+                [disabled]="!editForm().valid() || pending()"
+              >
+                Sačuvaj
+              </button>
+              <button class="button" type="button" [disabled]="pending()" (click)="cancelEdit()">
+                Otkaži
+              </button>
+            </div>
+          </form>
+        } @else {
+          <app-challenge-card
+            [challenge]="challenge"
+            [confirming]="confirmingChallengeId() === challenge.id"
+            [pending]="pending()"
+            (edit)="startEdit(challenge)"
+            (startDelete)="startDelete(challenge.id)"
+            (confirmDelete)="remove(challenge)"
+            (cancelDelete)="confirmingChallengeId.set(null)"
+          />
+        }
+      } @empty {
+        <p>Još nema izazova.</p>
+      }
+    }
+  </div>
+}

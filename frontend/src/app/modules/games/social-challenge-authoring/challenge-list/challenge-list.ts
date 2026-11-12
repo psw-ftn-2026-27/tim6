@@ -1,7 +1,8 @@
 import { httpResource } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
-import { FormField, form, max, min, required } from '@angular/forms/signals';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormField, form, max, maxLength, min, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
+import { Auth } from '../../../../core/auth/auth';
 import { serverMessage } from '../../../../shared/util/server-message';
 import { SocialChallengeDto } from '../../api/games-api-types';
 import { ChallengeCard } from '../challenge-card/challenge-card';
@@ -15,6 +16,11 @@ import { SocialChallengeAuthoring } from '../social-challenge-authoring';
 })
 export class ChallengeList {
   private readonly socialChallengeAuthoring = inject(SocialChallengeAuthoring);
+  private readonly auth = inject(Auth);
+
+  protected readonly isAdministrator = computed(
+    () => this.auth.user()?.roles.includes('administrator') ?? false,
+  );
 
   protected readonly challenges = httpResource<SocialChallengeDto[]>(
     () => '/api/games/social-challenges',
@@ -40,6 +46,7 @@ export class ChallengeList {
     }),
     (path) => {
       required(path.name, { message: 'Naziv je obavezan.' });
+      maxLength(path.name, 200, { message: 'Naziv može imati najviše 200 znakova.' });
       required(path.start, { message: 'Početak je obavezan.' });
       required(path.end, { message: 'Kraj je obavezan.' });
       required(path.requiredPeople, { message: 'Potreban broj ljudi je obavezan.' });

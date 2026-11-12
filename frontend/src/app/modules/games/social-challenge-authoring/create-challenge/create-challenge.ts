@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
-import { FormField, form, max, min, required } from '@angular/forms/signals';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormField, form, max, maxLength, min, required } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
+import { Auth } from '../../../../core/auth/auth';
 import { serverMessage } from '../../../../shared/util/server-message';
 import { SocialChallengeAuthoring } from '../social-challenge-authoring';
 
@@ -13,6 +14,11 @@ import { SocialChallengeAuthoring } from '../social-challenge-authoring';
 export class CreateChallenge {
   private readonly socialChallengeAuthoring = inject(SocialChallengeAuthoring);
   private readonly router = inject(Router);
+  private readonly auth = inject(Auth);
+
+  protected readonly isAdministrator = computed(
+    () => this.auth.user()?.roles.includes('administrator') ?? false,
+  );
 
   // The time-window rules (start and end differ, 1 to 6 hours, may cross midnight) are
   // checked by the server; its message is shown above the form.
@@ -28,6 +34,7 @@ export class CreateChallenge {
     }),
     (path) => {
       required(path.name, { message: 'Naziv je obavezan.' });
+      maxLength(path.name, 200, { message: 'Naziv može imati najviše 200 znakova.' });
       required(path.start, { message: 'Početak je obavezan.' });
       required(path.end, { message: 'Kraj je obavezan.' });
       required(path.requiredPeople, { message: 'Potreban broj ljudi je obavezan.' });

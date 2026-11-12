@@ -12,13 +12,13 @@ public class SocialChallengeAuthoringQueryTests : BaseIntegrationTest
     public SocialChallengeAuthoringQueryTests(GamesApiFactory factory) : base(factory) { }
 
     [Fact]
-    public async Task Administrator_sees_every_social_challenge_with_its_data()
+    public async Task Administrator_sees_every_social_challenge_with_its_data_newest_first()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
 
         var challenges = await client.GetFromJsonAsync<List<SocialChallengeDto>>("/api/games/social-challenges", JsonOptions);
 
-        var expected = SocialChallengeSeed.All.Select(challenge => new SocialChallengeDto(
+        var expected = SocialChallengeSeed.All.OrderByDescending(challenge => challenge.CreatedAt).Select(challenge => new SocialChallengeDto(
             challenge.Id,
             challenge.Name,
             challenge.Status,
@@ -27,6 +27,6 @@ public class SocialChallengeAuthoringQueryTests : BaseIntegrationTest
             challenge.RangeInMeters,
             challenge.Xp,
             challenge.ExitMessage));
-        challenges.Should().BeEquivalentTo(expected);
+        challenges.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering());
     }
 }

@@ -32,6 +32,24 @@ public class SocialChallengeTests
         creation.Should().Throw<DomainException>();
     }
 
+    [Fact]
+    public void Social_challenge_with_a_name_of_two_hundred_characters_is_created()
+    {
+        var name = new string('a', 200);
+
+        var challenge = new SocialChallenge(name, CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!");
+
+        challenge.Name.Should().Be(name);
+    }
+
+    [Fact]
+    public void Social_challenge_name_longer_than_two_hundred_characters_is_rejected()
+    {
+        var creation = () => new SocialChallenge(new string('a', 201), CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!");
+
+        creation.Should().Throw<DomainException>();
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(31)]
@@ -78,6 +96,14 @@ public class SocialChallengeTests
         var creation = () => new SocialChallenge("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 0, "Svi ste se okupili!");
 
         creation.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Social_challenge_rewarding_one_xp_is_created()
+    {
+        var challenge = new SocialChallenge("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 1, "Svi ste se okupili!");
+
+        challenge.Xp.Should().Be(1);
     }
 
     [Fact]

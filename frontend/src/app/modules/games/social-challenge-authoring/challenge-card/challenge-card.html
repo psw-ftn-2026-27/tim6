@@ -1,7 +1,13 @@
 <article class="card stack">
   <div class="header">
     <h2>{{ challenge().name }}</h2>
-    <span class="meta">{{ challenge().status }}</span>
+    <span class="meta">
+      @switch (challenge().status) {
+        @case ('Draft') {
+          Nacrt
+        }
+      }
+    </span>
   </div>
 
   <dl class="details">
