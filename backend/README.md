@@ -54,7 +54,7 @@ Ovaj direktorijum sadrži module aplikacije. Ovde se odvija najveći deo rada ti
 
 ### Identity
 
-Modul `Identity` je izuzetak od strukture ostalih modula. To je projekat u vlasništvu platformskog tima, zadužen za registraciju i prijavu korisnika i za izdavanje JWT tokena. Ostali moduli ga ne referenciraju, već korisnika pamte samo preko njegovog identifikatora. Uz njega postoji i projekat `Identity.Tests`. Njegovi testovi koriste prave krajnje tačke za registraciju i prijavu, pa nisu uzor za testove funkcionalnih modula. Uzor su test projekti modula `Exploration` i `Social`.
+Modul `Identity` je izuzetak od strukture ostalih modula. Njegov implementacioni projekat je u vlasništvu platformskog tima, zadužen za registraciju i prijavu korisnika, izdavanje JWT tokena i čitanje osnovnog identiteta korisnika. Ostali moduli ne referenciraju implementaciju, već po potrebi koriste zaseban `Identity.Contracts` projekat da za poznati korisnički identifikator dobiju email. Uz njih postoji i projekat `Identity.Tests`. Njegovi testovi proveravaju krajnje tačke registracije i prijave i javni serverski ugovor; nisu uzor za testove funkcionalnih modula. Uzor su test projekti modula `Exploration` i `Social`.
 
 ### Funkcionalni moduli
 

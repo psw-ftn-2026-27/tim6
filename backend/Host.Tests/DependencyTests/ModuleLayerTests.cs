@@ -5,6 +5,17 @@ namespace Host.Tests.DependencyTests;
 // The layering inside a single module: which of its own projects and which Shared projects each layer may depend on.
 public class ModuleLayerTests : BaseArchitectureTests
 {
+    [Fact]
+    public void Identity_contracts_depends_on_nothing()
+    {
+        var forbidden = Modules
+            .SelectMany(module => Layers.Select(layer => $"{module}.{layer}"))
+            .Concat(SharedProjects)
+            .Append("Identity")
+            .ToArray();
+        AssertNoDependency("Identity.Contracts", forbidden);
+    }
+
     [Theory]
     [MemberData(nameof(ModuleNames))]
     public void Domain_depends_only_on_shared_domain(string module)
