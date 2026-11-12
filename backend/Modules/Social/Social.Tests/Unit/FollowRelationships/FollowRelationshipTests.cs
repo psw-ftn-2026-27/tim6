@@ -159,4 +159,106 @@ public class FollowRelationshipTests
 
         status.Should().Be(expected);
     }
+
+    [Fact]
+    public void Recipient_accepts_a_pending_request()
+    {
+        var relationship = CreateRelationship();
+        var request = relationship.SendRequest(WellKnownUsers.Explorer);
+
+        relationship.AcceptRequest(request.Id, WellKnownUsers.SecondExplorer);
+
+        relationship.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Following);
+        relationship.Requests.Single().Status.Should().Be(FollowRequestStatus.Accepted);
+    }
+
+    [Fact]
+    public void A_user_who_is_not_the_recipient_cannot_accept_the_request()
+    {
+        var relationship = CreateRelationship();
+        var request = relationship.SendRequest(WellKnownUsers.Explorer);
+
+        var accepting = () => relationship.AcceptRequest(request.Id, WellKnownUsers.Explorer);
+
+        accepting.Should().Throw<NotFoundException>();
+    }
+
+    [Theory]
+    [InlineData(FollowRequestStatus.Accepted)]
+    [InlineData(FollowRequestStatus.Rejected)]
+    public void A_request_that_is_not_pending_cannot_be_accepted(FollowRequestStatus status)
+    {
+        var relationship = CreateRelationship();
+        var request = relationship.SendRequest(WellKnownUsers.Explorer);
+        if (status == FollowRequestStatus.Accepted)
+        {
+            relationship.AcceptRequest(request.Id, WellKnownUsers.SecondExplorer);
+        }
+        else
+        {
+            relationship.RejectRequest(request.Id, WellKnownUsers.SecondExplorer);
+        }
+
+        var accepting = () => relationship.AcceptRequest(request.Id, WellKnownUsers.SecondExplorer);
+
+        accepting.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Recipient_rejects_a_pending_request()
+    {
+        var relationship = CreateRelationship();
+        var request = relationship.SendRequest(WellKnownUsers.Explorer);
+
+        relationship.RejectRequest(request.Id, WellKnownUsers.SecondExplorer);
+
+        relationship.Requests.Single().Status.Should().Be(FollowRequestStatus.Rejected);
+        relationship.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Follow);
+    }
+
+    [Fact]
+    public void A_user_who_is_not_the_recipient_cannot_reject_the_request()
+    {
+        var relationship = CreateRelationship();
+        var request = relationship.SendRequest(WellKnownUsers.Explorer);
+
+        var rejecting = () => relationship.RejectRequest(request.Id, WellKnownUsers.Explorer);
+
+        rejecting.Should().Throw<NotFoundException>();
+    }
+
+    [Theory]
+    [InlineData(FollowRequestStatus.Accepted)]
+    [InlineData(FollowRequestStatus.Rejected)]
+    public void A_request_that_is_not_pending_cannot_be_rejected(FollowRequestStatus status)
+    {
+        var relationship = CreateRelationship();
+        var request = relationship.SendRequest(WellKnownUsers.Explorer);
+        if (status == FollowRequestStatus.Accepted)
+        {
+            relationship.AcceptRequest(request.Id, WellKnownUsers.SecondExplorer);
+        }
+        else
+        {
+            relationship.RejectRequest(request.Id, WellKnownUsers.SecondExplorer);
+        }
+
+        var rejecting = () => relationship.RejectRequest(request.Id, WellKnownUsers.SecondExplorer);
+
+        rejecting.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Accept_then_send_establishes_mutual_follow_and_the_returning_request_is_accepted_at_once()
+    {
+        var relationship = CreateRelationship();
+        var request = relationship.SendRequest(WellKnownUsers.Explorer);
+
+        relationship.AcceptRequest(request.Id, WellKnownUsers.SecondExplorer);
+        var returningRequest = relationship.SendRequest(WellKnownUsers.SecondExplorer);
+
+        returningRequest.Status.Should().Be(FollowRequestStatus.Accepted);
+        relationship.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Following);
+        relationship.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Following);
+    }
 }

@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Auth } from '../../../../core/auth/auth';
 import { serverMessage } from '../../../../shared/util/server-message';
 import { BlogDto, BlogFollowStatusDto } from '../../api/social-api-types';
+import { Following } from '../../following/following';
 import { BlogComments, CommentEdit } from '../blog-comments/blog-comments';
 import { BlogReading } from '../blog-reading';
 import { FollowButton } from '../follow-button/follow-button';
@@ -16,6 +17,7 @@ import { FollowButton } from '../follow-button/follow-button';
 })
 export class BlogDetail {
   private readonly blogReading = inject(BlogReading);
+  private readonly following = inject(Following);
   protected readonly auth = inject(Auth);
 
   readonly id = input.required<string>();
@@ -33,7 +35,7 @@ export class BlogDetail {
     this.followPending.set(true);
     this.error.set(null);
     try {
-      await this.blogReading.sendFollowRequest(recipientId);
+      await this.following.sendFollowRequest(recipientId);
       this.followStatus.reload();
     } catch (failure) {
       this.error.set(serverMessage(failure, 'Could not send the follow request.'));

@@ -60,4 +60,46 @@ public class FollowingQueryTests : BaseIntegrationTest
         followedUserIds.Should().Contain(WellKnownUsers.Administrator);
         followedUserIds.Should().NotContain(WellKnownUsers.Explorer);
     }
+
+    [Fact]
+    public async Task Received_requests_list_shows_only_pending_requests_where_the_user_is_the_recipient()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+
+        var requests = await client.GetFromJsonAsync<List<ReceivedFollowRequestDto>>(
+            "/api/social/follow-requests/received", JsonOptions);
+
+        requests!.Select(request => request.SenderId).Should().Contain(WellKnownUsers.SecondExplorer);
+        requests.Should().OnlyContain(request => request.SenderId != WellKnownUsers.Administrator);
+    }
+
+    [Fact]
+    public async Task Followers_list_shows_only_users_who_currently_follow_the_user()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var followers = await client.GetFromJsonAsync<List<FollowerDto>>(
+            "/api/social/followers", JsonOptions);
+
+        var followerIds = followers!.Select(follower => follower.UserId).ToList();
+        followerIds.Should().Contain(WellKnownUsers.SecondExplorer);
+        followerIds.Should().NotContain(WellKnownUsers.Explorer);
+    }
+
+    [Fact]
+    public async Task Followers_list_flags_whether_the_user_already_follows_back()
+    {
+        var explorerClient = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var sendResponse = await explorerClient.PostAsync(
+            $"/api/social/users/{WellKnownUsers.Administrator}/follow-requests", null);
+        var requestId = await sendResponse.Content.ReadFromJsonAsync<Guid>();
+        var administratorClient = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+        await administratorClient.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
+
+        var followers = await administratorClient.GetFromJsonAsync<List<FollowerDto>>(
+            "/api/social/followers", JsonOptions);
+
+        followers!.Should().ContainSingle(follower => follower.UserId == WellKnownUsers.Explorer)
+            .Which.IsFollowedBack.Should().BeFalse();
+    }
 }

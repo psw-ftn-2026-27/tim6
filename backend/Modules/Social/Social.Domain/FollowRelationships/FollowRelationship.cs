@@ -68,17 +68,47 @@ public sealed class FollowRelationship : AggregateRoot
 
         var request = _requests.FirstOrDefault(candidate =>
             candidate.Id == requestId && candidate.SenderId == actorId);
+        var pending = GetPendingRequest(request);
+
+        _requests.Remove(pending);
+    }
+
+    public void AcceptRequest(Guid requestId, Guid actorId)
+    {
+        EnsureMember(actorId);
+
+        var request = _requests.FirstOrDefault(candidate =>
+            candidate.Id == requestId && candidate.RecipientId == actorId);
+        var pending = GetPendingRequest(request);
+
+        pending.Accept();
+        SetFollows(pending.SenderId, true);
+    }
+
+    public void RejectRequest(Guid requestId, Guid actorId)
+    {
+        EnsureMember(actorId);
+
+        var request = _requests.FirstOrDefault(candidate =>
+            candidate.Id == requestId && candidate.RecipientId == actorId);
+        var pending = GetPendingRequest(request);
+
+        pending.Reject();
+    }
+
+    private static FollowRequest GetPendingRequest(FollowRequest? request)
+    {
         if (request is null)
         {
-            throw new NotFoundException($"Follow request {requestId} does not exist.");
+            throw new NotFoundException("The follow request does not exist for this user.");
         }
 
         if (request.Status != FollowRequestStatus.Pending)
         {
-            throw new DomainException("Only a pending follow request can be cancelled.");
+            throw new DomainException("Only a pending follow request can be acted upon.");
         }
 
-        _requests.Remove(request);
+        return request;
     }
 
     public void Unfollow(Guid followerId, Guid actorId)

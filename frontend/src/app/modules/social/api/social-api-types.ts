@@ -50,3 +50,14 @@ export interface SentFollowRequestDto {
 export interface FollowedUserDto {
   userId: string;
 }
+
+export interface ReceivedFollowRequestDto {
+  id: string;
+  senderId: string;
+  createdAt: string;
+}
+
+export interface FollowerDto {
+  userId: string;
+  isFollowedBack: boolean;
+}

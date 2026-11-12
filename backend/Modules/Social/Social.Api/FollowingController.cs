@@ -56,4 +56,44 @@ public sealed class FollowingController : ControllerBase
     {
         return await _followingQueries.GetFollowedUsersAsync(User.GetUserId());
     }
+
+    [HttpPost("follow-requests/{requestId:guid}/accept")]
+    public async Task<ActionResult> AcceptFollowRequest(Guid requestId)
+    {
+        await _followingService.AcceptFollowRequestAsync(User.GetUserId(), requestId);
+        return NoContent();
+    }
+
+    [HttpPost("follow-requests/{requestId:guid}/reject")]
+    public async Task<ActionResult> RejectFollowRequest(Guid requestId)
+    {
+        await _followingService.RejectFollowRequestAsync(User.GetUserId(), requestId);
+        return NoContent();
+    }
+
+    [HttpPost("follow-requests/{requestId:guid}/accept-and-follow-back")]
+    public async Task<ActionResult> AcceptAndFollowBack(Guid requestId)
+    {
+        await _followingService.AcceptAndFollowBackAsync(User.GetUserId(), requestId);
+        return NoContent();
+    }
+
+    [HttpDelete("followers/{followerId:guid}")]
+    public async Task<ActionResult> RemoveFollower(Guid followerId)
+    {
+        await _followingService.RemoveFollowerAsync(User.GetUserId(), followerId);
+        return NoContent();
+    }
+
+    [HttpGet("follow-requests/received")]
+    public async Task<ActionResult<List<ReceivedFollowRequestDto>>> GetReceivedFollowRequests()
+    {
+        return await _followingQueries.GetReceivedRequestsAsync(User.GetUserId());
+    }
+
+    [HttpGet("followers")]
+    public async Task<ActionResult<List<FollowerDto>>> GetFollowers()
+    {
+        return await _followingQueries.GetFollowersAsync(User.GetUserId());
+    }
 }

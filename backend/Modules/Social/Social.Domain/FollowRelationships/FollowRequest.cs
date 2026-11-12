@@ -25,4 +25,10 @@ public sealed class FollowRequest : Entity
         Status = FollowRequestStatus.Accepted;
         RespondedAt = DateTime.UtcNow;
     }
+
+    internal void Reject()
+    {
+        Status = FollowRequestStatus.Rejected;
+        RespondedAt = DateTime.UtcNow;
+    }
 }

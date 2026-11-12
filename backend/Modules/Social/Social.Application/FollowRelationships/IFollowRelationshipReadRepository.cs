@@ -6,4 +6,6 @@ public interface IFollowRelationshipReadRepository
 {
     Task<List<SentFollowRequestDto>> GetSentRequestsAsync(Guid senderId);
     Task<List<FollowedUserDto>> GetFollowedUsersAsync(Guid followerId);
+    Task<List<ReceivedFollowRequestDto>> GetReceivedRequestsAsync(Guid recipientId);
+    Task<List<FollowerDto>> GetFollowersAsync(Guid followedUserId);
 }

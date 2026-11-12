@@ -128,4 +128,120 @@ public class FollowingCommandTests : BaseIntegrationTest
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task Recipient_accepts_a_pending_request()
+    {
+        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+
+        var response = await client.PostAsync(
+            $"/api/social/follow-requests/{relationship.Requests.Single().Id}/accept", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
+        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Following);
+    }
+
+    [Fact]
+    public async Task A_request_that_is_not_pending_cannot_be_accepted_through_HTTP()
+    {
+        var relationship = FollowRelationshipSeed.AdministratorAndSecondExplorerFollowEachOther;
+        var acceptedRequest = relationship.Requests.Single(request => request.SenderId == WellKnownUsers.Administrator);
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+
+        var response = await client.PostAsync($"/api/social/follow-requests/{acceptedRequest.Id}/accept", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_user_cannot_accept_a_follow_request()
+    {
+        var requestId = FollowRelationshipSeed.SecondExplorerRequestedExplorer.Requests.Single().Id;
+        var client = Factory.CreateClient();
+
+        var response = await client.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Recipient_rejects_a_pending_request()
+    {
+        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+
+        var response = await client.PostAsync(
+            $"/api/social/follow-requests/{relationship.Requests.Single().Id}/reject", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
+        stored.Requests.Single().Status.Should().Be(FollowRequestStatus.Rejected);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_user_cannot_reject_a_follow_request()
+    {
+        var requestId = FollowRelationshipSeed.SecondExplorerRequestedExplorer.Requests.Single().Id;
+        var client = Factory.CreateClient();
+
+        var response = await client.PostAsync($"/api/social/follow-requests/{requestId}/reject", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Accept_and_follow_back_establishes_mutual_follow()
+    {
+        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+
+        var response = await client.PostAsync(
+            $"/api/social/follow-requests/{relationship.Requests.Single().Id}/accept-and-follow-back", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
+        stored.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Following);
+        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Following);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_user_cannot_accept_and_follow_back()
+    {
+        var requestId = FollowRelationshipSeed.SecondExplorerRequestedExplorer.Requests.Single().Id;
+        var client = Factory.CreateClient();
+
+        var response = await client.PostAsync($"/api/social/follow-requests/{requestId}/accept-and-follow-back", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task User_removes_a_follower()
+    {
+        var relationship = FollowRelationshipSeed.AdministratorAndSecondExplorerFollowEachOther;
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var response = await client.DeleteAsync($"/api/social/followers/{WellKnownUsers.SecondExplorer}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
+        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Follow);
+        stored.GetFollowStatusFor(WellKnownUsers.Administrator).Should().Be(FollowStatus.Following);
+    }
+
+    [Fact]
+    public async Task Unauthenticated_user_cannot_remove_a_follower()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await client.DeleteAsync($"/api/social/followers/{WellKnownUsers.SecondExplorer}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 }

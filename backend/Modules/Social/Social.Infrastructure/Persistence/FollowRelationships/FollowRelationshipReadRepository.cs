@@ -41,4 +41,28 @@ internal sealed class FollowRelationshipReadRepository : IFollowRelationshipRead
 
         return followedUserIds.Select(userId => new FollowedUserDto(userId)).ToList();
     }
+
+    public Task<List<ReceivedFollowRequestDto>> GetReceivedRequestsAsync(Guid recipientId)
+    {
+        return _dbContext.Set<FollowRequest>()
+            .Where(request => request.RecipientId == recipientId && request.Status == FollowRequestStatus.Pending)
+            .OrderByDescending(request => request.CreatedAt)
+            .Select(request => new ReceivedFollowRequestDto(request.Id, request.SenderId, request.CreatedAt))
+            .ToListAsync();
+    }
+
+    public async Task<List<FollowerDto>> GetFollowersAsync(Guid followedUserId)
+    {
+        var followersAsFirstUser = _dbContext.FollowRelationships
+            .Where(relationship => relationship.FirstUserId == followedUserId && relationship.SecondFollowsFirst)
+            .Select(relationship => new { UserId = relationship.SecondUserId, IsFollowedBack = relationship.FirstFollowsSecond });
+
+        var followersAsSecondUser = _dbContext.FollowRelationships
+            .Where(relationship => relationship.SecondUserId == followedUserId && relationship.FirstFollowsSecond)
+            .Select(relationship => new { UserId = relationship.FirstUserId, IsFollowedBack = relationship.SecondFollowsFirst });
+
+        var followers = await followersAsFirstUser.Concat(followersAsSecondUser).ToListAsync();
+
+        return followers.Select(follower => new FollowerDto(follower.UserId, follower.IsFollowedBack)).ToList();
+    }
 }

@@ -1,0 +1,53 @@
+<div class="stack">
+  <p><a routerLink="/social">Back to blogs</a></p>
+
+  <h1>Received follow requests</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (requests.isLoading()) {
+    <p>Loading received follow requests...</p>
+  } @else if (requests.error()) {
+    <p class="error">Could not load your received follow requests. Log in and try again.</p>
+  } @else {
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">User</th>
+          <th scope="col">Sent</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (request of requests.value() ?? []; track request.id) {
+          <tr>
+            <td>{{ request.senderId }}</td>
+            <td>{{ request.createdAt }}</td>
+            <td>
+              <button class="button button--primary" type="button" [disabled]="pending()" (click)="accept(request.id)">
+                Accept
+              </button>
+              <button class="button" type="button" [disabled]="pending()" (click)="reject(request.id)">
+                Reject
+              </button>
+              <button
+                class="button"
+                type="button"
+                [disabled]="pending()"
+                (click)="acceptAndFollowBack(request.id)"
+              >
+                Accept &amp; Follow back
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3">You have no received follow requests.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

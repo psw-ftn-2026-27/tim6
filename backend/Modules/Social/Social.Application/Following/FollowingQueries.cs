@@ -60,4 +60,14 @@ public sealed class FollowingQueries
     {
         return _relationshipReadRepository.GetFollowedUsersAsync(userId);
     }
+
+    public Task<List<ReceivedFollowRequestDto>> GetReceivedRequestsAsync(Guid userId)
+    {
+        return _relationshipReadRepository.GetReceivedRequestsAsync(userId);
+    }
+
+    public Task<List<FollowerDto>> GetFollowersAsync(Guid userId)
+    {
+        return _relationshipReadRepository.GetFollowersAsync(userId);
+    }
 }
