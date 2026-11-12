@@ -17,7 +17,7 @@ public sealed class ClubAuthoringService
 
     public async Task<Guid> CreateAsync(Guid ownerId, CreateClubDto dto)
     {
-        var club = new Club(ownerId, dto.Name, dto.Description, dto.Images);
+        var club = new Club(ownerId, dto.Name, dto.Description, dto.Images, DateTime.UtcNow);
 
         _clubRepository.Add(club);
         await _unitOfWork.SaveChangesAsync();
