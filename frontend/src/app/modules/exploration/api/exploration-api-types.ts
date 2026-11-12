@@ -42,3 +42,12 @@ export interface TourPreferenceDto {
   tags: string[];
   applyToSearch: boolean;
 }
+
+export interface TourPriceDto {
+  isFree: boolean;
+  amount: number | null;
+}
+
+export interface PublishTourDto {
+  price: TourPriceDto | null;
+}

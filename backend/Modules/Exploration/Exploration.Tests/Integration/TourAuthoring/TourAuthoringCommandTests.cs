@@ -105,13 +105,16 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Tour_is_published_when_all_rules_are_met()
+    public async Task Author_publishes_a_paid_tour_and_gets_back_the_chosen_price()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var request = new PublishTourDto(new TourPriceDto(false, 20));
 
-        var response = await client.PostAsync($"/api/exploration/tours/{TourSeed.PublishableRiverside.Id}/publish", null);
+        var response = await client.PostAsJsonAsync($"/api/exploration/tours/{TourSeed.PublishableRiverside.Id}/publish", request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var price = await response.Content.ReadFromJsonAsync<TourPriceDto>(JsonOptions);
+        price.Should().Be(new TourPriceDto(false, 20));
         using var assertContext = Factory.CreateContext<ExplorationDbContext>();
         var stored = assertContext.Tours.Single(tour => tour.Id == TourSeed.PublishableRiverside.Id);
         stored.Status.Should().Be(TourStatus.Published);
@@ -119,16 +122,54 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task Tour_with_a_paid_price_of_zero_stays_a_draft()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var request = new PublishTourDto(new TourPriceDto(false, 0));
+
+        var response = await client.PostAsJsonAsync($"/api/exploration/tours/{TourSeed.PublishableRiverside.Id}/publish", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var assertContext = Factory.CreateContext<ExplorationDbContext>();
+        var stored = assertContext.Tours.Single(tour => tour.Id == TourSeed.PublishableRiverside.Id);
+        stored.Status.Should().Be(TourStatus.Draft);
+        stored.PublishedAt.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Explorer_cannot_publish_another_authors_tour()
     {
         var client = Factory.CreateClientFor(Guid.NewGuid(), "explorer");
+        var request = new PublishTourDto(new TourPriceDto(true, null));
 
-        var response = await client.PostAsync($"/api/exploration/tours/{TourSeed.PublishableRiverside.Id}/publish", null);
+        var response = await client.PostAsJsonAsync($"/api/exploration/tours/{TourSeed.PublishableRiverside.Id}/publish", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         using var assertContext = Factory.CreateContext<ExplorationDbContext>();
         var stored = assertContext.Tours.Single(tour => tour.Id == TourSeed.PublishableRiverside.Id);
         stored.Status.Should().Be(TourStatus.Draft);
+    }
+
+    [Fact]
+    public async Task Anonymous_user_cannot_publish_a_tour()
+    {
+        var client = Factory.CreateClient();
+        var request = new PublishTourDto(new TourPriceDto(true, null));
+
+        var response = await client.PostAsJsonAsync($"/api/exploration/tours/{TourSeed.PublishableRiverside.Id}/publish", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Administrator_cannot_publish_a_tour()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+        var request = new PublishTourDto(new TourPriceDto(true, null));
+
+        var response = await client.PostAsJsonAsync($"/api/exploration/tours/{TourSeed.PublishableRiverside.Id}/publish", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
