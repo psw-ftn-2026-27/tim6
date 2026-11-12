@@ -43,3 +43,6 @@ __pycache__/
 cov-raw/
 cov-sum/
 maintainability-report.json
+
+# Rider
+.idea
