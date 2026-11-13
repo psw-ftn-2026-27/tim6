@@ -18,9 +18,9 @@ internal sealed class FollowRequestRepository : IFollowRequestRepository
         return _dbContext.FollowRequests.FirstOrDefaultAsync(request => request.Id == requestId);
     }
 
-    public Task<bool> HasPendingAsync(Guid senderId, Guid recipientId)
+    public Task<FollowRequest?> GetPendingAsync(Guid senderId, Guid recipientId)
     {
-        return _dbContext.FollowRequests.AnyAsync(request =>
+        return _dbContext.FollowRequests.FirstOrDefaultAsync(request =>
             request.SenderId == senderId
             && request.RecipientId == recipientId
             && request.Status == FollowRequestStatus.Pending);

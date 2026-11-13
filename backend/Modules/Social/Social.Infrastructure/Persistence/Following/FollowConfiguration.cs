@@ -6,10 +6,8 @@ namespace Social.Infrastructure.Persistence.Following;
 
 internal static class FollowConfiguration
 {
-    /// <summary>At most one follow per ordered pair of users.</summary>
     public const string UniqueFollowIndex = "IX_Follows_FollowerId_FollowedUserId";
 
-    /// <summary>At most one request awaiting an answer per ordered pair of users.</summary>
     public const string UniquePendingRequestIndex = "IX_FollowRequests_SenderId_RecipientId_Pending";
 
     public static void ConfigureFollowing(this ModelBuilder modelBuilder)

@@ -33,9 +33,11 @@ public class FollowRequestTests
     {
         var request = new FollowRequest(_senderId, _recipientId);
 
-        request.Accept(_recipientId);
+        var follow = request.Accept(_recipientId);
 
         request.Status.Should().Be(FollowRequestStatus.Accepted);
+        follow.FollowerId.Should().Be(_senderId);
+        follow.FollowedUserId.Should().Be(_recipientId);
         request.RespondedAt.Should().NotBeNull();
     }
 
@@ -48,16 +50,6 @@ public class FollowRequestTests
 
         request.Status.Should().Be(FollowRequestStatus.Rejected);
         request.RespondedAt.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void A_request_can_be_accepted_automatically_when_it_is_sent()
-    {
-        var request = new FollowRequest(_senderId, _recipientId);
-
-        request.AcceptAutomatically();
-
-        request.Status.Should().Be(FollowRequestStatus.Accepted);
     }
 
     [Fact]

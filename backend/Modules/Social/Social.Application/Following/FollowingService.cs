@@ -7,25 +7,32 @@ public sealed class FollowingService
 {
     private readonly IFollowRepository _followRepository;
     private readonly IFollowRequestRepository _requestRepository;
+    private readonly FollowRequestSender _requestSender;
     private readonly IUnitOfWork _unitOfWork;
 
     public FollowingService(
         IFollowRepository followRepository,
         IFollowRequestRepository requestRepository,
+        FollowRequestSender requestSender,
         IUnitOfWork unitOfWork)
     {
         _followRepository = followRepository;
         _requestRepository = requestRepository;
+        _requestSender = requestSender;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Guid> SendFollowRequestAsync(Guid userId, Guid recipientId)
     {
-        var recipientFollowsSender = await _followRepository.ExistsAsync(recipientId, userId);
-        var request = await CreateRequestAsync(userId, recipientId, recipientFollowsSender);
+        var existingFollow = await _followRepository.GetAsync(userId, recipientId);
+        var pendingRequest = await _requestRepository.GetPendingAsync(userId, recipientId);
+        var recipientFollowsSender = await _followRepository.GetAsync(recipientId, userId);
+
+        var outcome = _requestSender.Send(userId, recipientId, existingFollow, pendingRequest, recipientFollowsSender);
+        AddOutcome(outcome);
         await _unitOfWork.SaveChangesAsync();
 
-        return request.Id;
+        return outcome.Request.Id;
     }
 
     public async Task CancelFollowRequestAsync(Guid userId, Guid requestId)
@@ -50,7 +57,7 @@ public sealed class FollowingService
     {
         var request = await GetRequestAsync(requestId);
 
-        AcceptAndStartFollowing(request, userId);
+        _followRepository.Add(request.Accept(userId));
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -65,14 +72,16 @@ public sealed class FollowingService
     public async Task AcceptAndFollowBackAsync(Guid userId, Guid requestId)
     {
         var request = await GetRequestAsync(requestId);
+        var existingFollowBack = await _followRepository.GetAsync(userId, request.SenderId);
+        var pendingFollowBack = await _requestRepository.GetPendingAsync(userId, request.SenderId);
 
-        AcceptAndStartFollowing(request, userId);
+        var follow = request.Accept(userId);
+        _followRepository.Add(follow);
 
-        var alreadyFollowsSender = await _followRepository.ExistsAsync(userId, request.SenderId);
-        var alreadyRequestedSender = await _requestRepository.HasPendingAsync(userId, request.SenderId);
-        if (!alreadyFollowsSender && !alreadyRequestedSender)
+        var followBack = _requestSender.FollowBack(follow, existingFollowBack, pendingFollowBack);
+        if (followBack is not null)
         {
-            await CreateRequestAsync(userId, request.SenderId, recipientFollowsSender: true);
+            AddOutcome(followBack);
         }
 
         await _unitOfWork.SaveChangesAsync();
@@ -93,34 +102,12 @@ public sealed class FollowingService
             ?? throw new NotFoundException($"Follow request {requestId} does not exist.");
     }
 
-    private void AcceptAndStartFollowing(FollowRequest request, Guid recipientId)
+    private void AddOutcome(FollowRequestOutcome outcome)
     {
-        request.Accept(recipientId);
-        _followRepository.Add(new Follow(request.SenderId, request.RecipientId));
-    }
-
-    private async Task<FollowRequest> CreateRequestAsync(Guid senderId, Guid recipientId, bool recipientFollowsSender)
-    {
-        var request = new FollowRequest(senderId, recipientId);
-
-        if (await _followRepository.ExistsAsync(senderId, recipientId))
+        _requestRepository.Add(outcome.Request);
+        if (outcome.Follow is not null)
         {
-            throw new DomainException("The user already follows the other user.");
+            _followRepository.Add(outcome.Follow);
         }
-
-        if (await _requestRepository.HasPendingAsync(senderId, recipientId))
-        {
-            throw new DomainException("A follow request is already pending.");
-        }
-
-        _requestRepository.Add(request);
-
-        if (recipientFollowsSender)
-        {
-            request.AcceptAutomatically();
-            _followRepository.Add(new Follow(senderId, recipientId));
-        }
-
-        return request;
     }
 }

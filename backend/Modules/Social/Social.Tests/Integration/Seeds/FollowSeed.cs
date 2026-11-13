@@ -27,14 +27,15 @@ internal static class FollowSeed
     public static readonly FollowRequest AdministratorAcceptedRequestToSecondExplorer =
         CreateAccepted(WellKnownUsers.Administrator, WellKnownUsers.SecondExplorer);
 
-    public static readonly FollowRequest SecondExplorerAcceptedRequestToAdministrator =
-        CreateAcceptedAutomatically(WellKnownUsers.SecondExplorer, WellKnownUsers.Administrator);
-
     public static readonly Follow AdministratorFollowsSecondExplorer =
         new(WellKnownUsers.Administrator, WellKnownUsers.SecondExplorer);
 
     public static readonly Follow SecondExplorerFollowsAdministrator =
         new(WellKnownUsers.SecondExplorer, WellKnownUsers.Administrator);
+
+    public static readonly FollowRequest SecondExplorerAcceptedRequestToAdministrator = new FollowRequestSender()
+        .Send(WellKnownUsers.SecondExplorer, WellKnownUsers.Administrator, null, null, AdministratorFollowsSecondExplorer)
+        .Request;
 
     public static object[] All =>
     [
@@ -58,13 +59,6 @@ internal static class FollowSeed
     {
         var request = new FollowRequest(senderId, recipientId);
         request.Accept(recipientId);
-        return request;
-    }
-
-    private static FollowRequest CreateAcceptedAutomatically(Guid senderId, Guid recipientId)
-    {
-        var request = new FollowRequest(senderId, recipientId);
-        request.AcceptAutomatically();
         return request;
     }
 }

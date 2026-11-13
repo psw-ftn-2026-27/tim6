@@ -19,12 +19,6 @@ internal sealed class FollowRepository : IFollowRepository
             follow.FollowerId == followerId && follow.FollowedUserId == followedUserId);
     }
 
-    public Task<bool> ExistsAsync(Guid followerId, Guid followedUserId)
-    {
-        return _dbContext.Follows.AnyAsync(follow =>
-            follow.FollowerId == followerId && follow.FollowedUserId == followedUserId);
-    }
-
     public void Add(Follow follow)
     {
         _dbContext.Follows.Add(follow);

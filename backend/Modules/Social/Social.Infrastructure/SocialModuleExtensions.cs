@@ -10,6 +10,7 @@ using Social.Application.Following;
 using Social.Application.ClubAuthoring;
 using Social.Application.ClubReading;
 using Social.Application.Clubs;
+using Social.Domain.Following;
 using Social.Infrastructure.Persistence;
 using Social.Infrastructure.Persistence.Blogs;
 using Social.Infrastructure.Persistence.Following;
@@ -38,6 +39,7 @@ public static class SocialModuleExtensions
         services.AddScoped<BlogAuthoringQueries>();
         services.AddScoped<BlogReadingQueries>();
         services.AddScoped<BlogCommentingService>();
+        services.AddScoped<FollowRequestSender>();
         services.AddScoped<FollowingService>();
         services.AddScoped<FollowingQueries>();
         services.AddScoped<ClubAuthoringService>();

@@ -3,10 +3,6 @@ using Shared.Domain.Exceptions;
 
 namespace Social.Domain.Following;
 
-/// <summary>
-/// A request from <see cref="SenderId"/> to follow <see cref="RecipientId"/>. It is kept after
-/// it is answered so the sender can see whether it was accepted or rejected.
-/// </summary>
 public sealed class FollowRequest : AggregateRoot
 {
     public Guid SenderId { get; private set; }
@@ -32,16 +28,18 @@ public sealed class FollowRequest : AggregateRoot
         Status = FollowRequestStatus.Pending;
     }
 
-    public void Accept(Guid actorId)
+    public Follow Accept(Guid actorId)
     {
         EnsureRecipient(actorId);
         Respond(FollowRequestStatus.Accepted);
+        return new Follow(SenderId, RecipientId);
     }
 
-    /// <summary>
-    /// Accepts the request at the moment it is sent, because the recipient already follows the sender.
-    /// </summary>
-    public void AcceptAutomatically() => Respond(FollowRequestStatus.Accepted);
+    internal Follow AcceptAutomatically()
+    {
+        Respond(FollowRequestStatus.Accepted);
+        return new Follow(SenderId, RecipientId);
+    }
 
     public void Reject(Guid actorId)
     {
