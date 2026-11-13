@@ -41,3 +41,36 @@ export interface UpdateSocialChallengeDto {
   exitMessage: string;
   location: LocationDto | null;
 }
+
+export interface AnswerOptionDto {
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuestionDto {
+  text: string;
+  options: AnswerOptionDto[];
+}
+
+export interface QuizDto {
+  id: string;
+  name: string;
+  instructions: string;
+  xp: number;
+  status: ChallengeStatus;
+  questions: QuestionDto[];
+}
+
+export interface CreateQuizDto {
+  name: string;
+  instructions: string;
+  xp: number;
+  questions: QuestionDto[];
+}
+
+export interface UpdateQuizDto {
+  name: string;
+  instructions: string;
+  xp: number;
+  questions: QuestionDto[];
+}
