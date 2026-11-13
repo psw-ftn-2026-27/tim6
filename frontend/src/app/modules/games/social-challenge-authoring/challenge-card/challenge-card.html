@@ -1,0 +1,143 @@
+<article class="card stack">
+  <div class="header">
+    <h2>{{ challenge().name }}</h2>
+    <span class="meta">
+      @switch (challenge().status) {
+        @case ('Draft') {
+          Nacrt
+        }
+        @case ('Published') {
+          Objavljen
+        }
+        @case ('Retired') {
+          Povučen
+        }
+        @case ('Archived') {
+          Arhiviran
+        }
+      }
+    </span>
+  </div>
+
+  <dl class="details">
+    <div>
+      <dt>Doba dana</dt>
+      <dd>
+        {{ shortTime(challenge().timeWindow.start) }}–{{ shortTime(challenge().timeWindow.end) }}
+      </dd>
+    </div>
+    <div>
+      <dt>Potreban broj ljudi</dt>
+      <dd>{{ challenge().requiredPeople }}</dd>
+    </div>
+    <div>
+      <dt>XP</dt>
+      <dd>{{ challenge().xp }}</dd>
+    </div>
+  </dl>
+
+  @if (challenge().location) {
+    <app-geographic-map [pins]="pins()" />
+  } @else if (challenge().status === 'Draft') {
+    <p class="hint">Izazov nema lokaciju, dodaj je kroz Izmeni</p>
+  }
+
+  @if (confirming()) {
+    <p>
+      @switch (confirming()) {
+        @case ('publish') {
+          Da li sigurno želiš da objaviš izazov „{{ challenge().name }}”?
+        }
+        @case ('republish') {
+          Da li sigurno želiš da ponovo objaviš izazov „{{ challenge().name }}”?
+        }
+        @case ('retire') {
+          Da li sigurno želiš da povučeš izazov „{{ challenge().name }}”?
+        }
+        @case ('archive') {
+          Da li sigurno želiš da arhiviraš izazov „{{ challenge().name }}”?
+        }
+        @case ('delete') {
+          Da li sigurno želiš da obrišeš izazov „{{ challenge().name }}”?
+        }
+      }
+    </p>
+    <div class="actions">
+      <button class="button" type="button" [disabled]="pending()" (click)="cancelAction.emit()">
+        Otkaži
+      </button>
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="pending()"
+        (click)="confirm()"
+      >
+        Potvrdi
+      </button>
+    </div>
+  } @else {
+    <div class="actions">
+      @switch (challenge().status) {
+        @case ('Draft') {
+          <button class="button" type="button" [disabled]="pending()" (click)="edit.emit()">
+            Izmeni
+          </button>
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('delete')"
+          >
+            Obriši
+          </button>
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending() || !challenge().location"
+            (click)="startAction.emit('publish')"
+          >
+            Objavi
+          </button>
+        }
+        @case ('Published') {
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('retire')"
+          >
+            Povuci
+          </button>
+        }
+        @case ('Retired') {
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('republish')"
+          >
+            Ponovo objavi
+          </button>
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('archive')"
+          >
+            Arhiviraj
+          </button>
+        }
+        @case ('Archived') {
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('delete')"
+          >
+            Obriši
+          </button>
+        }
+      }
+    </div>
+  }
+</article>

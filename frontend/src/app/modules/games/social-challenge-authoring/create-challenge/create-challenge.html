@@ -1,0 +1,104 @@
+@if (!isAdministrator()) {
+  <p class="error">Nemaš pristup ovoj stranici. Društvene izazove pravi administrator.</p>
+} @else {
+  <div class="card stack">
+    <h1>Nov izazov</h1>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <form class="stack" (submit)="submit($event)">
+      <div class="field">
+        <label for="name">Naziv</label>
+        <input id="name" type="text" [formField]="form.name" />
+        @if (form.name().touched()) {
+          @for (message of form.name().errors(); track $index) {
+            <p class="error">{{ message.message }}</p>
+          }
+        }
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="start">Početak</label>
+          <input id="start" type="time" step="1" [formField]="form.start" />
+          @if (form.start().touched()) {
+            @for (message of form.start().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <div class="field">
+          <label for="end">Kraj</label>
+          <input id="end" type="time" step="1" [formField]="form.end" />
+          @if (form.end().touched()) {
+            @for (message of form.end().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="required-people">Potreban broj ljudi</label>
+        <input id="required-people" type="number" [formField]="form.requiredPeople" />
+        @if (form.requiredPeople().touched()) {
+          @for (message of form.requiredPeople().errors(); track $index) {
+            <p class="error">{{ message.message }}</p>
+          }
+        }
+      </div>
+
+      <div class="field">
+        <label for="range">Opseg u metrima</label>
+        <input id="range" type="number" [formField]="form.rangeInMeters" />
+        @if (form.rangeInMeters().touched()) {
+          @for (message of form.rangeInMeters().errors(); track $index) {
+            <p class="error">{{ message.message }}</p>
+          }
+        }
+      </div>
+
+      <div class="field">
+        <label for="xp">XP</label>
+        <input id="xp" type="number" [formField]="form.xp" />
+        @if (form.xp().touched()) {
+          @for (message of form.xp().errors(); track $index) {
+            <p class="error">{{ message.message }}</p>
+          }
+        }
+      </div>
+
+      <div class="field">
+        <label for="exit-message">Izlazna poruka</label>
+        <textarea id="exit-message" rows="3" [formField]="form.exitMessage"></textarea>
+        @if (form.exitMessage().touched()) {
+          @for (message of form.exitMessage().errors(); track $index) {
+            <p class="error">{{ message.message }}</p>
+          }
+        }
+      </div>
+
+      <div class="field">
+        <span class="field-label">Lokacija</span>
+        <app-geographic-map
+          [selectionEnabled]="true"
+          (locationSelected)="onLocationSelected($event)"
+        />
+      </div>
+
+      <div class="actions">
+        <button
+          class="button button--primary"
+          type="submit"
+          [disabled]="!form().valid() || pending()"
+        >
+          Sačuvaj
+        </button>
+        <a class="button" routerLink="/games/challenges">Otkaži</a>
+      </div>
+    </form>
+  </div>
+}

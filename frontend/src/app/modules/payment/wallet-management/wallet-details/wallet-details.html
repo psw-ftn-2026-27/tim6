@@ -1,0 +1,134 @@
+<div class="stack">
+  <p><a routerLink="/payment/wallets">Nazad na novčanike</a></p>
+
+  <h1>Novčanik</h1>
+
+  @if (wallet.isLoading()) {
+    <p>Učitavanje novčanika...</p>
+  } @else if (notFound()) {
+    <div class="empty">
+      <p>Novčanik ne postoji.</p>
+      <a class="button button--primary" routerLink="/payment/wallets">Idi na novčanike</a>
+    </div>
+  } @else if (wallet.error()) {
+    <p class="notice notice--danger" role="alert">
+      Novčanik nije moguće učitati. Prijavite se kao administrator i pokušajte ponovo.
+    </p>
+  } @else {
+    @if (wallet.value(); as current) {
+      <div class="card balance">
+        <p class="meta">{{ current.email ?? 'Korisnik bez imejla' }}</p>
+        <p class="meta">Stanje</p>
+        <p class="balance__amount">{{ current.balance }} EC</p>
+      </div>
+
+      <form class="card stack" (submit)="deposit($event)">
+        <h2>Uplata</h2>
+
+        @if (depositError()) {
+          <p class="error">{{ depositError() }}</p>
+        }
+
+        <div class="field">
+          <label for="amount">Iznos (EC)</label>
+          <input id="amount" type="number" step="1" [formField]="depositForm.amount" />
+          @if (depositForm.amount().touched()) {
+            @for (message of depositForm.amount().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <p>
+          <button
+            class="button button--primary"
+            type="submit"
+            [disabled]="!depositForm().valid() || pending()"
+          >
+            Uplati
+          </button>
+        </p>
+      </form>
+
+      <h2>Transakcije</h2>
+
+      @if (current.transactions.length === 0) {
+        <div class="empty">
+          <p>Još nema transakcija.</p>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Iznos</th>
+                <th scope="col">Vreme uplate</th>
+                <th scope="col">Storniranje</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (transaction of current.transactions; track transaction.id) {
+                <tr [class.cancelled]="transaction.isCancelled">
+                  <td>{{ transaction.amount }} EC</td>
+                  <td>{{ time(transaction.createdAt) }}</td>
+                  <td>
+                    @if (transaction.isCancelled) {
+                      <span class="badge badge--danger">stornirana</span>
+                      @if (transaction.cancelledAt) {
+                        <p class="meta">{{ time(transaction.cancelledAt) }}</p>
+                      }
+                      <p class="meta">{{ transaction.cancellationReason }}</p>
+                    } @else if (cancellingTransactionId() !== transaction.id) {
+                      <button
+                        class="button"
+                        type="button"
+                        [disabled]="pending()"
+                        (click)="startCancelling(transaction.id)"
+                      >
+                        Storniraj
+                      </button>
+                    }
+                  </td>
+                </tr>
+                @if (cancellingTransactionId() === transaction.id) {
+                  <tr>
+                    <td colspan="3">
+                      <form class="stack" (submit)="cancelTransaction($event, transaction.id)">
+                        @if (cancelError()) {
+                          <p class="error">{{ cancelError() }}</p>
+                        }
+
+                        <div class="field">
+                          <label for="reason">Razlog storniranja</label>
+                          <input id="reason" type="text" [formField]="cancelForm.reason" />
+                          @if (cancelForm.reason().touched()) {
+                            @for (message of cancelForm.reason().errors(); track $index) {
+                              <p class="error">{{ message.message }}</p>
+                            }
+                          }
+                        </div>
+
+                        <p class="actions">
+                          <button
+                            class="button button--danger"
+                            type="submit"
+                            [disabled]="!cancelForm().valid() || pending()"
+                          >
+                            Potvrdi
+                          </button>
+                          <button class="button" type="button" (click)="stopCancelling()">
+                            Odustani
+                          </button>
+                        </p>
+                      </form>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</div>
