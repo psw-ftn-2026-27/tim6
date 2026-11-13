@@ -1,3 +1,4 @@
+using Games.Application.Challenges;
 using Games.Domain.Challenges;
 
 namespace Games.Application.QuizAuthoring;
@@ -8,4 +9,5 @@ public sealed record QuizDto(
     string Instructions,
     int Xp,
     ChallengeStatus Status,
-    List<QuestionDto> Questions);
+    List<QuestionDto> Questions,
+    LocationDto? Location);

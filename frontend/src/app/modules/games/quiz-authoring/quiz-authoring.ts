@@ -21,4 +21,17 @@ export class QuizAuthoring {
   async delete(id: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${BASE_URL}/${id}`));
   }
+
+  // Publishes a draft or republishes a retired quiz; the server decides which.
+  async publish(id: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/publish`, null));
+  }
+
+  async retire(id: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/retire`, null));
+  }
+
+  async archive(id: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/archive`, null));
+  }
 }

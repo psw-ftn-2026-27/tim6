@@ -1,3 +1,4 @@
+using Games.Application.Challenges;
 using Games.Application.QuizAuthoring;
 using Games.Application.Quizzes;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +22,7 @@ internal sealed class QuizReadRepository : IQuizReadRepository
             .AsNoTracking()
             .OrderByDescending(quiz => quiz.CreatedAt)
             .ThenBy(quiz => quiz.Id)
-            .Select(quiz => new { quiz.Id, quiz.Name, quiz.Instructions, quiz.Xp, quiz.Status, quiz.Questions })
+            .Select(quiz => new { quiz.Id, quiz.Name, quiz.Instructions, quiz.Xp, quiz.Status, quiz.Questions, quiz.Location })
             .ToListAsync();
 
         return quizzes
@@ -37,7 +38,8 @@ internal sealed class QuizReadRepository : IQuizReadRepository
                         question.Options
                             .Select(option => new AnswerOptionDto(option.Text, option.IsCorrect))
                             .ToList()))
-                    .ToList()))
+                    .ToList(),
+                quiz.Location is null ? null : new LocationDto(quiz.Location.Latitude, quiz.Location.Longitude)))
             .ToList();
     }
 }

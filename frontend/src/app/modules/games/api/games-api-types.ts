@@ -59,6 +59,7 @@ export interface QuizDto {
   xp: number;
   status: ChallengeStatus;
   questions: QuestionDto[];
+  location: LocationDto | null;
 }
 
 export interface CreateQuizDto {
@@ -66,6 +67,7 @@ export interface CreateQuizDto {
   instructions: string;
   xp: number;
   questions: QuestionDto[];
+  location: LocationDto | null;
 }
 
 export interface UpdateQuizDto {
@@ -73,4 +75,5 @@ export interface UpdateQuizDto {
   instructions: string;
   xp: number;
   questions: QuestionDto[];
+  location: LocationDto | null;
 }

@@ -30,31 +30,108 @@
     </div>
   </dl>
 
-  @if (quiz().status === 'Draft') {
-    @if (confirmingDelete()) {
-      <p>Da li sigurno želiš da obrišeš kviz „{{ quiz().name }}”?</p>
-      <div class="actions">
-        <button class="button" type="button" [disabled]="pending()" (click)="cancelDelete.emit()">
-          Otkaži
-        </button>
-        <button
-          class="button button--primary"
-          type="button"
-          [disabled]="pending()"
-          (click)="confirmDelete.emit()"
-        >
-          Potvrdi
-        </button>
-      </div>
-    } @else {
-      <div class="actions">
-        <button class="button" type="button" [disabled]="pending()" (click)="edit.emit()">
-          Izmeni
-        </button>
-        <button class="button" type="button" [disabled]="pending()" (click)="startDelete.emit()">
-          Obriši
-        </button>
-      </div>
-    }
+  @if (quiz().location) {
+    <app-geographic-map [pins]="pins()" />
+  } @else if (quiz().status === 'Draft') {
+    <p class="hint">Kviz nema lokaciju, dodaj je kroz Izmeni</p>
+  }
+
+  @if (confirming()) {
+    <p>
+      @switch (confirming()) {
+        @case ('publish') {
+          Da li sigurno želiš da objaviš kviz „{{ quiz().name }}”?
+        }
+        @case ('republish') {
+          Da li sigurno želiš da ponovo objaviš kviz „{{ quiz().name }}”?
+        }
+        @case ('retire') {
+          Da li sigurno želiš da povučeš kviz „{{ quiz().name }}”?
+        }
+        @case ('archive') {
+          Da li sigurno želiš da arhiviraš kviz „{{ quiz().name }}”?
+        }
+        @case ('delete') {
+          Da li sigurno želiš da obrišeš kviz „{{ quiz().name }}”?
+        }
+      }
+    </p>
+    <div class="actions">
+      <button class="button" type="button" [disabled]="pending()" (click)="cancelAction.emit()">
+        Otkaži
+      </button>
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="pending()"
+        (click)="confirm()"
+      >
+        Potvrdi
+      </button>
+    </div>
+  } @else {
+    <div class="actions">
+      @switch (quiz().status) {
+        @case ('Draft') {
+          <button class="button" type="button" [disabled]="pending()" (click)="edit.emit()">
+            Izmeni
+          </button>
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('delete')"
+          >
+            Obriši
+          </button>
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending() || !quiz().location"
+            (click)="startAction.emit('publish')"
+          >
+            Objavi
+          </button>
+        }
+        @case ('Published') {
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('retire')"
+          >
+            Povuci
+          </button>
+        }
+        @case ('Retired') {
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('republish')"
+          >
+            Ponovo objavi
+          </button>
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('archive')"
+          >
+            Arhiviraj
+          </button>
+        }
+        @case ('Archived') {
+          <button
+            class="button"
+            type="button"
+            [disabled]="pending()"
+            (click)="startAction.emit('delete')"
+          >
+            Obriši
+          </button>
+        }
+      }
+    </div>
   }
 </article>

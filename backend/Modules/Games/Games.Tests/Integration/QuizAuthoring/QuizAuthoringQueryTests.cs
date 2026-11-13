@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using FluentAssertions;
+using Games.Application.Challenges;
 using Games.Application.QuizAuthoring;
 using Games.Tests.Integration.Seeds;
 using Shared.Tests;
@@ -31,7 +32,24 @@ public class QuizAuthoringQueryTests : BaseIntegrationTest
                     .Select(question => new QuestionDto(
                         question.Text,
                         question.Options.Select(option => new AnswerOptionDto(option.Text, option.IsCorrect)).ToList()))
-                    .ToList()));
+                    .ToList(),
+                quiz.Location is null ? null : new LocationDto(quiz.Location.Latitude, quiz.Location.Longitude)));
         quizzes.Should().BeEquivalentTo(expected, options => options.ComparingRecordsByMembers().WithStrictOrdering());
+    }
+
+    [Fact]
+    public async Task Administrator_sees_the_location_and_status_of_every_quiz()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var quizzes = await client.GetFromJsonAsync<List<QuizDto>>("/api/games/quizzes", JsonOptions);
+
+        var expected = QuizSeed.All.Select(quiz => new
+        {
+            quiz.Id,
+            quiz.Status,
+            Location = quiz.Location is null ? null : new LocationDto(quiz.Location.Latitude, quiz.Location.Longitude)
+        });
+        quizzes.Should().BeEquivalentTo(expected);
     }
 }

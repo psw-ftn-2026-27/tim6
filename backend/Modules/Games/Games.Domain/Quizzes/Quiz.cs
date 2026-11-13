@@ -1,10 +1,9 @@
 using Games.Domain.Challenges;
-using Shared.Domain;
 using Shared.Domain.Exceptions;
 
 namespace Games.Domain.Quizzes;
 
-public sealed class Quiz : AggregateRoot
+public sealed class Quiz : Challenge
 {
     private const int MaxNameLength = 200;
     private const int MinQuestions = 1;
@@ -15,9 +14,9 @@ public sealed class Quiz : AggregateRoot
     public string Name { get; private set; }
     public string Instructions { get; private set; }
     public int Xp { get; private set; }
-    public ChallengeStatus Status { get; private set; }
-    public DateTime CreatedAt { get; private set; }
     public IReadOnlyList<Question> Questions => _questions;
+
+    protected override string KindName => "quiz";
 
     private Quiz()
     {
@@ -34,8 +33,6 @@ public sealed class Quiz : AggregateRoot
         Instructions = instructions;
         Xp = xp;
         _questions.AddRange(questions);
-        Status = ChallengeStatus.Draft;
-        CreatedAt = DateTime.UtcNow;
     }
 
     public void Edit(string name, string instructions, int xp, List<Question> questions)
@@ -51,14 +48,6 @@ public sealed class Quiz : AggregateRoot
         Xp = xp;
         _questions.Clear();
         _questions.AddRange(questions);
-    }
-
-    public void Delete()
-    {
-        if (Status != ChallengeStatus.Draft)
-        {
-            throw new DomainException("Only a draft quiz can be deleted.");
-        }
     }
 
     private static void Validate(string name, string instructions, int xp, List<Question> questions)
