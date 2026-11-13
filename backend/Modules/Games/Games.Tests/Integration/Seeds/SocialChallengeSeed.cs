@@ -1,3 +1,4 @@
+using Games.Domain.Challenges;
 using Games.Domain.SocialChallenges;
 
 namespace Games.Tests.Integration.Seeds;

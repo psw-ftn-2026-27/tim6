@@ -1,5 +1,7 @@
 using AutoMapper;
+using Games.Application.Challenges;
 using Games.Application.SocialChallengeAuthoring;
+using Games.Domain.Challenges;
 using Games.Domain.SocialChallenges;
 
 namespace Games.Application;

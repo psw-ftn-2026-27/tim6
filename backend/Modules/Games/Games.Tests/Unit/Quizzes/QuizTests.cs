@@ -17,6 +17,34 @@ public class QuizTests
     private static Quiz CreateQuiz() =>
         new("Istorija tvrđave", "Prošetajte tvrđavom.", 100, CreateQuestions(1));
 
+    private static Quiz CreateLocatedQuiz()
+    {
+        var quiz = CreateQuiz();
+        quiz.PlaceAt(new Location(45.2517, 19.8619));
+        return quiz;
+    }
+
+    private static Quiz CreatePublishedQuiz()
+    {
+        var quiz = CreateLocatedQuiz();
+        quiz.Publish();
+        return quiz;
+    }
+
+    private static Quiz CreateRetiredQuiz()
+    {
+        var quiz = CreatePublishedQuiz();
+        quiz.Retire();
+        return quiz;
+    }
+
+    private static Quiz CreateArchivedQuiz()
+    {
+        var quiz = CreateRetiredQuiz();
+        quiz.Archive();
+        return quiz;
+    }
+
     [Fact]
     public void New_quiz_is_a_draft()
     {
@@ -112,5 +140,115 @@ public class QuizTests
         quiz.Instructions.Should().Be("Prošetajte tvrđavom.");
         quiz.Xp.Should().Be(100);
         quiz.Questions.Should().Equal(questionsBefore);
+    }
+
+    [Fact]
+    public void Published_quiz_cannot_be_moved()
+    {
+        var quiz = CreatePublishedQuiz();
+
+        var placing = () => quiz.PlaceAt(new Location(44.8125, 20.4612));
+
+        placing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_quiz_cannot_lose_its_location()
+    {
+        var quiz = CreatePublishedQuiz();
+
+        var removal = () => quiz.RemoveLocation();
+
+        removal.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Draft_with_a_location_is_published()
+    {
+        var quiz = CreateLocatedQuiz();
+
+        quiz.Publish();
+
+        quiz.Status.Should().Be(ChallengeStatus.Published);
+    }
+
+    [Fact]
+    public void Retired_quiz_is_published_again()
+    {
+        var quiz = CreateRetiredQuiz();
+
+        quiz.Publish();
+
+        quiz.Status.Should().Be(ChallengeStatus.Published);
+    }
+
+    [Fact]
+    public void Archived_quiz_cannot_be_published()
+    {
+        var quiz = CreateArchivedQuiz();
+
+        var publishing = () => quiz.Publish();
+
+        publishing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Draft_without_a_location_cannot_be_published()
+    {
+        var quiz = CreateQuiz();
+
+        var publishing = () => quiz.Publish();
+
+        publishing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Draft_cannot_be_retired()
+    {
+        var quiz = CreateLocatedQuiz();
+
+        var retiring = () => quiz.Retire();
+
+        retiring.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_quiz_cannot_be_archived()
+    {
+        var quiz = CreatePublishedQuiz();
+
+        var archiving = () => quiz.Archive();
+
+        archiving.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_quiz_can_be_deleted()
+    {
+        var quiz = CreateArchivedQuiz();
+
+        var deletion = () => quiz.Delete();
+
+        deletion.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Published_quiz_cannot_be_deleted()
+    {
+        var quiz = CreatePublishedQuiz();
+
+        var deletion = () => quiz.Delete();
+
+        deletion.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_quiz_cannot_be_edited()
+    {
+        var quiz = CreatePublishedQuiz();
+
+        var edit = () => quiz.Edit("Istorija tvrđave", "Prošetajte tvrđavom.", 100, CreateQuestions(1));
+
+        edit.Should().Throw<DomainException>();
     }
 }

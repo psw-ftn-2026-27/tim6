@@ -1,5 +1,6 @@
 using Games.Application;
 using Games.Application.QuizAuthoring;
+using Games.Application.QuizPublishing;
 using Games.Application.Quizzes;
 using Games.Application.SocialChallengeAuthoring;
 using Games.Application.SocialChallengePublishing;
@@ -32,6 +33,7 @@ public static class GamesModuleExtensions
         services.AddScoped<SocialChallengePublishingService>();
         services.AddScoped<QuizAuthoringService>();
         services.AddScoped<QuizAuthoringQueries>();
+        services.AddScoped<QuizPublishingService>();
 
         return services;
     }

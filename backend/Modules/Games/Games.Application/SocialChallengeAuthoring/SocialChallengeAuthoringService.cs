@@ -1,5 +1,6 @@
 using AutoMapper;
 using Games.Application.SocialChallenges;
+using Games.Domain.Challenges;
 using Games.Domain.SocialChallenges;
 using Shared.Domain.Exceptions;
 

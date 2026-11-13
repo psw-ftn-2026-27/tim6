@@ -1,3 +1,5 @@
+using Games.Application.Challenges;
+
 namespace Games.Application.SocialChallengeAuthoring;
 
 public sealed record UpdateSocialChallengeDto(string Name, DailyTimeWindowDto TimeWindow, int RequiredPeople,

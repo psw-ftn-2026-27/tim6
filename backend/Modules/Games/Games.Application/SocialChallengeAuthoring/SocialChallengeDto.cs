@@ -1,3 +1,4 @@
+using Games.Application.Challenges;
 using Games.Domain.Challenges;
 
 namespace Games.Application.SocialChallengeAuthoring;

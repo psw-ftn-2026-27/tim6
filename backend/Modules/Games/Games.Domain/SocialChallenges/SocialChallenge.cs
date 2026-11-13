@@ -1,10 +1,9 @@
 using Games.Domain.Challenges;
-using Shared.Domain;
 using Shared.Domain.Exceptions;
 
 namespace Games.Domain.SocialChallenges;
 
-public sealed class SocialChallenge : AggregateRoot
+public sealed class SocialChallenge : Challenge
 {
     private const int MaxNameLength = 200;
     private const int MinRequiredPeople = 2;
@@ -18,9 +17,8 @@ public sealed class SocialChallenge : AggregateRoot
     public int RangeInMeters { get; private set; }
     public int Xp { get; private set; }
     public DailyTimeWindow TimeWindow { get; private set; }
-    public Location? Location { get; private set; }
-    public ChallengeStatus Status { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+
+    protected override string KindName => "social challenge";
 
     private SocialChallenge()
     {
@@ -41,8 +39,6 @@ public sealed class SocialChallenge : AggregateRoot
         RangeInMeters = rangeInMeters;
         Xp = xp;
         ExitMessage = exitMessage;
-        Status = ChallengeStatus.Draft;
-        CreatedAt = DateTime.UtcNow;
     }
 
     public void Edit(string name, DailyTimeWindow timeWindow, int requiredPeople, int rangeInMeters, int xp,
@@ -60,68 +56,6 @@ public sealed class SocialChallenge : AggregateRoot
         RangeInMeters = rangeInMeters;
         Xp = xp;
         ExitMessage = exitMessage;
-    }
-
-    public void PlaceAt(Location location)
-    {
-        if (Status != ChallengeStatus.Draft)
-        {
-            throw new DomainException("Only a draft social challenge can be placed.");
-        }
-
-        Location = location;
-    }
-
-    public void RemoveLocation()
-    {
-        if (Status != ChallengeStatus.Draft)
-        {
-            throw new DomainException("Only a draft social challenge can have its location removed.");
-        }
-
-        Location = null;
-    }
-
-    public void Publish()
-    {
-        if (Status != ChallengeStatus.Draft && Status != ChallengeStatus.Retired)
-        {
-            throw new DomainException("Only a draft or retired social challenge can be published.");
-        }
-        if (Location is null)
-        {
-            throw new DomainException("A social challenge can be published only with a location.");
-        }
-
-        Status = ChallengeStatus.Published;
-    }
-
-    public void Retire()
-    {
-        if (Status != ChallengeStatus.Published)
-        {
-            throw new DomainException("Only a published social challenge can be retired.");
-        }
-
-        Status = ChallengeStatus.Retired;
-    }
-
-    public void Archive()
-    {
-        if (Status != ChallengeStatus.Retired)
-        {
-            throw new DomainException("Only a retired social challenge can be archived.");
-        }
-
-        Status = ChallengeStatus.Archived;
-    }
-
-    public void Delete()
-    {
-        if (Status != ChallengeStatus.Draft && Status != ChallengeStatus.Archived)
-        {
-            throw new DomainException("Only a draft or archived social challenge can be deleted.");
-        }
     }
 
     private static void Validate(string name, DailyTimeWindow timeWindow, int requiredPeople, int rangeInMeters,
