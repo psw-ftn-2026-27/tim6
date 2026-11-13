@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Games.Domain.Challenges;
 using Games.Domain.SocialChallenges;
 using Shared.Domain.Exceptions;
 using Xunit;
@@ -11,6 +12,34 @@ public class SocialChallengeTests
 
     private static SocialChallenge CreateChallenge(int requiredPeople = 5, int rangeInMeters = 50) =>
         new("Okupljanje na trgu", CreateTimeWindow(), requiredPeople, rangeInMeters, 100, "Svi ste se okupili!");
+
+    private static SocialChallenge CreateLocatedChallenge()
+    {
+        var challenge = CreateChallenge();
+        challenge.PlaceAt(new Location(45.2551, 19.8451));
+        return challenge;
+    }
+
+    private static SocialChallenge CreatePublishedChallenge()
+    {
+        var challenge = CreateLocatedChallenge();
+        challenge.Publish();
+        return challenge;
+    }
+
+    private static SocialChallenge CreateRetiredChallenge()
+    {
+        var challenge = CreatePublishedChallenge();
+        challenge.Retire();
+        return challenge;
+    }
+
+    private static SocialChallenge CreateArchivedChallenge()
+    {
+        var challenge = CreateRetiredChallenge();
+        challenge.Archive();
+        return challenge;
+    }
 
     [Fact]
     public void New_social_challenge_is_a_draft()
@@ -114,5 +143,165 @@ public class SocialChallengeTests
         var edit = () => challenge.Edit("Okupljanje na trgu", CreateTimeWindow(), 31, 50, 100, "Svi ste se okupili!");
 
         edit.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Draft_without_a_location_cannot_be_published()
+    {
+        var challenge = CreateChallenge();
+
+        var publishing = () => challenge.Publish();
+
+        publishing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Draft_with_a_location_is_published()
+    {
+        var challenge = CreateLocatedChallenge();
+
+        challenge.Publish();
+
+        challenge.Status.Should().Be(ChallengeStatus.Published);
+    }
+
+    [Fact]
+    public void Retired_social_challenge_is_published_again()
+    {
+        var challenge = CreateRetiredChallenge();
+
+        challenge.Publish();
+
+        challenge.Status.Should().Be(ChallengeStatus.Published);
+    }
+
+    [Fact]
+    public void Published_social_challenge_is_retired()
+    {
+        var challenge = CreatePublishedChallenge();
+
+        challenge.Retire();
+
+        challenge.Status.Should().Be(ChallengeStatus.Retired);
+    }
+
+    [Fact]
+    public void Retired_social_challenge_is_archived()
+    {
+        var challenge = CreateRetiredChallenge();
+
+        challenge.Archive();
+
+        challenge.Status.Should().Be(ChallengeStatus.Archived);
+    }
+
+    [Fact]
+    public void Archived_social_challenge_cannot_be_published()
+    {
+        var challenge = CreateArchivedChallenge();
+
+        var publishing = () => challenge.Publish();
+
+        publishing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Draft_cannot_be_retired()
+    {
+        var challenge = CreateLocatedChallenge();
+
+        var retiring = () => challenge.Retire();
+
+        retiring.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_social_challenge_cannot_be_archived()
+    {
+        var challenge = CreatePublishedChallenge();
+
+        var archiving = () => challenge.Archive();
+
+        archiving.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_social_challenge_cannot_be_edited()
+    {
+        var challenge = CreatePublishedChallenge();
+
+        var edit = () => challenge.Edit("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!");
+
+        edit.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Draft_is_placed_at_a_location()
+    {
+        var challenge = CreateChallenge();
+
+        challenge.PlaceAt(new Location(44.8125, 20.4612));
+
+        challenge.Location.Should().Be(new Location(44.8125, 20.4612));
+    }
+
+    [Fact]
+    public void Draft_loses_its_location()
+    {
+        var challenge = CreateLocatedChallenge();
+
+        challenge.RemoveLocation();
+
+        challenge.Location.Should().BeNull();
+    }
+
+    [Fact]
+    public void Published_social_challenge_cannot_be_moved()
+    {
+        var challenge = CreatePublishedChallenge();
+
+        var placing = () => challenge.PlaceAt(new Location(44.8125, 20.4612));
+
+        placing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_social_challenge_cannot_lose_its_location()
+    {
+        var challenge = CreatePublishedChallenge();
+
+        var removal = () => challenge.RemoveLocation();
+
+        removal.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_social_challenge_cannot_be_deleted()
+    {
+        var challenge = CreatePublishedChallenge();
+
+        var deletion = () => challenge.Delete();
+
+        deletion.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Retired_social_challenge_cannot_be_deleted()
+    {
+        var challenge = CreateRetiredChallenge();
+
+        var deletion = () => challenge.Delete();
+
+        deletion.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Archived_social_challenge_can_be_deleted()
+    {
+        var challenge = CreateArchivedChallenge();
+
+        var deletion = () => challenge.Delete();
+
+        deletion.Should().NotThrow();
     }
 }

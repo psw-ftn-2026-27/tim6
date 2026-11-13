@@ -1,4 +1,4 @@
-using Games.Domain.SocialChallenges;
+using Games.Domain.Challenges;
 
 namespace Games.Application.SocialChallengeAuthoring;
 
@@ -10,4 +10,5 @@ public sealed record SocialChallengeDto(
     int RequiredPeople,
     int RangeInMeters,
     int Xp,
-    string ExitMessage);
+    string ExitMessage,
+    LocationDto? Location);

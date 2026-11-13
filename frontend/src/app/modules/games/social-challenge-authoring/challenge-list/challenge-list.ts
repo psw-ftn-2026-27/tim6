@@ -3,13 +3,18 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, max, maxLength, min, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { Auth } from '../../../../core/auth/auth';
+import {
+  GeographicMap,
+  MapCoordinate,
+  MapPin,
+} from '../../../../shared/geographic-map/geographic-map';
 import { serverMessage } from '../../../../shared/util/server-message';
-import { SocialChallengeDto } from '../../api/games-api-types';
-import { ChallengeCard } from '../challenge-card/challenge-card';
+import { LocationDto, SocialChallengeDto } from '../../api/games-api-types';
+import { ChallengeAction, ChallengeCard } from '../challenge-card/challenge-card';
 import { SocialChallengeAuthoring } from '../social-challenge-authoring';
 
 @Component({
-  imports: [ChallengeCard, FormField, RouterLink],
+  imports: [ChallengeCard, FormField, GeographicMap, RouterLink],
   selector: 'app-challenge-list',
   styleUrl: './challenge-list.scss',
   templateUrl: './challenge-list.html',
@@ -28,9 +33,15 @@ export class ChallengeList {
 
   protected readonly editingChallengeId = signal<string | null>(null);
   protected readonly confirmingChallengeId = signal<string | null>(null);
+  protected readonly confirmingAction = signal<ChallengeAction | null>(null);
   protected readonly pending = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly editError = signal<string | null>(null);
+
+  // A map click is not typed text, so the chosen location is kept next to the form.
+  protected readonly editLocation = signal<LocationDto | null>(null);
+  // The map shows the saved location as a pin; a click places the chosen one beside it.
+  protected readonly editSavedPins = signal<MapPin[]>([]);
 
   // The time-window rules (start and end differ, 1 to 6 hours, may cross midnight) are
   // checked by the server; its message is shown in the edit form.
@@ -62,9 +73,11 @@ export class ChallengeList {
   );
 
   protected startEdit(challenge: SocialChallengeDto): void {
-    this.confirmingChallengeId.set(null);
+    this.cancelAction();
     this.editError.set(null);
     this.editingChallengeId.set(challenge.id);
+    this.editLocation.set(challenge.location);
+    this.editSavedPins.set(challenge.location === null ? [] : [challenge.location]);
     this.editForm().reset({
       name: challenge.name,
       start: challenge.timeWindow.start,
@@ -93,6 +106,7 @@ export class ChallengeList {
         rangeInMeters: this.editForm.rangeInMeters().value(),
         xp: this.editForm.xp().value(),
         exitMessage: this.editForm.exitMessage().value(),
+        location: this.editLocation(),
       });
       this.editingChallengeId.set(null);
       this.challenges.reload();
@@ -103,20 +117,50 @@ export class ChallengeList {
     }
   }
 
-  protected startDelete(challengeId: string): void {
-    this.cancelEdit();
-    this.confirmingChallengeId.set(challengeId);
+  protected onLocationSelected(coordinate: MapCoordinate): void {
+    this.editLocation.set({ latitude: coordinate.latitude, longitude: coordinate.longitude });
   }
 
-  protected async remove(challenge: SocialChallengeDto): Promise<void> {
+  // The draft is saved with an empty location, which the server removes.
+  protected removeLocation(): void {
+    this.editLocation.set(null);
+    this.editSavedPins.set([]);
+  }
+
+  protected startAction(challengeId: string, action: ChallengeAction): void {
+    this.cancelEdit();
+    this.confirmingChallengeId.set(challengeId);
+    this.confirmingAction.set(action);
+  }
+
+  protected cancelAction(): void {
+    this.confirmingChallengeId.set(null);
+    this.confirmingAction.set(null);
+  }
+
+  protected async runAction(challenge: SocialChallengeDto, action: ChallengeAction): Promise<void> {
     this.pending.set(true);
     this.error.set(null);
     try {
-      await this.socialChallengeAuthoring.delete(challenge.id);
-      this.confirmingChallengeId.set(null);
+      switch (action) {
+        case 'publish':
+        case 'republish':
+          await this.socialChallengeAuthoring.publish(challenge.id);
+          break;
+        case 'retire':
+          await this.socialChallengeAuthoring.retire(challenge.id);
+          break;
+        case 'archive':
+          await this.socialChallengeAuthoring.archive(challenge.id);
+          break;
+        case 'delete':
+          await this.socialChallengeAuthoring.delete(challenge.id);
+          break;
+      }
+      this.cancelAction();
       this.challenges.reload();
     } catch (failure) {
-      this.error.set(serverMessage(failure, 'Izazov nije obrisan.'));
+      this.error.set(serverMessage(failure, 'Radnja nije izvršena.'));
     } finally {
       this.pending.set(false);
     }

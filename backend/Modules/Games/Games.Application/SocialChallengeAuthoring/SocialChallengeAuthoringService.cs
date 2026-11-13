@@ -24,6 +24,10 @@ public sealed class SocialChallengeAuthoringService
         var timeWindow = new DailyTimeWindow(dto.TimeWindow.Start, dto.TimeWindow.End);
         var challenge = new SocialChallenge(dto.Name, timeWindow, dto.RequiredPeople, dto.RangeInMeters, dto.Xp,
             dto.ExitMessage);
+        if (dto.Location is not null)
+        {
+            challenge.PlaceAt(new Location(dto.Location.Latitude, dto.Location.Longitude));
+        }
 
         _challengeRepository.Add(challenge);
         await _unitOfWork.SaveChangesAsync();
@@ -37,6 +41,14 @@ public sealed class SocialChallengeAuthoringService
 
         var timeWindow = new DailyTimeWindow(dto.TimeWindow.Start, dto.TimeWindow.End);
         challenge.Edit(dto.Name, timeWindow, dto.RequiredPeople, dto.RangeInMeters, dto.Xp, dto.ExitMessage);
+        if (dto.Location is null)
+        {
+            challenge.RemoveLocation();
+        }
+        else
+        {
+            challenge.PlaceAt(new Location(dto.Location.Latitude, dto.Location.Longitude));
+        }
         await _unitOfWork.SaveChangesAsync();
     }
 

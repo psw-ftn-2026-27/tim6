@@ -18,5 +18,6 @@ internal static class SocialChallengeConfiguration
         builder.Property(challenge => challenge.Status).HasConversion<string>().HasMaxLength(20);
 
         builder.OwnsOne(challenge => challenge.TimeWindow);
+        builder.OwnsOne(challenge => challenge.Location);
     }
 }

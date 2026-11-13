@@ -17,6 +17,7 @@ internal sealed class SocialChallengeReadRepository : ISocialChallengeReadReposi
     {
         return _dbContext.SocialChallenges
             .OrderByDescending(challenge => challenge.CreatedAt)
+            .ThenBy(challenge => challenge.Id)
             .Select(challenge => new SocialChallengeDto(
                 challenge.Id,
                 challenge.Name,
@@ -25,7 +26,10 @@ internal sealed class SocialChallengeReadRepository : ISocialChallengeReadReposi
                 challenge.RequiredPeople,
                 challenge.RangeInMeters,
                 challenge.Xp,
-                challenge.ExitMessage))
+                challenge.ExitMessage,
+                challenge.Location == null
+                    ? null
+                    : new LocationDto(challenge.Location.Latitude, challenge.Location.Longitude)))
             .ToListAsync();
     }
 }

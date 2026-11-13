@@ -2,11 +2,13 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, max, maxLength, min, required } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../../../core/auth/auth';
+import { GeographicMap, MapCoordinate } from '../../../../shared/geographic-map/geographic-map';
 import { serverMessage } from '../../../../shared/util/server-message';
+import { LocationDto } from '../../api/games-api-types';
 import { SocialChallengeAuthoring } from '../social-challenge-authoring';
 
 @Component({
-  imports: [FormField, RouterLink],
+  imports: [FormField, GeographicMap, RouterLink],
   selector: 'app-create-challenge',
   styleUrl: './create-challenge.scss',
   templateUrl: './create-challenge.html',
@@ -52,6 +54,13 @@ export class CreateChallenge {
   protected readonly pending = signal(false);
   protected readonly error = signal<string | null>(null);
 
+  // A map click is not typed text, so the chosen location is kept next to the form.
+  protected readonly location = signal<LocationDto | null>(null);
+
+  protected onLocationSelected(coordinate: MapCoordinate): void {
+    this.location.set({ latitude: coordinate.latitude, longitude: coordinate.longitude });
+  }
+
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();
     this.pending.set(true);
@@ -64,6 +73,7 @@ export class CreateChallenge {
         rangeInMeters: this.form.rangeInMeters().value(),
         xp: this.form.xp().value(),
         exitMessage: this.form.exitMessage().value(),
+        location: this.location(),
       });
       await this.router.navigate(['/games/challenges']);
     } catch (failure) {
