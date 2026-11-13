@@ -39,10 +39,10 @@ public sealed class FollowingController : ControllerBase
         return NoContent();
     }
 
-    [HttpGet("blogs/{blogId:guid}/follow-status")]
-    public async Task<ActionResult<BlogFollowStatusDto>> GetBlogFollowStatus(Guid blogId)
+    [HttpGet("users/{otherUserId:guid}/follow-status")]
+    public async Task<ActionResult<FollowStatusDto>> GetFollowStatus(Guid otherUserId)
     {
-        return await _followingQueries.GetBlogFollowStatusAsync(User.GetUserId(), blogId);
+        return await _followingQueries.GetFollowStatusAsync(User.GetUserId(), otherUserId);
     }
 
     [HttpGet("follow-requests/sent")]

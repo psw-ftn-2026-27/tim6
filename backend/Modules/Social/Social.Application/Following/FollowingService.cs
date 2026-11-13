@@ -1,30 +1,28 @@
 using Shared.Domain.Exceptions;
-using Social.Application.FollowRelationships;
-using Social.Domain.FollowRelationships;
+using Social.Domain.Following;
 
 namespace Social.Application.Following;
 
 public sealed class FollowingService
 {
-    private readonly IFollowRelationshipRepository _relationshipRepository;
+    private readonly IFollowRepository _followRepository;
+    private readonly IFollowRequestRepository _requestRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public FollowingService(IFollowRelationshipRepository relationshipRepository, IUnitOfWork unitOfWork)
+    public FollowingService(
+        IFollowRepository followRepository,
+        IFollowRequestRepository requestRepository,
+        IUnitOfWork unitOfWork)
     {
-        _relationshipRepository = relationshipRepository;
+        _followRepository = followRepository;
+        _requestRepository = requestRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<Guid> SendFollowRequestAsync(Guid userId, Guid recipientId)
     {
-        var relationship = await _relationshipRepository.GetByPairAsync(userId, recipientId);
-        if (relationship is null)
-        {
-            relationship = new FollowRelationship(userId, recipientId);
-            _relationshipRepository.Add(relationship);
-        }
-
-        var request = relationship.SendRequest(userId);
+        var recipientFollowsSender = await _followRepository.ExistsAsync(recipientId, userId);
+        var request = await CreateRequestAsync(userId, recipientId, recipientFollowsSender);
         await _unitOfWork.SaveChangesAsync();
 
         return request.Id;
@@ -32,74 +30,97 @@ public sealed class FollowingService
 
     public async Task CancelFollowRequestAsync(Guid userId, Guid requestId)
     {
-        var relationship = await _relationshipRepository.GetByRequestIdAsync(requestId);
-        if (relationship is null)
-        {
-            throw new NotFoundException($"Follow request {requestId} does not exist.");
-        }
+        var request = await GetRequestAsync(requestId);
 
-        relationship.CancelRequest(requestId, userId);
+        request.EnsureCanBeCancelledBy(userId);
+        _requestRepository.Remove(request);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task UnfollowUserAsync(Guid userId, Guid followedUserId)
     {
-        var relationship = await _relationshipRepository.GetByPairAsync(userId, followedUserId);
-        if (relationship is null)
-        {
-            throw new NotFoundException($"User {followedUserId} is not followed.");
-        }
+        var follow = await _followRepository.GetAsync(userId, followedUserId)
+            ?? throw new NotFoundException($"User {followedUserId} is not followed.");
 
-        relationship.Unfollow(userId, userId);
+        _followRepository.Remove(follow);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task AcceptFollowRequestAsync(Guid userId, Guid requestId)
     {
-        var relationship = await _relationshipRepository.GetByRequestIdAsync(requestId);
-        if (relationship is null)
-        {
-            throw new NotFoundException($"Follow request {requestId} does not exist.");
-        }
+        var request = await GetRequestAsync(requestId);
 
-        relationship.AcceptRequest(requestId, userId);
+        AcceptAndStartFollowing(request, userId);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task RejectFollowRequestAsync(Guid userId, Guid requestId)
     {
-        var relationship = await _relationshipRepository.GetByRequestIdAsync(requestId);
-        if (relationship is null)
-        {
-            throw new NotFoundException($"Follow request {requestId} does not exist.");
-        }
+        var request = await GetRequestAsync(requestId);
 
-        relationship.RejectRequest(requestId, userId);
+        request.Reject(userId);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task AcceptAndFollowBackAsync(Guid userId, Guid requestId)
     {
-        var relationship = await _relationshipRepository.GetByRequestIdAsync(requestId);
-        if (relationship is null)
+        var request = await GetRequestAsync(requestId);
+
+        AcceptAndStartFollowing(request, userId);
+
+        var alreadyFollowsSender = await _followRepository.ExistsAsync(userId, request.SenderId);
+        var alreadyRequestedSender = await _requestRepository.HasPendingAsync(userId, request.SenderId);
+        if (!alreadyFollowsSender && !alreadyRequestedSender)
         {
-            throw new NotFoundException($"Follow request {requestId} does not exist.");
+            await CreateRequestAsync(userId, request.SenderId, recipientFollowsSender: true);
         }
 
-        relationship.AcceptRequest(requestId, userId);
-        relationship.SendRequest(userId);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task RemoveFollowerAsync(Guid userId, Guid followerId)
     {
-        var relationship = await _relationshipRepository.GetByPairAsync(userId, followerId);
-        if (relationship is null)
+        var follow = await _followRepository.GetAsync(followerId, userId)
+            ?? throw new NotFoundException($"User {followerId} does not follow you.");
+
+        _followRepository.Remove(follow);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private async Task<FollowRequest> GetRequestAsync(Guid requestId)
+    {
+        return await _requestRepository.GetByIdAsync(requestId)
+            ?? throw new NotFoundException($"Follow request {requestId} does not exist.");
+    }
+
+    private void AcceptAndStartFollowing(FollowRequest request, Guid recipientId)
+    {
+        request.Accept(recipientId);
+        _followRepository.Add(new Follow(request.SenderId, request.RecipientId));
+    }
+
+    private async Task<FollowRequest> CreateRequestAsync(Guid senderId, Guid recipientId, bool recipientFollowsSender)
+    {
+        var request = new FollowRequest(senderId, recipientId);
+
+        if (await _followRepository.ExistsAsync(senderId, recipientId))
         {
-            throw new NotFoundException($"User {followerId} does not follow you.");
+            throw new DomainException("The user already follows the other user.");
         }
 
-        relationship.Unfollow(followerId, userId);
-        await _unitOfWork.SaveChangesAsync();
+        if (await _requestRepository.HasPendingAsync(senderId, recipientId))
+        {
+            throw new DomainException("A follow request is already pending.");
+        }
+
+        _requestRepository.Add(request);
+
+        if (recipientFollowsSender)
+        {
+            request.AcceptAutomatically();
+            _followRepository.Add(new Follow(senderId, recipientId));
+        }
+
+        return request;
     }
 }

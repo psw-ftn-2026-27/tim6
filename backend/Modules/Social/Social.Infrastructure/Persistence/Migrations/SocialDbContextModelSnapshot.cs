@@ -116,42 +116,35 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.ToTable("Clubs", "social");
                 });
 
-            modelBuilder.Entity("Social.Domain.FollowRelationships.FollowRelationship", b =>
+            modelBuilder.Entity("Social.Domain.Following.Follow", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("FirstFollowsSecond")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("FirstUserId")
+                    b.Property<Guid>("FollowedUserId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("SecondFollowsFirst")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("SecondUserId")
+                    b.Property<Guid>("FollowerId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FirstUserId", "SecondUserId")
-                        .IsUnique();
+                    b.HasIndex("FollowedUserId");
 
-                    b.ToTable("FollowRelationships", "social");
+                    b.HasIndex("FollowerId", "FollowedUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Follows_FollowerId_FollowedUserId");
+
+                    b.ToTable("Follows", "social");
                 });
 
-            modelBuilder.Entity("Social.Domain.FollowRelationships.FollowRequest", b =>
+            modelBuilder.Entity("Social.Domain.Following.FollowRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("FollowRelationshipId")
-                        .HasColumnType("uuid");
 
                     b.Property<Guid>("RecipientId")
                         .HasColumnType("uuid");
@@ -169,7 +162,14 @@ namespace Social.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FollowRelationshipId");
+                    b.HasIndex("RecipientId");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("SenderId", "RecipientId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_FollowRequests_SenderId_RecipientId_Pending")
+                        .HasFilter("\"Status\" = 'Pending'");
 
                     b.ToTable("FollowRequests", "social");
                 });
@@ -183,23 +183,9 @@ namespace Social.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Social.Domain.FollowRelationships.FollowRequest", b =>
-                {
-                    b.HasOne("Social.Domain.FollowRelationships.FollowRelationship", null)
-                        .WithMany("Requests")
-                        .HasForeignKey("FollowRelationshipId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Social.Domain.Blogs.Blog", b =>
                 {
                     b.Navigation("Comments");
-                });
-
-            modelBuilder.Entity("Social.Domain.FollowRelationships.FollowRelationship", b =>
-                {
-                    b.Navigation("Requests");
                 });
 #pragma warning restore 612, 618
         }

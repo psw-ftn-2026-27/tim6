@@ -1,4 +1,4 @@
-namespace Social.Domain.FollowRelationships;
+namespace Social.Domain.Following;
 
 public enum FollowRequestStatus
 {

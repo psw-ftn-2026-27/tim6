@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Shared.Tests;
-using Social.Domain.FollowRelationships;
+using Social.Domain.Following;
 using Social.Infrastructure.Persistence;
 using Social.Tests.Integration.Seeds;
 using Xunit;
@@ -11,237 +11,538 @@ namespace Social.Tests.Integration.Following;
 
 public class FollowingCommandTests : BaseIntegrationTest
 {
+    private static readonly Guid Administrator = WellKnownUsers.Administrator;
+    private static readonly Guid Explorer = WellKnownUsers.Explorer;
+    private static readonly Guid SecondExplorer = WellKnownUsers.SecondExplorer;
+
     public FollowingCommandTests(SocialApiFactory factory) : base(factory) { }
 
     [Fact]
-    public async Task User_sends_a_follow_request()
+    public async Task Following_endpoints_require_authentication()
     {
-        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+        var client = Factory.CreateClient();
 
-        var response = await client.PostAsync(
-            $"/api/social/users/{WellKnownUsers.Explorer}/follow-requests", null);
+        var response = await SendRequestAsync(client, Explorer);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task An_unauthenticated_user_cannot_cancel_a_follow_request()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await DeleteAsync(
+            client, $"/api/social/follow-requests/{FollowSeed.SecondExplorerPendingRequestToExplorer.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task An_unauthenticated_user_cannot_unfollow_a_user()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await DeleteAsync(client, $"/api/social/following/{SecondExplorer}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task An_unauthenticated_user_cannot_accept_a_follow_request()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await PostAsync(
+            client, $"/api/social/follow-requests/{FollowSeed.SecondExplorerPendingRequestToExplorer.Id}/accept");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task An_unauthenticated_user_cannot_reject_a_follow_request()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await PostAsync(
+            client, $"/api/social/follow-requests/{FollowSeed.SecondExplorerPendingRequestToExplorer.Id}/reject");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task An_unauthenticated_user_cannot_accept_and_follow_back_a_follow_request()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await PostAsync(
+            client,
+            $"/api/social/follow-requests/{FollowSeed.SecondExplorerPendingRequestToExplorer.Id}/accept-and-follow-back");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task An_unauthenticated_user_cannot_remove_a_follower()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await DeleteAsync(client, $"/api/social/followers/{Administrator}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    // ---- Sending requests ----
+
+    [Fact]
+    public async Task A_user_can_send_a_follow_request()
+    {
+        var response = await SendRequestAsync(ClientFor(Administrator), Explorer);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var requestId = await response.Content.ReadFromJsonAsync<Guid>();
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships
-            .Single(relationship => relationship.Requests.Any(request => request.Id == requestId));
-        stored.Requests.Should().Contain(request =>
-            request.Id == requestId
-            && request.SenderId == WellKnownUsers.Administrator
-            && request.RecipientId == WellKnownUsers.Explorer
-            && request.Status == FollowRequestStatus.Pending);
+        var request = StoredRequest(await response.Content.ReadFromJsonAsync<Guid>());
+        request.SenderId.Should().Be(Administrator);
+        request.RecipientId.Should().Be(Explorer);
+        request.Status.Should().Be(FollowRequestStatus.Pending);
+        IsFollowing(Administrator, Explorer).Should().BeFalse();
     }
 
     [Fact]
-    public async Task Unauthenticated_user_cannot_send_a_follow_request()
+    public async Task A_request_is_accepted_immediately_if_the_recipient_already_follows_the_sender()
     {
-        var client = Factory.CreateClient();
+        var firstRequestId = await SendRequestAndGetIdAsync(Administrator, Explorer);
+        var acceptResponse = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{firstRequestId}/accept");
+        acceptResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        var response = await client.PostAsync(
-            $"/api/social/users/{WellKnownUsers.Explorer}/follow-requests", null);
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task Crossed_requests_sent_through_HTTP_stay_pending()
-    {
-        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
-        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-
-        var response = await client.PostAsync(
-            $"/api/social/users/{WellKnownUsers.SecondExplorer}/follow-requests", null);
+        var response = await SendRequestAsync(ClientFor(Explorer), Administrator);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
-        stored.Requests.Should().HaveCount(relationship.Requests.Count + 1);
-        stored.Requests.Should().OnlyContain(request => request.Status == FollowRequestStatus.Pending);
-        stored.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Pending);
-        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Pending);
+        StoredRequest(await response.Content.ReadFromJsonAsync<Guid>()).Status.Should().Be(FollowRequestStatus.Accepted);
+        IsFollowing(Explorer, Administrator).Should().BeTrue();
     }
 
     [Fact]
-    public async Task Sending_a_second_request_while_one_is_pending_is_rejected_and_nothing_changes()
+    public async Task Crossed_requests_stay_pending_instead_of_being_accepted_automatically()
     {
-        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
-        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+        var response = await SendRequestAsync(ClientFor(Explorer), SecondExplorer);
 
-        var response = await client.PostAsync(
-            $"/api/social/users/{WellKnownUsers.Explorer}/follow-requests", null);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        StoredRequest(await response.Content.ReadFromJsonAsync<Guid>()).Status.Should().Be(FollowRequestStatus.Pending);
+        StoredRequest(FollowSeed.SecondExplorerPendingRequestToExplorer.Id).Status.Should().Be(FollowRequestStatus.Pending);
+        IsFollowing(Explorer, SecondExplorer).Should().BeFalse();
+        IsFollowing(SecondExplorer, Explorer).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task A_second_request_is_rejected_while_one_is_still_pending()
+    {
+        var before = GetStoredState();
+
+        var response = await SendRequestAsync(ClientFor(SecondExplorer), Explorer);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
-        stored.Requests.Should().HaveCount(relationship.Requests.Count);
+        GetStoredState().Should().BeEquivalentTo(before);
     }
 
     [Fact]
-    public async Task Sender_cancels_a_pending_request()
+    public async Task A_user_cannot_send_a_request_to_a_user_they_already_follow()
     {
-        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
-        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+        var before = GetStoredState();
 
-        var response = await client.DeleteAsync(
-            $"/api/social/follow-requests/{relationship.Requests.Single().Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
-        stored.Requests.Should().HaveCount(relationship.Requests.Count - 1);
-    }
-
-    [Fact]
-    public async Task Unauthenticated_user_cannot_cancel_a_follow_request()
-    {
-        var requestId = FollowRelationshipSeed.SecondExplorerRequestedExplorer.Requests.Single().Id;
-        var client = Factory.CreateClient();
-
-        var response = await client.DeleteAsync($"/api/social/follow-requests/{requestId}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task User_stops_following_another_user()
-    {
-        var relationship = FollowRelationshipSeed.AdministratorAndSecondExplorerFollowEachOther;
-        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
-
-        var response = await client.DeleteAsync($"/api/social/following/{WellKnownUsers.SecondExplorer}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
-        stored.GetFollowStatusFor(WellKnownUsers.Administrator).Should().Be(FollowStatus.Follow);
-        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Following);
-        stored.Requests.Should().HaveCount(relationship.Requests.Count);
-    }
-
-    [Fact]
-    public async Task Unauthenticated_user_cannot_stop_following_a_user()
-    {
-        var client = Factory.CreateClient();
-
-        var response = await client.DeleteAsync($"/api/social/following/{WellKnownUsers.SecondExplorer}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task Recipient_accepts_a_pending_request()
-    {
-        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
-        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-
-        var response = await client.PostAsync(
-            $"/api/social/follow-requests/{relationship.Requests.Single().Id}/accept", null);
-
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
-        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Following);
-    }
-
-    [Fact]
-    public async Task A_request_that_is_not_pending_cannot_be_accepted_through_HTTP()
-    {
-        var relationship = FollowRelationshipSeed.AdministratorAndSecondExplorerFollowEachOther;
-        var acceptedRequest = relationship.Requests.Single(request => request.SenderId == WellKnownUsers.Administrator);
-        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
-
-        var response = await client.PostAsync($"/api/social/follow-requests/{acceptedRequest.Id}/accept", null);
+        var response = await SendRequestAsync(ClientFor(Administrator), SecondExplorer);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        GetStoredState().Should().BeEquivalentTo(before);
     }
 
     [Fact]
-    public async Task Unauthenticated_user_cannot_accept_a_follow_request()
+    public async Task A_user_cannot_send_a_request_to_themselves()
     {
-        var requestId = FollowRelationshipSeed.SecondExplorerRequestedExplorer.Requests.Single().Id;
-        var client = Factory.CreateClient();
+        var before = GetStoredState();
 
-        var response = await client.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
+        var response = await SendRequestAsync(ClientFor(Administrator), Administrator);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        GetStoredState().Should().BeEquivalentTo(before);
     }
 
     [Fact]
-    public async Task Recipient_rejects_a_pending_request()
+    public async Task A_new_request_can_be_sent_after_the_previous_one_was_rejected()
     {
-        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
-        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var firstRequestId = await SendRequestAndGetIdAsync(Administrator, Explorer);
+        var rejectResponse = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{firstRequestId}/reject");
+        rejectResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-        var response = await client.PostAsync(
-            $"/api/social/follow-requests/{relationship.Requests.Single().Id}/reject", null);
+        var response = await SendRequestAsync(ClientFor(Administrator), Explorer);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        StoredRequest(firstRequestId).Status.Should().Be(FollowRequestStatus.Rejected);
+        StoredRequest(await response.Content.ReadFromJsonAsync<Guid>()).Status.Should().Be(FollowRequestStatus.Pending);
+    }
+
+    // ---- Cancelling requests ----
+
+    [Fact]
+    public async Task The_sender_can_cancel_a_pending_request()
+    {
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await DeleteAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
-        stored.Requests.Single().Status.Should().Be(FollowRequestStatus.Rejected);
+        GetStoredState().Requests.Should().NotContain(request => request.Id == requestId);
     }
 
     [Fact]
-    public async Task Unauthenticated_user_cannot_reject_a_follow_request()
+    public async Task Only_the_sender_can_cancel_a_request()
     {
-        var requestId = FollowRelationshipSeed.SecondExplorerRequestedExplorer.Requests.Single().Id;
-        var client = Factory.CreateClient();
+        var before = GetStoredState();
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
 
-        var response = await client.PostAsync($"/api/social/follow-requests/{requestId}/reject", null);
+        var response = await DeleteAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        GetStoredState().Should().BeEquivalentTo(before);
     }
 
     [Fact]
-    public async Task Accept_and_follow_back_establishes_mutual_follow()
+    public async Task An_answered_request_cannot_be_cancelled()
     {
-        var relationship = FollowRelationshipSeed.SecondExplorerRequestedExplorer;
-        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var before = GetStoredState();
+        var requestId = FollowSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
 
-        var response = await client.PostAsync(
-            $"/api/social/follow-requests/{relationship.Requests.Single().Id}/accept-and-follow-back", null);
+        var response = await DeleteAsync(ClientFor(Administrator), $"/api/social/follow-requests/{requestId}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        GetStoredState().Should().BeEquivalentTo(before);
+    }
+
+    [Fact]
+    public async Task Cancelling_a_request_that_does_not_exist_returns_not_found()
+    {
+        var response = await DeleteAsync(ClientFor(Administrator), $"/api/social/follow-requests/{Guid.NewGuid()}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // ---- Unfollowing ----
+
+    [Fact]
+    public async Task A_user_can_unfollow_a_followed_user()
+    {
+        var requestsBefore = GetStoredState().Requests;
+
+        var response = await DeleteAsync(ClientFor(Administrator), $"/api/social/following/{SecondExplorer}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
-        stored.GetFollowStatusFor(WellKnownUsers.Explorer).Should().Be(FollowStatus.Following);
-        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Following);
+        IsFollowing(Administrator, SecondExplorer).Should().BeFalse();
+        IsFollowing(SecondExplorer, Administrator).Should().BeTrue();
+        GetStoredState().Requests.Should().BeEquivalentTo(requestsBefore);
     }
 
     [Fact]
-    public async Task Unauthenticated_user_cannot_accept_and_follow_back()
+    public async Task A_user_cannot_unfollow_a_user_they_have_no_relationship_with()
     {
-        var requestId = FollowRelationshipSeed.SecondExplorerRequestedExplorer.Requests.Single().Id;
-        var client = Factory.CreateClient();
+        var response = await DeleteAsync(ClientFor(Administrator), $"/api/social/following/{Explorer}");
 
-        var response = await client.PostAsync($"/api/social/follow-requests/{requestId}/accept-and-follow-back", null);
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
-    public async Task User_removes_a_follower()
+    public async Task A_user_cannot_unfollow_a_user_who_only_has_a_pending_request()
     {
-        var relationship = FollowRelationshipSeed.AdministratorAndSecondExplorerFollowEachOther;
-        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+        var before = GetStoredState();
 
-        var response = await client.DeleteAsync($"/api/social/followers/{WellKnownUsers.SecondExplorer}");
+        var response = await DeleteAsync(ClientFor(SecondExplorer), $"/api/social/following/{Explorer}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        GetStoredState().Should().BeEquivalentTo(before);
+    }
+
+    // ---- Accepting requests ----
+
+    [Fact]
+    public async Task The_recipient_can_accept_a_pending_request()
+    {
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept");
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        using var assertContext = Factory.CreateContext<SocialDbContext>();
-        var stored = assertContext.FollowRelationships.Single(candidate => candidate.Id == relationship.Id);
-        stored.GetFollowStatusFor(WellKnownUsers.SecondExplorer).Should().Be(FollowStatus.Follow);
-        stored.GetFollowStatusFor(WellKnownUsers.Administrator).Should().Be(FollowStatus.Following);
+        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
+        IsFollowing(SecondExplorer, Explorer).Should().BeTrue();
+        IsFollowing(Explorer, SecondExplorer).Should().BeFalse();
     }
 
     [Fact]
-    public async Task Unauthenticated_user_cannot_remove_a_follower()
+    public async Task An_accepted_request_cannot_be_accepted_again()
     {
-        var client = Factory.CreateClient();
+        var before = GetStoredState();
+        var requestId = FollowSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
 
-        var response = await client.DeleteAsync($"/api/social/followers/{WellKnownUsers.SecondExplorer}");
+        var response = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}/accept");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        GetStoredState().Should().BeEquivalentTo(before);
+        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
+    }
+
+    [Fact]
+    public async Task A_rejected_request_cannot_be_accepted()
+    {
+        var before = GetStoredState();
+        var requestId = FollowSeed.ExplorerRejectedRequestToSecondExplorer.Id;
+
+        var response = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}/accept");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        GetStoredState().Should().BeEquivalentTo(before);
+        IsFollowing(Explorer, SecondExplorer).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Only_the_recipient_can_accept_a_request()
+    {
+        var before = GetStoredState();
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Administrator), $"/api/social/follow-requests/{requestId}/accept");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        GetStoredState().Should().BeEquivalentTo(before);
+    }
+
+    [Fact]
+    public async Task Accepting_a_request_that_does_not_exist_returns_not_found()
+    {
+        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{Guid.NewGuid()}/accept");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // ---- Rejecting requests ----
+
+    [Fact]
+    public async Task The_recipient_can_reject_a_pending_request()
+    {
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/reject");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Rejected);
+        IsFollowing(SecondExplorer, Explorer).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task An_accepted_request_cannot_be_rejected()
+    {
+        var before = GetStoredState();
+        var requestId = FollowSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
+
+        var response = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}/reject");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        GetStoredState().Should().BeEquivalentTo(before);
+        IsFollowing(Administrator, SecondExplorer).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Only_the_recipient_can_reject_a_request()
+    {
+        var before = GetStoredState();
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Administrator), $"/api/social/follow-requests/{requestId}/reject");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        GetStoredState().Should().BeEquivalentTo(before);
+    }
+
+    [Fact]
+    public async Task Rejecting_a_request_that_does_not_exist_returns_not_found()
+    {
+        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{Guid.NewGuid()}/reject");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // ---- Accepting and following back ----
+
+    [Fact]
+    public async Task Accepting_and_following_back_makes_both_users_follow_each_other()
+    {
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
+        IsFollowing(SecondExplorer, Explorer).Should().BeTrue();
+        IsFollowing(Explorer, SecondExplorer).Should().BeTrue();
+        using var context = Factory.CreateContext<SocialDbContext>();
+        context.FollowRequests.Count(request =>
+            request.SenderId == Explorer
+            && request.RecipientId == SecondExplorer
+            && request.Status == FollowRequestStatus.Accepted).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Accepting_and_following_back_leaves_the_users_own_pending_request_to_the_sender_unchanged()
+    {
+        var ownRequestId = await SendRequestAndGetIdAsync(Explorer, SecondExplorer);
+        var ownRequestBefore = StoredRequest(ownRequestId);
+        var requestsBefore = GetStoredState().Requests.Count;
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
+        IsFollowing(SecondExplorer, Explorer).Should().BeTrue();
+        IsFollowing(Explorer, SecondExplorer).Should().BeFalse("the user's own request is still waiting for an answer");
+        var ownRequestAfter = StoredRequest(ownRequestId);
+        ownRequestAfter.Status.Should().Be(FollowRequestStatus.Pending);
+        ownRequestAfter.RespondedAt.Should().Be(ownRequestBefore.RespondedAt);
+        GetStoredState().Requests.Should().HaveCount(requestsBefore, "no second follow-back request may be created");
+    }
+
+    [Fact]
+    public async Task Accepting_and_following_back_creates_no_new_follow_if_the_user_already_follows_the_sender()
+    {
+        var ownRequestId = await SendRequestAndGetIdAsync(Explorer, SecondExplorer);
+        var acceptOwn = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{ownRequestId}/accept");
+        acceptOwn.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        IsFollowing(Explorer, SecondExplorer).Should().BeTrue();
+        var before = GetStoredState();
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
+        IsFollowing(SecondExplorer, Explorer).Should().BeTrue();
+        var after = GetStoredState();
+        after.Requests.Should().HaveCount(before.Requests.Count, "no follow-back request is needed");
+        after.Follows.Count(follow => follow.FollowerId == Explorer && follow.FollowedUserId == SecondExplorer)
+            .Should().Be(1, "the existing follow must stay the only one");
+        after.Follows.Should().HaveCount(before.Follows.Count + 1, "only the accepted request adds a follow");
+    }
+
+    [Fact]
+    public async Task An_answered_request_cannot_be_accepted_and_followed_back()
+    {
+        var before = GetStoredState();
+        var requestId = FollowSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
+
+        var response = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        GetStoredState().Should().BeEquivalentTo(before);
+    }
+
+    [Fact]
+    public async Task Only_the_recipient_can_accept_and_follow_back()
+    {
+        var before = GetStoredState();
+        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Administrator), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        GetStoredState().Should().BeEquivalentTo(before);
+    }
+
+    [Fact]
+    public async Task Accepting_and_following_back_a_request_that_does_not_exist_returns_not_found()
+    {
+        var response = await PostAsync(
+            ClientFor(Explorer), $"/api/social/follow-requests/{Guid.NewGuid()}/accept-and-follow-back");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // ---- Removing followers ----
+
+    [Fact]
+    public async Task A_user_can_remove_a_follower()
+    {
+        var response = await DeleteAsync(ClientFor(SecondExplorer), $"/api/social/followers/{Administrator}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        IsFollowing(Administrator, SecondExplorer).Should().BeFalse();
+        IsFollowing(SecondExplorer, Administrator).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task A_user_cannot_remove_a_user_who_does_not_follow_them()
+    {
+        var response = await DeleteAsync(ClientFor(Administrator), $"/api/social/followers/{Explorer}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task A_user_cannot_remove_a_user_who_only_sent_a_pending_request()
+    {
+        var before = GetStoredState();
+
+        var response = await DeleteAsync(ClientFor(Explorer), $"/api/social/followers/{SecondExplorer}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        GetStoredState().Should().BeEquivalentTo(before);
+    }
+
+    // ---- Helpers ----
+
+    private sealed record StoredState(
+        List<(Guid Id, FollowRequestStatus Status, DateTime? RespondedAt)> Requests,
+        List<(Guid FollowerId, Guid FollowedUserId)> Follows);
+
+    private HttpClient ClientFor(Guid userId) =>
+        Factory.CreateClientFor(userId, userId == Administrator ? "administrator" : "explorer");
+
+    private static Task<HttpResponseMessage> SendRequestAsync(HttpClient client, Guid recipientId) =>
+        client.PostAsync($"/api/social/users/{recipientId}/follow-requests", null);
+
+    private static Task<HttpResponseMessage> PostAsync(HttpClient client, string url) => client.PostAsync(url, null);
+
+    private static Task<HttpResponseMessage> DeleteAsync(HttpClient client, string url) => client.DeleteAsync(url);
+
+    private async Task<Guid> SendRequestAndGetIdAsync(Guid senderId, Guid recipientId)
+    {
+        var response = await SendRequestAsync(ClientFor(senderId), recipientId);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        return await response.Content.ReadFromJsonAsync<Guid>();
+    }
+
+    private FollowRequest StoredRequest(Guid requestId)
+    {
+        using var context = Factory.CreateContext<SocialDbContext>();
+        return context.FollowRequests.Single(request => request.Id == requestId);
+    }
+
+    private bool IsFollowing(Guid followerId, Guid followedUserId)
+    {
+        using var context = Factory.CreateContext<SocialDbContext>();
+        return context.Follows.Any(follow => follow.FollowerId == followerId && follow.FollowedUserId == followedUserId);
+    }
+
+    private StoredState GetStoredState()
+    {
+        using var context = Factory.CreateContext<SocialDbContext>();
+        var requests = context.FollowRequests
+            .Select(request => new { request.Id, request.Status, request.RespondedAt })
+            .AsEnumerable()
+            .Select(request => (request.Id, request.Status, request.RespondedAt))
+            .ToList();
+        var follows = context.Follows
+            .Select(follow => new { follow.FollowerId, follow.FollowedUserId })
+            .AsEnumerable()
+            .Select(follow => (follow.FollowerId, follow.FollowedUserId))
+            .ToList();
+
+        return new StoredState(requests, follows);
     }
 }

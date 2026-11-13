@@ -39,10 +39,10 @@ export interface UpdateCommentDto {
   text: string;
 }
 
-export type BlogFollowState = 'Follow' | 'Pending' | 'Following' | 'OwnBlog';
+export type FollowStatus = 'Follow' | 'Pending' | 'Following';
 
-export interface BlogFollowStatusDto {
-  state: BlogFollowState;
+export interface FollowStatusDto {
+  status: FollowStatus;
 }
 
 export type FollowRequestStatus = 'Pending' | 'Accepted' | 'Rejected';

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MarkdownComponent } from 'ngx-markdown';
 import { Auth } from '../../../../core/auth/auth';
 import { serverMessage } from '../../../../shared/util/server-message';
-import { BlogDto, BlogFollowStatusDto } from '../../api/social-api-types';
+import { BlogDto, FollowStatusDto } from '../../api/social-api-types';
 import { Following } from '../../following/following';
 import { BlogComments, CommentEdit } from '../blog-comments/blog-comments';
 import { BlogReading } from '../blog-reading';
@@ -25,9 +25,12 @@ export class BlogDetail {
 
   protected readonly detail = httpResource<BlogDto>(() => `/api/social/blogs/${this.id()}`);
 
-  protected readonly followStatus = httpResource<BlogFollowStatusDto>(() =>
-    this.auth.isLoggedIn() ? `/api/social/blogs/${this.id()}/follow-status` : undefined,
-  );
+  protected readonly followStatus = httpResource<FollowStatusDto>(() => {
+    const authorId = this.detail.hasValue() ? this.detail.value().authorId : undefined;
+    const canFollowAuthor =
+      this.auth.isLoggedIn() && authorId !== undefined && authorId !== this.auth.user()?.id;
+    return canFollowAuthor ? `/api/social/users/${authorId}/follow-status` : undefined;
+  });
 
   protected readonly followPending = signal(false);
   protected readonly error = signal<string | null>(null);

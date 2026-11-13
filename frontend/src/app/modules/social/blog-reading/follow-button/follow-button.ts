@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { BlogFollowState } from '../../api/social-api-types';
+import { FollowStatus } from '../../api/social-api-types';
 
 @Component({
   selector: 'app-follow-button',
@@ -7,7 +7,7 @@ import { BlogFollowState } from '../../api/social-api-types';
   templateUrl: './follow-button.html',
 })
 export class FollowButton {
-  readonly state = input.required<BlogFollowState>();
+  readonly status = input.required<FollowStatus>();
   readonly pending = input(false);
 
   readonly follow = output<void>();

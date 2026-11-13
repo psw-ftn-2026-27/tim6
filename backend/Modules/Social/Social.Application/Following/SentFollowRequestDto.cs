@@ -1,4 +1,4 @@
-using Social.Domain.FollowRelationships;
+using Social.Domain.Following;
 
 namespace Social.Application.Following;
 

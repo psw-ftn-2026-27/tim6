@@ -1,7 +1,9 @@
+using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Shared.Tests;
 using Social.Application.Following;
+using Social.Domain.Following;
 using Social.Tests.Integration.Seeds;
 using Xunit;
 
@@ -12,65 +14,83 @@ public class FollowingQueryTests : BaseIntegrationTest
     public FollowingQueryTests(SocialApiFactory factory) : base(factory) { }
 
     [Fact]
-    public async Task Authors_own_blog_shows_no_follow_option()
-    {
-        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-
-        var status = await client.GetFromJsonAsync<BlogFollowStatusDto>(
-            $"/api/social/blogs/{BlogSeed.PublishedRiverbank.Id}/follow-status", JsonOptions);
-
-        status!.State.Should().Be(BlogFollowState.OwnBlog);
-    }
-
-    [Fact]
-    public async Task Follow_status_for_an_author_without_any_relationship_is_follow()
+    public async Task Follow_status_is_follow_when_the_users_have_no_relationship()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
 
-        var status = await client.GetFromJsonAsync<BlogFollowStatusDto>(
-            $"/api/social/blogs/{BlogSeed.PublishedRiverbank.Id}/follow-status", JsonOptions);
+        var status = await GetAsync<FollowStatusDto>(
+            client, $"/api/social/users/{WellKnownUsers.Explorer}/follow-status");
 
-        status!.State.Should().Be(BlogFollowState.Follow);
+        status.Status.Should().Be(FollowStatus.Follow);
+    }
+
+    [Fact]
+    public async Task Follow_status_is_pending_when_the_user_has_a_pending_request_to_the_other_user()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+
+        var status = await GetAsync<FollowStatusDto>(
+            client, $"/api/social/users/{WellKnownUsers.Explorer}/follow-status");
+
+        status.Status.Should().Be(FollowStatus.Pending);
+    }
+
+    [Fact]
+    public async Task Follow_status_is_following_when_the_user_follows_the_other_user()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var status = await GetAsync<FollowStatusDto>(
+            client, $"/api/social/users/{WellKnownUsers.SecondExplorer}/follow-status");
+
+        status.Status.Should().Be(FollowStatus.Following);
     }
 
     [Fact]
     public async Task Sent_requests_list_shows_only_the_users_own_requests_with_statuses()
     {
-        var expected = FollowRelationshipSeed.All
-            .SelectMany(relationship => relationship.Requests)
+        var expected = FollowSeed.All
+            .OfType<FollowRequest>()
             .Where(request => request.SenderId == WellKnownUsers.SecondExplorer);
         var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
 
-        var requests = await client.GetFromJsonAsync<List<SentFollowRequestDto>>(
-            "/api/social/follow-requests/sent", JsonOptions);
+        var requests = await GetAsync<List<SentFollowRequestDto>>(client, "/api/social/follow-requests/sent");
 
-        requests!.Select(request => (request.Id, request.Status))
+        requests.Select(request => (request.Id, request.Status))
             .Should().BeEquivalentTo(expected.Select(request => (request.Id, request.Status)));
     }
 
     [Fact]
-    public async Task Followed_users_list_shows_only_active_follows_not_request_history()
+    public async Task Followed_users_exclude_users_with_only_a_pending_request()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
 
-        var followedUsers = await client.GetFromJsonAsync<List<FollowedUserDto>>(
-            "/api/social/following", JsonOptions);
+        var followedUsers = await GetAsync<List<FollowedUserDto>>(client, "/api/social/following");
 
-        var followedUserIds = followedUsers!.Select(user => user.UserId).ToList();
+        var followedUserIds = followedUsers.Select(user => user.UserId).ToList();
         followedUserIds.Should().Contain(WellKnownUsers.Administrator);
         followedUserIds.Should().NotContain(WellKnownUsers.Explorer);
     }
 
     [Fact]
-    public async Task Received_requests_list_shows_only_pending_requests_where_the_user_is_the_recipient()
+    public async Task Received_requests_list_contains_the_pending_request_addressed_to_the_user()
     {
+        var expectedRequestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
 
-        var requests = await client.GetFromJsonAsync<List<ReceivedFollowRequestDto>>(
-            "/api/social/follow-requests/received", JsonOptions);
+        var requests = await GetAsync<List<ReceivedFollowRequestDto>>(client, "/api/social/follow-requests/received");
 
-        requests!.Select(request => request.SenderId).Should().Contain(WellKnownUsers.SecondExplorer);
-        requests.Should().OnlyContain(request => request.SenderId != WellKnownUsers.Administrator);
+        requests.Select(request => request.Id).Should().BeEquivalentTo([expectedRequestId]);
+    }
+
+    [Fact]
+    public async Task Received_requests_list_excludes_requests_that_were_already_answered()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+
+        var requests = await GetAsync<List<ReceivedFollowRequestDto>>(client, "/api/social/follow-requests/received");
+
+        requests.Should().BeEmpty();
     }
 
     [Fact]
@@ -78,28 +98,47 @@ public class FollowingQueryTests : BaseIntegrationTest
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
 
-        var followers = await client.GetFromJsonAsync<List<FollowerDto>>(
-            "/api/social/followers", JsonOptions);
+        var followers = await GetAsync<List<FollowerDto>>(client, "/api/social/followers");
 
-        var followerIds = followers!.Select(follower => follower.UserId).ToList();
-        followerIds.Should().Contain(WellKnownUsers.SecondExplorer);
-        followerIds.Should().NotContain(WellKnownUsers.Explorer);
+        followers.Select(follower => follower.UserId).Should().BeEquivalentTo([WellKnownUsers.SecondExplorer]);
     }
 
     [Fact]
-    public async Task Followers_list_flags_whether_the_user_already_follows_back()
+    public async Task Followers_list_flags_a_follower_the_user_follows_back()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var followers = await GetAsync<List<FollowerDto>>(client, "/api/social/followers");
+
+        followers.Should().ContainSingle(follower => follower.UserId == WellKnownUsers.SecondExplorer)
+            .Which.IsFollowedBack.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Followers_list_is_empty_for_a_user_whose_only_incoming_request_is_pending()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+
+        var followers = await GetAsync<List<FollowerDto>>(client, "/api/social/followers");
+
+        followers.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Followers_list_flags_a_follower_the_user_does_not_follow_back()
     {
         var explorerClient = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
         var sendResponse = await explorerClient.PostAsync(
             $"/api/social/users/{WellKnownUsers.Administrator}/follow-requests", null);
+        sendResponse.EnsureSuccessStatusCode();
         var requestId = await sendResponse.Content.ReadFromJsonAsync<Guid>();
         var administratorClient = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
-        await administratorClient.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
+        var acceptResponse = await administratorClient.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
+        acceptResponse.EnsureSuccessStatusCode();
 
-        var followers = await administratorClient.GetFromJsonAsync<List<FollowerDto>>(
-            "/api/social/followers", JsonOptions);
+        var followers = await GetAsync<List<FollowerDto>>(administratorClient, "/api/social/followers");
 
-        followers!.Should().ContainSingle(follower => follower.UserId == WellKnownUsers.Explorer)
+        followers.Should().ContainSingle(follower => follower.UserId == WellKnownUsers.Explorer)
             .Which.IsFollowedBack.Should().BeFalse();
     }
 
@@ -109,15 +148,24 @@ public class FollowingQueryTests : BaseIntegrationTest
         var explorerClient = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
         var sendResponse = await explorerClient.PostAsync(
             $"/api/social/users/{WellKnownUsers.SecondExplorer}/follow-requests", null);
+        sendResponse.EnsureSuccessStatusCode();
         var requestId = await sendResponse.Content.ReadFromJsonAsync<Guid>();
         var secondExplorerClient = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
-        await secondExplorerClient.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
+        var acceptResponse = await secondExplorerClient.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
+        acceptResponse.EnsureSuccessStatusCode();
 
-        var followers = await secondExplorerClient.GetFromJsonAsync<List<FollowerDto>>(
-            "/api/social/followers", JsonOptions);
+        var followers = await GetAsync<List<FollowerDto>>(secondExplorerClient, "/api/social/followers");
 
-        var follower = followers!.Should().ContainSingle(candidate => candidate.UserId == WellKnownUsers.Explorer).Subject;
+        var follower = followers.Should().ContainSingle(candidate => candidate.UserId == WellKnownUsers.Explorer).Subject;
         follower.IsFollowedBack.Should().BeFalse();
         follower.HasPendingRequest.Should().BeTrue();
+    }
+
+    private static async Task<T> GetAsync<T>(HttpClient client, string url)
+    {
+        var response = await client.GetAsync(url);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
     }
 }

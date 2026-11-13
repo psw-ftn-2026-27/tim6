@@ -39,9 +39,9 @@
 
       @if (followStatus.error()) {
         <p class="error">Could not load the follow status.</p>
-      } @else if (followStatus.value(); as status) {
+      } @else if (followStatus.value(); as followStatusDto) {
         <app-follow-button
-          [state]="status.state"
+          [status]="followStatusDto.status"
           [pending]="followPending()"
           (follow)="follow(blog.authorId)"
         />

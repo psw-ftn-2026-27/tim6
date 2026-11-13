@@ -1,9 +1,10 @@
-using Social.Application.Following;
+using Social.Domain.Following;
 
-namespace Social.Application.FollowRelationships;
+namespace Social.Application.Following;
 
-public interface IFollowRelationshipReadRepository
+public interface IFollowReadRepository
 {
+    Task<FollowStatus> GetFollowStatusAsync(Guid userId, Guid otherUserId);
     Task<List<SentFollowRequestDto>> GetSentRequestsAsync(Guid senderId);
     Task<List<FollowedUserDto>> GetFollowedUsersAsync(Guid followerId);
     Task<List<ReceivedFollowRequestDto>> GetReceivedRequestsAsync(Guid recipientId);

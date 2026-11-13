@@ -2,5 +2,5 @@ namespace Social.Tests.Integration.Seeds;
 
 internal static class SocialSeed
 {
-    public static object[] All => [.. BlogSeed.All, .. FollowRelationshipSeed.All, .. ClubSeed.All];
+    public static object[] All => [.. BlogSeed.All, .. FollowSeed.All, .. ClubSeed.All];
 }
