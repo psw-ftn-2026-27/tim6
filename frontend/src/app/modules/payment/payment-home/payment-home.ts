@@ -1,9 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { Auth } from '../../../core/auth/auth';
 import { serverMessage } from '../../../shared/util/server-message';
 import { MyWallet } from '../my-wallet/my-wallet';
 
 @Component({
+  imports: [RouterLink],
   selector: 'app-payment-home',
   styleUrl: './payment-home.scss',
   templateUrl: './payment-home.html',
@@ -11,6 +13,12 @@ import { MyWallet } from '../my-wallet/my-wallet';
 export class PaymentHome {
   private readonly myWallet = inject(MyWallet);
   private readonly router = inject(Router);
+  private readonly auth = inject(Auth);
+
+  // An administrator manages every wallet, so the page shows "Novčanici" instead of "Moj novčanik".
+  protected readonly isAdministrator = computed(
+    () => this.auth.user()?.roles.includes('administrator') ?? false,
+  );
 
   protected readonly pending = signal(false);
   protected readonly error = signal<string | null>(null);

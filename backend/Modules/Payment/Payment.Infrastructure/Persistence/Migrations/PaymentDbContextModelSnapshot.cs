@@ -28,6 +28,9 @@ namespace Payment.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("AdministratorId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Amount")
                         .HasColumnType("integer");
 

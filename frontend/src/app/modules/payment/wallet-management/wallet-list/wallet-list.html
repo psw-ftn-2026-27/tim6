@@ -1,0 +1,55 @@
+<div class="stack">
+  <p><a routerLink="/payment">Nazad</a></p>
+
+  <h1>Novčanici</h1>
+
+  @if (wallets.isLoading()) {
+    <p>Učitavanje novčanika...</p>
+  } @else if (wallets.error()) {
+    <p class="notice notice--danger" role="alert">
+      Novčanike nije moguće učitati. Prijavite se kao administrator i pokušajte ponovo.
+    </p>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Imejl</th>
+            <th scope="col">Stanje</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (wallet of wallets.value()?.items ?? []; track wallet.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/payment/wallets', wallet.id]">
+                  {{ wallet.email ?? 'Korisnik bez imejla' }}
+                </a>
+              </td>
+              <td>{{ wallet.balance }} EC</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="2">Još nema novčanika.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <p class="pages">
+    <button class="button" type="button" [disabled]="page() <= 1" (click)="previousPage()">
+      Prethodna
+    </button>
+    <span class="meta">Stranica {{ page() }} od {{ pageCount() }}</span>
+    <button
+      class="button"
+      type="button"
+      [disabled]="page() >= pageCount()"
+      (click)="nextPage()"
+    >
+      Sledeća
+    </button>
+  </p>
+</div>
