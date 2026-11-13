@@ -1,0 +1,60 @@
+<article class="card stack">
+  <div class="header">
+    <h2>{{ quiz().name }}</h2>
+    <span class="meta">
+      @switch (quiz().status) {
+        @case ('Draft') {
+          Nacrt
+        }
+        @case ('Published') {
+          Objavljen
+        }
+        @case ('Retired') {
+          Povučen
+        }
+        @case ('Archived') {
+          Arhiviran
+        }
+      }
+    </span>
+  </div>
+
+  <dl class="details">
+    <div>
+      <dt>XP</dt>
+      <dd>{{ quiz().xp }}</dd>
+    </div>
+    <div>
+      <dt>Broj pitanja</dt>
+      <dd>{{ quiz().questions.length }}</dd>
+    </div>
+  </dl>
+
+  @if (quiz().status === 'Draft') {
+    @if (confirmingDelete()) {
+      <p>Da li sigurno želiš da obrišeš kviz „{{ quiz().name }}”?</p>
+      <div class="actions">
+        <button class="button" type="button" [disabled]="pending()" (click)="cancelDelete.emit()">
+          Otkaži
+        </button>
+        <button
+          class="button button--primary"
+          type="button"
+          [disabled]="pending()"
+          (click)="confirmDelete.emit()"
+        >
+          Potvrdi
+        </button>
+      </div>
+    } @else {
+      <div class="actions">
+        <button class="button" type="button" [disabled]="pending()" (click)="edit.emit()">
+          Izmeni
+        </button>
+        <button class="button" type="button" [disabled]="pending()" (click)="startDelete.emit()">
+          Obriši
+        </button>
+      </div>
+    }
+  }
+</article>
