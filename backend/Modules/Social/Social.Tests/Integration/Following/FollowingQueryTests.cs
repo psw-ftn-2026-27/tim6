@@ -73,14 +73,17 @@ public class FollowingQueryTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Received_requests_list_contains_the_pending_request_addressed_to_the_user()
+    public async Task Received_requests_list_contains_the_pending_requests_addressed_to_the_user()
     {
-        var expectedRequestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+        var expectedRequestIds = FollowSeed.All
+            .OfType<FollowRequest>()
+            .Where(request => request.RecipientId == WellKnownUsers.Explorer && request.IsPending)
+            .Select(request => request.Id);
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
 
         var requests = await GetAsync<List<ReceivedFollowRequestDto>>(client, "/api/social/follow-requests/received");
 
-        requests.Select(request => request.Id).Should().BeEquivalentTo([expectedRequestId]);
+        requests.Select(request => request.Id).Should().BeEquivalentTo(expectedRequestIds);
     }
 
     [Fact]
@@ -127,36 +130,22 @@ public class FollowingQueryTests : BaseIntegrationTest
     [Fact]
     public async Task Followers_list_flags_a_follower_the_user_does_not_follow_back()
     {
-        var explorerClient = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-        var sendResponse = await explorerClient.PostAsync(
-            $"/api/social/users/{WellKnownUsers.Administrator}/follow-requests", null);
-        sendResponse.EnsureSuccessStatusCode();
-        var requestId = await sendResponse.Content.ReadFromJsonAsync<Guid>();
-        var administratorClient = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
-        var acceptResponse = await administratorClient.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
-        acceptResponse.EnsureSuccessStatusCode();
+        var client = Factory.CreateClientFor(FollowSeed.ThirdExplorer, "explorer");
 
-        var followers = await GetAsync<List<FollowerDto>>(administratorClient, "/api/social/followers");
+        var followers = await GetAsync<List<FollowerDto>>(client, "/api/social/followers");
 
-        followers.Should().ContainSingle(follower => follower.UserId == WellKnownUsers.Explorer)
+        followers.Should().ContainSingle(follower => follower.UserId == WellKnownUsers.Administrator)
             .Which.IsFollowedBack.Should().BeFalse();
     }
 
     [Fact]
     public async Task Followers_list_flags_a_pending_request_the_user_sent_to_a_follower()
     {
-        var explorerClient = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-        var sendResponse = await explorerClient.PostAsync(
-            $"/api/social/users/{WellKnownUsers.SecondExplorer}/follow-requests", null);
-        sendResponse.EnsureSuccessStatusCode();
-        var requestId = await sendResponse.Content.ReadFromJsonAsync<Guid>();
-        var secondExplorerClient = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
-        var acceptResponse = await secondExplorerClient.PostAsync($"/api/social/follow-requests/{requestId}/accept", null);
-        acceptResponse.EnsureSuccessStatusCode();
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
 
-        var followers = await GetAsync<List<FollowerDto>>(secondExplorerClient, "/api/social/followers");
+        var followers = await GetAsync<List<FollowerDto>>(client, "/api/social/followers");
 
-        var follower = followers.Should().ContainSingle(candidate => candidate.UserId == WellKnownUsers.Explorer).Subject;
+        var follower = followers.Should().ContainSingle(candidate => candidate.UserId == FollowSeed.ThirdExplorer).Subject;
         follower.IsFollowedBack.Should().BeFalse();
         follower.HasPendingRequest.Should().BeTrue();
     }
