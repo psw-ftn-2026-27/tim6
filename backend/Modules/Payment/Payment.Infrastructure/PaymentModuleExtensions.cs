@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Payment.Application;
 using Payment.Application.MyWallet;
+using Payment.Application.WalletManagement;
 using Payment.Application.Wallets;
 using Payment.Infrastructure.Persistence;
 using Payment.Infrastructure.Persistence.Wallets;
@@ -23,6 +24,8 @@ public static class PaymentModuleExtensions
 
         services.AddScoped<MyWalletService>();
         services.AddScoped<MyWalletQueries>();
+        services.AddScoped<WalletManagementService>();
+        services.AddScoped<WalletManagementQueries>();
 
         return services;
     }

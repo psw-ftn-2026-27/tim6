@@ -1,4 +1,4 @@
-namespace Payment.Application.MyWallet;
+namespace Payment.Application.Wallets;
 
 public sealed record TransactionDto(
     Guid Id,
