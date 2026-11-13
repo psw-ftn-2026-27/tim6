@@ -122,6 +122,27 @@
           </div>
         </div>
 
+        <div class="field">
+          <span class="field-label">Lokacija</span>
+          <app-geographic-map
+            [pins]="savedPins()"
+            [selectionEnabled]="true"
+            (locationSelected)="selectLocation($event)"
+          />
+          @if (quizForm.location().value()) {
+            <div class="actions">
+              <button
+                class="button"
+                type="button"
+                [disabled]="pending()"
+                (click)="removeLocation()"
+              >
+                Ukloni lokaciju
+              </button>
+            </div>
+          }
+        </div>
+
         <div class="actions">
           <button
             class="button button--primary"
@@ -149,12 +170,12 @@
       @for (quiz of quizzes.value() ?? []; track quiz.id) {
         <app-quiz-card
           [quiz]="quiz"
-          [confirmingDelete]="deletingQuizId() === quiz.id"
+          [confirming]="confirmingQuizId() === quiz.id ? confirmingAction() : null"
           [pending]="pending()"
           (edit)="startEdit(quiz)"
-          (startDelete)="startDelete(quiz.id)"
-          (confirmDelete)="delete(quiz)"
-          (cancelDelete)="cancelDelete()"
+          (startAction)="startAction(quiz.id, $event)"
+          (confirmAction)="runAction(quiz, $event)"
+          (cancelAction)="cancelAction()"
         />
       } @empty {
         <p>Još nema kvizova.</p>

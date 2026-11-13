@@ -1,3 +1,4 @@
+using Games.Application.Challenges;
 using Games.Application.SocialChallengeAuthoring;
 using Games.Application.SocialChallenges;
 using Microsoft.EntityFrameworkCore;

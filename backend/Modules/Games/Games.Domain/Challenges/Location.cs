@@ -1,6 +1,6 @@
 using Shared.Domain.Exceptions;
 
-namespace Games.Domain.SocialChallenges;
+namespace Games.Domain.Challenges;
 
 public sealed record Location
 {

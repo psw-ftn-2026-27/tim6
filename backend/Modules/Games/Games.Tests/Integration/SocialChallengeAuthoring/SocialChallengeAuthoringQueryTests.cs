@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using FluentAssertions;
+using Games.Application.Challenges;
 using Games.Application.SocialChallengeAuthoring;
 using Games.Tests.Integration.Seeds;
 using Shared.Tests;

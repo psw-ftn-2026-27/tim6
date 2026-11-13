@@ -1,9 +1,9 @@
 using FluentAssertions;
-using Games.Domain.SocialChallenges;
+using Games.Domain.Challenges;
 using Shared.Domain.Exceptions;
 using Xunit;
 
-namespace Games.Tests.Unit.SocialChallenges;
+namespace Games.Tests.Unit.Challenges;
 
 public class LocationTests
 {

@@ -1,4 +1,5 @@
 using Games.Application.Quizzes;
+using Games.Domain.Challenges;
 using Games.Domain.Quizzes;
 using Shared.Domain.Exceptions;
 
@@ -18,6 +19,10 @@ public sealed class QuizAuthoringService
     public async Task<Guid> CreateAsync(CreateQuizDto dto)
     {
         var quiz = new Quiz(dto.Name, dto.Instructions, dto.Xp, ToQuestions(dto.Questions));
+        if (dto.Location is not null)
+        {
+            quiz.PlaceAt(new Location(dto.Location.Latitude, dto.Location.Longitude));
+        }
 
         _quizRepository.Add(quiz);
         await _unitOfWork.SaveChangesAsync();
@@ -30,6 +35,14 @@ public sealed class QuizAuthoringService
         var quiz = await GetQuizAsync(quizId);
 
         quiz.Edit(dto.Name, dto.Instructions, dto.Xp, ToQuestions(dto.Questions));
+        if (dto.Location is null)
+        {
+            quiz.RemoveLocation();
+        }
+        else
+        {
+            quiz.PlaceAt(new Location(dto.Location.Latitude, dto.Location.Longitude));
+        }
         await _unitOfWork.SaveChangesAsync();
     }
 
