@@ -124,6 +124,20 @@ public class QuizAuthoringCommandTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task Edited_draft_with_a_location_keeps_the_new_location()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+        var request = new UpdateQuizDto("Istorija tvrđave", "Prošetajte tvrđavom i odgovorite na pitanja o njenoj prošlosti.", 150, CreateQuestions(), new LocationDto(45.2517, 19.8659));
+
+        var response = await client.PutAsJsonAsync($"/api/games/quizzes/{QuizSeed.DraftFortressHistory.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<GamesDbContext>();
+        var stored = assertContext.Quizzes.Single(quiz => quiz.Id == QuizSeed.DraftFortressHistory.Id);
+        stored.Location.Should().Be(new Location(45.2517, 19.8659));
+    }
+
+    [Fact]
     public async Task Edited_draft_without_a_location_loses_its_location()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
