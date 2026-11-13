@@ -1,0 +1,164 @@
+@if (!isAdministrator()) {
+  <p class="error">Nemaš pristup ovoj stranici. Kvizovima upravlja administrator.</p>
+} @else {
+  <div class="stack">
+    <div class="page-header">
+      <h1>Kvizovi</h1>
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="pending()"
+        (click)="startCreate()"
+      >
+        Nov kviz
+      </button>
+    </div>
+
+    @if (formOpen()) {
+      <form class="card stack" (submit)="save($event)">
+        <h2>{{ editingQuizId() === null ? 'Nov kviz' : 'Izmena kviza' }}</h2>
+
+        @if (formError()) {
+          <p class="error">{{ formError() }}</p>
+        }
+
+        <div class="field">
+          <label for="name">Naziv</label>
+          <input id="name" type="text" [formField]="quizForm.name" />
+          @if (quizForm.name().touched()) {
+            @for (message of quizForm.name().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <div class="field">
+          <label for="instructions">Uputstva</label>
+          <textarea id="instructions" rows="3" [formField]="quizForm.instructions"></textarea>
+          @if (quizForm.instructions().touched()) {
+            @for (message of quizForm.instructions().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <div class="field">
+          <label for="xp">XP</label>
+          <input id="xp" type="number" [formField]="quizForm.xp" />
+          @if (quizForm.xp().touched()) {
+            @for (message of quizForm.xp().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <div class="stack">
+          <span class="field-label">Pitanja</span>
+
+          @for (question of quizForm.questions; track $index; let questionIndex = $index) {
+            <fieldset class="question stack">
+              <div class="field">
+                <label for="question-{{ questionIndex }}">Pitanje {{ questionIndex + 1 }}</label>
+                <input id="question-{{ questionIndex }}" type="text" [formField]="question.text" />
+              </div>
+
+              @for (option of question.options; track $index; let optionIndex = $index) {
+                <div class="option">
+                  <input
+                    type="radio"
+                    name="correct-{{ questionIndex }}"
+                    aria-label="Tačan odgovor"
+                    [checked]="option.isCorrect().value()"
+                    (change)="markCorrect(questionIndex, optionIndex)"
+                  />
+                  <input
+                    type="text"
+                    aria-label="Odgovor {{ optionIndex + 1 }}"
+                    [formField]="option.text"
+                  />
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="pending() || !canRemoveOption(questionIndex)"
+                    (click)="removeOption(questionIndex, optionIndex)"
+                  >
+                    Ukloni
+                  </button>
+                </div>
+              }
+
+              <div class="actions">
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending() || !canAddOption(questionIndex)"
+                  (click)="addOption(questionIndex)"
+                >
+                  Dodaj odgovor
+                </button>
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending() || !canRemoveQuestion()"
+                  (click)="removeQuestion(questionIndex)"
+                >
+                  Ukloni pitanje
+                </button>
+              </div>
+            </fieldset>
+          } @empty {
+            <p class="hint">Kviz još nema pitanja.</p>
+          }
+
+          <div class="actions">
+            <button
+              class="button"
+              type="button"
+              [disabled]="pending() || !canAddQuestion()"
+              (click)="addQuestion()"
+            >
+              Dodaj pitanje
+            </button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button
+            class="button button--primary"
+            type="submit"
+            [disabled]="!quizForm().valid() || pending()"
+          >
+            Sačuvaj
+          </button>
+          <button class="button" type="button" [disabled]="pending()" (click)="cancelForm()">
+            Otkaži
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    @if (quizzes.isLoading()) {
+      <p>Učitavanje kvizova...</p>
+    } @else if (quizzes.error()) {
+      <p class="error">Kvizovi nisu učitani. Prijavite se kao administrator i pokušajte ponovo.</p>
+    } @else {
+      @for (quiz of quizzes.value() ?? []; track quiz.id) {
+        <app-quiz-card
+          [quiz]="quiz"
+          [confirmingDelete]="deletingQuizId() === quiz.id"
+          [pending]="pending()"
+          (edit)="startEdit(quiz)"
+          (startDelete)="startDelete(quiz.id)"
+          (confirmDelete)="delete(quiz)"
+          (cancelDelete)="cancelDelete()"
+        />
+      } @empty {
+        <p>Još nema kvizova.</p>
+      }
+    }
+  </div>
+}
