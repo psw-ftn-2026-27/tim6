@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Games.Domain.Challenges;
 using Games.Domain.SocialChallenges;
 using Shared.Domain.Exceptions;
 using Xunit;
@@ -10,10 +11,14 @@ public class SocialChallengeTests
     private static DailyTimeWindow CreateTimeWindow() => new(new TimeOnly(18, 0), new TimeOnly(20, 0));
 
     private static SocialChallenge CreateChallenge(int requiredPeople = 5, int rangeInMeters = 50) =>
-        new("Okupljanje na trgu", CreateTimeWindow(), requiredPeople, rangeInMeters, 100, "Svi ste se okupili!", null);
+        new("Okupljanje na trgu", CreateTimeWindow(), requiredPeople, rangeInMeters, 100, "Svi ste se okupili!");
 
-    private static SocialChallenge CreateLocatedChallenge() =>
-        new("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!", new Location(45.2551, 19.8451));
+    private static SocialChallenge CreateLocatedChallenge()
+    {
+        var challenge = CreateChallenge();
+        challenge.PlaceAt(new Location(45.2551, 19.8451));
+        return challenge;
+    }
 
     private static SocialChallenge CreatePublishedChallenge()
     {
@@ -51,7 +56,7 @@ public class SocialChallengeTests
     [InlineData("Okupljanje na trgu", "   ")]
     public void New_social_challenge_requires_a_name_and_an_exit_message(string name, string exitMessage)
     {
-        var creation = () => new SocialChallenge(name, CreateTimeWindow(), 5, 50, 100, exitMessage, null);
+        var creation = () => new SocialChallenge(name, CreateTimeWindow(), 5, 50, 100, exitMessage);
 
         creation.Should().Throw<DomainException>();
     }
@@ -61,7 +66,7 @@ public class SocialChallengeTests
     {
         var name = new string('a', 200);
 
-        var challenge = new SocialChallenge(name, CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!", null);
+        var challenge = new SocialChallenge(name, CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!");
 
         challenge.Name.Should().Be(name);
     }
@@ -69,7 +74,7 @@ public class SocialChallengeTests
     [Fact]
     public void Social_challenge_name_longer_than_two_hundred_characters_is_rejected()
     {
-        var creation = () => new SocialChallenge(new string('a', 201), CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!", null);
+        var creation = () => new SocialChallenge(new string('a', 201), CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!");
 
         creation.Should().Throw<DomainException>();
     }
@@ -117,7 +122,7 @@ public class SocialChallengeTests
     [Fact]
     public void Social_challenge_without_xp_cannot_be_created()
     {
-        var creation = () => new SocialChallenge("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 0, "Svi ste se okupili!", null);
+        var creation = () => new SocialChallenge("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 0, "Svi ste se okupili!");
 
         creation.Should().Throw<DomainException>();
     }
@@ -125,7 +130,7 @@ public class SocialChallengeTests
     [Fact]
     public void Social_challenge_rewarding_one_xp_is_created()
     {
-        var challenge = new SocialChallenge("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 1, "Svi ste se okupili!", null);
+        var challenge = new SocialChallenge("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 1, "Svi ste se okupili!");
 
         challenge.Xp.Should().Be(1);
     }
@@ -135,7 +140,7 @@ public class SocialChallengeTests
     {
         var challenge = CreateChallenge();
 
-        var edit = () => challenge.Edit("Okupljanje na trgu", CreateTimeWindow(), 31, 50, 100, "Svi ste se okupili!", null);
+        var edit = () => challenge.Edit("Okupljanje na trgu", CreateTimeWindow(), 31, 50, 100, "Svi ste se okupili!");
 
         edit.Should().Throw<DomainException>();
     }
@@ -221,13 +226,53 @@ public class SocialChallengeTests
     }
 
     [Fact]
-    public void Published_social_challenge_cannot_be_edited_nor_moved()
+    public void Published_social_challenge_cannot_be_edited()
     {
         var challenge = CreatePublishedChallenge();
 
-        var edit = () => challenge.Edit("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!", new Location(44.8125, 20.4612));
+        var edit = () => challenge.Edit("Okupljanje na trgu", CreateTimeWindow(), 5, 50, 100, "Svi ste se okupili!");
 
         edit.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Draft_is_placed_at_a_location()
+    {
+        var challenge = CreateChallenge();
+
+        challenge.PlaceAt(new Location(44.8125, 20.4612));
+
+        challenge.Location.Should().Be(new Location(44.8125, 20.4612));
+    }
+
+    [Fact]
+    public void Draft_loses_its_location()
+    {
+        var challenge = CreateLocatedChallenge();
+
+        challenge.RemoveLocation();
+
+        challenge.Location.Should().BeNull();
+    }
+
+    [Fact]
+    public void Published_social_challenge_cannot_be_moved()
+    {
+        var challenge = CreatePublishedChallenge();
+
+        var placing = () => challenge.PlaceAt(new Location(44.8125, 20.4612));
+
+        placing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Published_social_challenge_cannot_lose_its_location()
+    {
+        var challenge = CreatePublishedChallenge();
+
+        var removal = () => challenge.RemoveLocation();
+
+        removal.Should().Throw<DomainException>();
     }
 
     [Fact]

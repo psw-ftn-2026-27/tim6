@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Games.Application.SocialChallengeAuthoring;
+using Games.Domain.Challenges;
 using Games.Domain.SocialChallenges;
 using Games.Infrastructure.Persistence;
 using Games.Tests.Integration.Seeds;
@@ -36,7 +37,7 @@ public class SocialChallengeAuthoringCommandTests : BaseIntegrationTest
         stored.RequiredPeople.Should().Be(4);
         stored.RangeInMeters.Should().Be(100);
         stored.Xp.Should().Be(150);
-        stored.ExitMessage.Should().Be("Zajedno ste istrčali jutro!", null);
+        stored.ExitMessage.Should().Be("Zajedno ste istrčali jutro!");
     }
 
     [Fact]
@@ -108,7 +109,7 @@ public class SocialChallengeAuthoringCommandTests : BaseIntegrationTest
         stored.RequiredPeople.Should().Be(8);
         stored.RangeInMeters.Should().Be(120);
         stored.Xp.Should().Be(300);
-        stored.ExitMessage.Should().Be("Okupili ste se uveče!", null);
+        stored.ExitMessage.Should().Be("Okupili ste se uveče!");
         stored.Status.Should().Be(ChallengeStatus.Draft);
     }
 
@@ -124,6 +125,20 @@ public class SocialChallengeAuthoringCommandTests : BaseIntegrationTest
         using var assertContext = Factory.CreateContext<GamesDbContext>();
         var stored = assertContext.SocialChallenges.Single(challenge => challenge.Id == SocialChallengeSeed.DraftSquareGathering.Id);
         stored.Location.Should().Be(new Location(45.2551, 19.8451));
+    }
+
+    [Fact]
+    public async Task Edited_draft_without_a_location_loses_its_location()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+        var request = new UpdateSocialChallengeDto("Zalazak sunca na tvrđavi", new DailyTimeWindowDto(new TimeOnly(19, 0), new TimeOnly(21, 0)), 6, 80, 150, "Zajedno ste ispratili sunce!", null);
+
+        var response = await client.PutAsJsonAsync($"/api/games/social-challenges/{SocialChallengeSeed.LocatedDraftFortressSunset.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<GamesDbContext>();
+        var stored = assertContext.SocialChallenges.Single(challenge => challenge.Id == SocialChallengeSeed.LocatedDraftFortressSunset.Id);
+        stored.Location.Should().BeNull();
     }
 
     [Fact]

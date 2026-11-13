@@ -1,3 +1,4 @@
+using Games.Domain.Challenges;
 using Shared.Domain;
 using Shared.Domain.Exceptions;
 
@@ -29,7 +30,7 @@ public sealed class SocialChallenge : AggregateRoot
     }
 
     public SocialChallenge(string name, DailyTimeWindow timeWindow, int requiredPeople, int rangeInMeters, int xp,
-        string exitMessage, Location? location)
+        string exitMessage)
         : base(Guid.NewGuid())
     {
         Validate(name, timeWindow, requiredPeople, rangeInMeters, xp, exitMessage);
@@ -40,13 +41,12 @@ public sealed class SocialChallenge : AggregateRoot
         RangeInMeters = rangeInMeters;
         Xp = xp;
         ExitMessage = exitMessage;
-        Location = location;
         Status = ChallengeStatus.Draft;
         CreatedAt = DateTime.UtcNow;
     }
 
     public void Edit(string name, DailyTimeWindow timeWindow, int requiredPeople, int rangeInMeters, int xp,
-        string exitMessage, Location? location)
+        string exitMessage)
     {
         if (Status != ChallengeStatus.Draft)
         {
@@ -60,7 +60,26 @@ public sealed class SocialChallenge : AggregateRoot
         RangeInMeters = rangeInMeters;
         Xp = xp;
         ExitMessage = exitMessage;
+    }
+
+    public void PlaceAt(Location location)
+    {
+        if (Status != ChallengeStatus.Draft)
+        {
+            throw new DomainException("Only a draft social challenge can be placed.");
+        }
+
         Location = location;
+    }
+
+    public void RemoveLocation()
+    {
+        if (Status != ChallengeStatus.Draft)
+        {
+            throw new DomainException("Only a draft social challenge can have its location removed.");
+        }
+
+        Location = null;
     }
 
     public void Publish()

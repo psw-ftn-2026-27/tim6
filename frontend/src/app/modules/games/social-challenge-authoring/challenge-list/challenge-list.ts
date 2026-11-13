@@ -121,6 +121,12 @@ export class ChallengeList {
     this.editLocation.set({ latitude: coordinate.latitude, longitude: coordinate.longitude });
   }
 
+  // The draft is saved with an empty location, which the server removes.
+  protected removeLocation(): void {
+    this.editLocation.set(null);
+    this.editSavedPins.set([]);
+  }
+
   protected startAction(challengeId: string, action: ChallengeAction): void {
     this.cancelEdit();
     this.confirmingChallengeId.set(challengeId);

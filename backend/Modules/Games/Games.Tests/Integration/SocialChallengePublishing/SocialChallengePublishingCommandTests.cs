@@ -1,6 +1,6 @@
 using System.Net;
 using FluentAssertions;
-using Games.Domain.SocialChallenges;
+using Games.Domain.Challenges;
 using Games.Infrastructure.Persistence;
 using Games.Tests.Integration.Seeds;
 using Shared.Tests;

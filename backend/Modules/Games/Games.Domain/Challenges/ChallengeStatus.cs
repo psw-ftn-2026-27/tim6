@@ -1,4 +1,4 @@
-namespace Games.Domain.SocialChallenges;
+namespace Games.Domain.Challenges;
 
 public enum ChallengeStatus
 {

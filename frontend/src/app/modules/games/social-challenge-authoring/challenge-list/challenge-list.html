@@ -98,6 +98,18 @@
                 [selectionEnabled]="true"
                 (locationSelected)="onLocationSelected($event)"
               />
+              @if (editLocation()) {
+                <div class="actions">
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="pending()"
+                    (click)="removeLocation()"
+                  >
+                    Ukloni lokaciju
+                  </button>
+                </div>
+              }
             </div>
 
             @if (editError()) {
