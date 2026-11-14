@@ -63,6 +63,26 @@ public class FollowRequestTests
     }
 
     [Fact]
+    public void Only_the_recipient_can_reject_a_request()
+    {
+        var request = new FollowRequest(_senderId, _recipientId);
+
+        var act = () => request.Reject(_senderId);
+
+        act.Should().Throw<NotFoundException>();
+    }
+
+    [Fact]
+    public void Only_the_sender_can_cancel_a_request()
+    {
+        var request = new FollowRequest(_senderId, _recipientId);
+
+        var act = () => request.EnsureCanBeCancelledBy(_recipientId);
+
+        act.Should().Throw<NotFoundException>();
+    }
+
+    [Fact]
     public void An_accepted_request_cannot_be_accepted_again()
     {
         var request = CreateAcceptedRequest();

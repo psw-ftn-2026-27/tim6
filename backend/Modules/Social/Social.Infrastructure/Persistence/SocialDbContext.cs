@@ -22,7 +22,8 @@ internal sealed class SocialDbContext : DbContext, IUnitOfWork
     {
         builder.HasDefaultSchema("social");
         builder.ConfigureBlogs();
-        builder.ConfigureFollowing();
+        builder.ConfigureFollows();
+        builder.ConfigureFollowRequests();
         builder.ConfigureClubs();
     }
 }

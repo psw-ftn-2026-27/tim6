@@ -45,13 +45,10 @@ export interface FollowStatusDto {
   status: FollowStatus;
 }
 
-export type FollowRequestStatus = 'Pending' | 'Accepted' | 'Rejected';
-
 export interface SentFollowRequestDto {
   id: string;
   recipientId: string;
   createdAt: string;
-  status: FollowRequestStatus;
 }
 
 export interface FollowedUserDto {

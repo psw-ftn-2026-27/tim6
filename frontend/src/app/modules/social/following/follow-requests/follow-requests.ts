@@ -29,9 +29,7 @@ export class FollowRequests {
   );
 
   protected readonly rows = computed<FollowRequestRow[]>(() => {
-    const sentRows = (this.sent.value() ?? [])
-      .filter((request) => request.status === 'Pending')
-      .map((request) => ({
+    const sentRows = (this.sent.value() ?? []).map((request) => ({
         id: request.id,
         userId: request.recipientId,
         createdAt: request.createdAt,

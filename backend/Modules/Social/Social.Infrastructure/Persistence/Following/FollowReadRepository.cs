@@ -32,13 +32,9 @@ internal sealed class FollowReadRepository : IFollowReadRepository
     public Task<List<SentFollowRequestDto>> GetSentRequestsAsync(Guid senderId)
     {
         return _dbContext.FollowRequests
-            .Where(request => request.SenderId == senderId)
+            .Where(request => request.SenderId == senderId && request.Status == FollowRequestStatus.Pending)
             .OrderByDescending(request => request.CreatedAt)
-            .Select(request => new SentFollowRequestDto(
-                request.Id,
-                request.RecipientId,
-                request.CreatedAt,
-                request.Status))
+            .Select(request => new SentFollowRequestDto(request.Id, request.RecipientId, request.CreatedAt))
             .ToListAsync();
     }
 

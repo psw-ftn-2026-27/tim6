@@ -15,68 +15,22 @@ public class FollowingCommandTests : BaseIntegrationTest
     private static readonly Guid Explorer = WellKnownUsers.Explorer;
     private static readonly Guid SecondExplorer = WellKnownUsers.SecondExplorer;
     private static readonly Guid ThirdExplorer = FollowSeed.ThirdExplorer;
+    private const string AnyId = "00000000-0000-0000-0000-000000000000";
 
     public FollowingCommandTests(SocialApiFactory factory) : base(factory) { }
 
-    [Fact]
-    public async Task An_unauthenticated_user_cannot_send_a_follow_request()
+    [Theory]
+    [InlineData("POST", $"/api/social/users/{AnyId}/follow-requests")]
+    [InlineData("DELETE", $"/api/social/follow-requests/{AnyId}")]
+    [InlineData("DELETE", $"/api/social/following/{AnyId}")]
+    [InlineData("POST", $"/api/social/follow-requests/{AnyId}/accept")]
+    [InlineData("POST", $"/api/social/follow-requests/{AnyId}/reject")]
+    [InlineData("DELETE", $"/api/social/followers/{AnyId}")]
+    public async Task An_unauthenticated_user_cannot_change_follow_state(string method, string url)
     {
         var client = Factory.CreateClient();
 
-        var response = await SendRequestAsync(client, Explorer);
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task An_unauthenticated_user_cannot_cancel_a_follow_request()
-    {
-        var client = Factory.CreateClient();
-
-        var response = await DeleteAsync(
-            client, $"/api/social/follow-requests/{FollowSeed.SecondExplorerPendingRequestToExplorer.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task An_unauthenticated_user_cannot_unfollow_a_user()
-    {
-        var client = Factory.CreateClient();
-
-        var response = await DeleteAsync(client, $"/api/social/following/{SecondExplorer}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task An_unauthenticated_user_cannot_accept_a_follow_request()
-    {
-        var client = Factory.CreateClient();
-
-        var response = await PostAsync(
-            client, $"/api/social/follow-requests/{FollowSeed.SecondExplorerPendingRequestToExplorer.Id}/accept");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task An_unauthenticated_user_cannot_reject_a_follow_request()
-    {
-        var client = Factory.CreateClient();
-
-        var response = await PostAsync(
-            client, $"/api/social/follow-requests/{FollowSeed.SecondExplorerPendingRequestToExplorer.Id}/reject");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task An_unauthenticated_user_cannot_remove_a_follower()
-    {
-        var client = Factory.CreateClient();
-
-        var response = await DeleteAsync(client, $"/api/social/followers/{Administrator}");
+        var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -113,7 +67,7 @@ public class FollowingCommandTests : BaseIntegrationTest
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         StoredRequest(await response.Content.ReadFromJsonAsync<Guid>()).Status.Should().Be(FollowRequestStatus.Pending);
-        StoredRequest(FollowSeed.SecondExplorerPendingRequestToExplorer.Id).Status.Should().Be(FollowRequestStatus.Pending);
+        StoredRequest(FollowRequestSeed.SecondExplorerPendingRequestToExplorer.Id).Status.Should().Be(FollowRequestStatus.Pending);
         IsFollowing(Explorer, SecondExplorer).Should().BeFalse();
         IsFollowing(SecondExplorer, Explorer).Should().BeFalse();
     }
@@ -154,7 +108,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     [Fact]
     public async Task A_new_request_can_be_sent_after_the_previous_one_was_rejected()
     {
-        var rejectedRequestId = FollowSeed.ExplorerRejectedRequestToSecondExplorer.Id;
+        var rejectedRequestId = FollowRequestSeed.ExplorerRejectedRequestToSecondExplorer.Id;
 
         var response = await SendRequestAsync(ClientFor(Explorer), SecondExplorer);
 
@@ -168,7 +122,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     [Fact]
     public async Task The_sender_can_cancel_a_pending_request()
     {
-        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+        var requestId = FollowRequestSeed.SecondExplorerPendingRequestToExplorer.Id;
 
         var response = await DeleteAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}");
 
@@ -180,7 +134,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     public async Task Only_the_sender_can_cancel_a_request()
     {
         var before = GetStoredState();
-        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+        var requestId = FollowRequestSeed.SecondExplorerPendingRequestToExplorer.Id;
 
         var response = await DeleteAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}");
 
@@ -192,7 +146,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     public async Task An_answered_request_cannot_be_cancelled()
     {
         var before = GetStoredState();
-        var requestId = FollowSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
+        var requestId = FollowRequestSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
 
         var response = await DeleteAsync(ClientFor(Administrator), $"/api/social/follow-requests/{requestId}");
 
@@ -253,7 +207,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     [Fact]
     public async Task The_recipient_can_accept_a_pending_request()
     {
-        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+        var requestId = FollowRequestSeed.SecondExplorerPendingRequestToExplorer.Id;
 
         var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept");
 
@@ -266,8 +220,8 @@ public class FollowingCommandTests : BaseIntegrationTest
     [Fact]
     public async Task Accepting_a_request_also_accepts_the_users_own_pending_request_to_the_sender()
     {
-        var requestId = FollowSeed.ThirdExplorerPendingRequestToExplorer.Id;
-        var ownRequestId = FollowSeed.ExplorerPendingRequestToThirdExplorer.Id;
+        var requestId = FollowRequestSeed.ThirdExplorerPendingRequestToExplorer.Id;
+        var ownRequestId = FollowRequestSeed.ExplorerPendingRequestToThirdExplorer.Id;
 
         var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept");
 
@@ -282,7 +236,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     public async Task An_accepted_request_cannot_be_accepted_again()
     {
         var before = GetStoredState();
-        var requestId = FollowSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
+        var requestId = FollowRequestSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
 
         var response = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}/accept");
 
@@ -295,7 +249,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     public async Task A_rejected_request_cannot_be_accepted()
     {
         var before = GetStoredState();
-        var requestId = FollowSeed.ExplorerRejectedRequestToSecondExplorer.Id;
+        var requestId = FollowRequestSeed.ExplorerRejectedRequestToSecondExplorer.Id;
 
         var response = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}/accept");
 
@@ -308,7 +262,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     public async Task Only_the_recipient_can_accept_a_request()
     {
         var before = GetStoredState();
-        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+        var requestId = FollowRequestSeed.SecondExplorerPendingRequestToExplorer.Id;
 
         var response = await PostAsync(ClientFor(Administrator), $"/api/social/follow-requests/{requestId}/accept");
 
@@ -332,7 +286,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     [Fact]
     public async Task The_recipient_can_reject_a_pending_request()
     {
-        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+        var requestId = FollowRequestSeed.SecondExplorerPendingRequestToExplorer.Id;
 
         var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/reject");
 
@@ -345,7 +299,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     public async Task An_accepted_request_cannot_be_rejected()
     {
         var before = GetStoredState();
-        var requestId = FollowSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
+        var requestId = FollowRequestSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
 
         var response = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}/reject");
 
@@ -358,7 +312,7 @@ public class FollowingCommandTests : BaseIntegrationTest
     public async Task Only_the_recipient_can_reject_a_request()
     {
         var before = GetStoredState();
-        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
+        var requestId = FollowRequestSeed.SecondExplorerPendingRequestToExplorer.Id;
 
         var response = await PostAsync(ClientFor(Administrator), $"/api/social/follow-requests/{requestId}/reject");
 

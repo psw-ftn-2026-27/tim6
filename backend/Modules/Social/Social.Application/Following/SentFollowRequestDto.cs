@@ -1,9 +1,3 @@
-using Social.Domain.Following;
-
 namespace Social.Application.Following;
 
-public sealed record SentFollowRequestDto(
-    Guid Id,
-    Guid RecipientId,
-    DateTime CreatedAt,
-    FollowRequestStatus Status);
+public sealed record SentFollowRequestDto(Guid Id, Guid RecipientId, DateTime CreatedAt);

@@ -47,36 +47,37 @@ public class FollowingQueryTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Sent_requests_list_shows_only_the_users_own_requests_with_statuses()
+    public async Task Sent_requests_list_contains_the_users_pending_requests()
     {
-        var expected = FollowSeed.All
-            .OfType<FollowRequest>()
-            .Where(request => request.SenderId == WellKnownUsers.SecondExplorer);
+        var expectedRequestIds = FollowRequestSeed.All
+            .Where(request => request.SenderId == WellKnownUsers.SecondExplorer && request.IsPending)
+            .Select(request => request.Id);
         var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
 
         var requests = await GetAsync<List<SentFollowRequestDto>>(client, "/api/social/follow-requests/sent");
 
-        requests.Select(request => (request.Id, request.Status))
-            .Should().BeEquivalentTo(expected.Select(request => (request.Id, request.Status)));
+        requests.Select(request => request.Id).Should().BeEquivalentTo(expectedRequestIds);
     }
 
     [Fact]
-    public async Task Followed_users_exclude_users_with_only_a_pending_request()
+    public async Task Followed_users_list_contains_followed_users_but_not_pending_requests()
     {
+        var expectedUserIds = FollowSeed.All
+            .Where(follow => follow.FollowerId == WellKnownUsers.SecondExplorer)
+            .Select(follow => follow.FollowedUserId);
         var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
 
         var followedUsers = await GetAsync<List<FollowedUserDto>>(client, "/api/social/following");
 
         var followedUserIds = followedUsers.Select(user => user.UserId).ToList();
-        followedUserIds.Should().Contain(WellKnownUsers.Administrator);
-        followedUserIds.Should().NotContain(WellKnownUsers.Explorer);
+        followedUserIds.Should().BeEquivalentTo(expectedUserIds);
+        followedUserIds.Should().NotContain(FollowRequestSeed.SecondExplorerPendingRequestToExplorer.RecipientId);
     }
 
     [Fact]
     public async Task Received_requests_list_contains_the_pending_requests_addressed_to_the_user()
     {
-        var expectedRequestIds = FollowSeed.All
-            .OfType<FollowRequest>()
+        var expectedRequestIds = FollowRequestSeed.All
             .Where(request => request.RecipientId == WellKnownUsers.Explorer && request.IsPending)
             .Select(request => request.Id);
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
