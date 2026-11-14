@@ -6,10 +6,6 @@ namespace Social.Infrastructure.Persistence.Following;
 
 internal static class FollowConfiguration
 {
-    public const string UniqueFollowIndex = "IX_Follows_FollowerId_FollowedUserId";
-
-    public const string UniquePendingRequestIndex = "IX_FollowRequests_SenderId_RecipientId_Pending";
-
     public static void ConfigureFollowing(this ModelBuilder modelBuilder)
     {
         ConfigureFollow(modelBuilder.Entity<Follow>());
@@ -23,7 +19,7 @@ internal static class FollowConfiguration
 
         builder.HasIndex(follow => new { follow.FollowerId, follow.FollowedUserId })
             .IsUnique()
-            .HasDatabaseName(UniqueFollowIndex);
+            .HasDatabaseName("IX_Follows_FollowerId_FollowedUserId");
         builder.HasIndex(follow => follow.FollowedUserId);
     }
 
@@ -37,7 +33,7 @@ internal static class FollowConfiguration
         builder.HasIndex(request => request.RecipientId);
         builder.HasIndex(request => new { request.SenderId, request.RecipientId })
             .IsUnique()
-            .HasDatabaseName(UniquePendingRequestIndex)
+            .HasDatabaseName("IX_FollowRequests_SenderId_RecipientId_Pending")
             .HasFilter($"\"Status\" = '{nameof(FollowRequestStatus.Pending)}'");
     }
 }
