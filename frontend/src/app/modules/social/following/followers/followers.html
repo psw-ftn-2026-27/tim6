@@ -1,0 +1,52 @@
+<div class="stack">
+  <h1>Followers</h1>
+
+  <app-follow-tabs active="followers" />
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (followers.isLoading()) {
+    <p>Loading your followers...</p>
+  } @else if (followers.error()) {
+    <p class="error">Could not load your followers. Log in and try again.</p>
+  } @else {
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">User</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (follower of followers.value() ?? []; track follower.userId) {
+          <tr>
+            <td>{{ follower.userId }}</td>
+            <td>
+              @if (follower.isFollowedBack) {
+                <span class="meta">Following</span>
+              } @else {
+                <button
+                  class="button button--primary"
+                  type="button"
+                  [disabled]="pending()"
+                  (click)="followBack(follower.userId)"
+                >
+                  Follow back
+                </button>
+              }
+              <button class="button" type="button" [disabled]="pending()" (click)="remove(follower.userId)">
+                Remove
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="2">You have no followers yet.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

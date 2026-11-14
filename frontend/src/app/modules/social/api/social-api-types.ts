@@ -39,7 +39,33 @@ export interface UpdateCommentDto {
   text: string;
 }
 
-export interface ClubDto {
+export type FollowStatus = 'Follow' | 'Pending' | 'Following';
+
+export interface FollowStatusDto {
+  status: FollowStatus;
+}
+
+export interface SentFollowRequestDto {
+  id: string;
+  recipientId: string;
+  createdAt: string;
+}
+
+export interface FollowedUserDto {
+  userId: string;
+}
+
+export interface ReceivedFollowRequestDto {
+  id: string;
+  senderId: string;
+  createdAt: string;
+}
+
+export interface FollowerDto {
+  userId: string;
+  isFollowedBack: boolean;
+}
+  export interface ClubDto {
   id: string;
   ownerId: string;
   name: string;

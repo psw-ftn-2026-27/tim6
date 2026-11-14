@@ -20,4 +20,8 @@ export class BlogReading {
   async deleteComment(id: string, commentId: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${BASE_URL}/${id}/comments/${commentId}`));
   }
+
+  async sendFollowRequest(recipientId: string): Promise<string> {
+    return firstValueFrom(this.http.post<string>(`/api/social/users/${recipientId}/follow-requests`, {}));
+  }
 }

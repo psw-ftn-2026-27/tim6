@@ -116,6 +116,64 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.ToTable("Clubs", "social");
                 });
 
+            modelBuilder.Entity("Social.Domain.Following.Follow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FollowedUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FollowerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FollowedUserId");
+
+                    b.HasIndex("FollowerId", "FollowedUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Follows_FollowerId_FollowedUserId");
+
+                    b.ToTable("Follows", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Following.FollowRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecipientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientId");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("SenderId", "RecipientId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_FollowRequests_SenderId_RecipientId_Pending")
+                        .HasFilter("\"Status\" = 'Pending'");
+
+                    b.ToTable("FollowRequests", "social");
+                });
+
             modelBuilder.Entity("Social.Domain.Blogs.Comment", b =>
                 {
                     b.HasOne("Social.Domain.Blogs.Blog", null)

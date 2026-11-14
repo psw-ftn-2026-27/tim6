@@ -1,0 +1,45 @@
+<div class="stack">
+  <h1>Following</h1>
+
+  <app-follow-tabs active="following" />
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (followedUsers.isLoading()) {
+    <p>Loading the people you follow...</p>
+  } @else if (followedUsers.error()) {
+    <p class="error">Could not load the people you follow. Log in and try again.</p>
+  } @else {
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">User</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of followedUsers.value() ?? []; track user.userId) {
+          <tr>
+            <td>{{ user.userId }}</td>
+            <td>
+              <button
+                class="button"
+                type="button"
+                [disabled]="pending()"
+                (click)="unfollow(user.userId)"
+              >
+                Unfollow
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="2">You do not follow anyone yet.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

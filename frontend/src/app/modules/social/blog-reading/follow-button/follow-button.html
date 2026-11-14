@@ -1,0 +1,18 @@
+@switch (status()) {
+  @case ('Follow') {
+    <button
+      class="button button--primary"
+      type="button"
+      [disabled]="pending()"
+      (click)="follow.emit()"
+    >
+      Follow
+    </button>
+  }
+  @case ('Pending') {
+    <button class="button" type="button" disabled>Request sent</button>
+  }
+  @case ('Following') {
+    <button class="button" type="button" disabled>Following</button>
+  }
+}

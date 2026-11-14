@@ -1,0 +1,26 @@
+<nav class="tabs">
+  <a
+    class="tabs__link"
+    routerLink="/social/requests"
+    [class.tabs__link--active]="active() === 'requests'"
+    [attr.aria-current]="active() === 'requests' ? 'page' : null"
+  >
+    Requests
+  </a>
+  <a
+    class="tabs__link"
+    routerLink="/social/followers"
+    [class.tabs__link--active]="active() === 'followers'"
+    [attr.aria-current]="active() === 'followers' ? 'page' : null"
+  >
+    Followers
+  </a>
+  <a
+    class="tabs__link"
+    routerLink="/social/following"
+    [class.tabs__link--active]="active() === 'following'"
+    [attr.aria-current]="active() === 'following' ? 'page' : null"
+  >
+    Following
+  </a>
+</nav>

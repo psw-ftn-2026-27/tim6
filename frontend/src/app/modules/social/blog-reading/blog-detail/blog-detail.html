@@ -35,6 +35,18 @@
         {{ blog.lastModifiedAt.slice(0, 10) }}
       </p>
 
+      <p class="meta">Author: {{ blog.authorId }}</p>
+
+      @if (followStatus.error()) {
+        <p class="error">Could not load the follow status.</p>
+      } @else if (followStatus.value(); as followStatusDto) {
+        <app-follow-button
+          [status]="followStatusDto.status"
+          [pending]="followPending()"
+          (follow)="follow(blog.authorId)"
+        />
+      }
+
       <app-blog-comments
         [comments]="blog.comments"
         [currentUserId]="auth.user()?.id ?? null"
