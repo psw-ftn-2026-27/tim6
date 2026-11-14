@@ -61,13 +61,6 @@ export class FollowRequests {
     await this.run(() => this.following.rejectRequest(requestId), 'Could not reject the follow request.');
   }
 
-  protected async acceptAndFollowBack(requestId: string): Promise<void> {
-    await this.run(
-      () => this.following.acceptAndFollowBack(requestId),
-      'Could not accept the request and follow back.',
-    );
-  }
-
   private async run(action: () => Promise<void>, errorMessage: string): Promise<void> {
     this.pending.set(true);
     this.error.set(null);

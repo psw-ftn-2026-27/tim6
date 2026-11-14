@@ -71,13 +71,6 @@ public sealed class FollowingController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("follow-requests/{requestId:guid}/accept-and-follow-back")]
-    public async Task<ActionResult> AcceptAndFollowBack(Guid requestId)
-    {
-        await _followingService.AcceptAndFollowBackAsync(User.GetUserId(), requestId);
-        return NoContent();
-    }
-
     [HttpDelete("followers/{followerId:guid}")]
     public async Task<ActionResult> RemoveFollower(Guid followerId)
     {

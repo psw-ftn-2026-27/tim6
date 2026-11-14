@@ -28,12 +28,6 @@ export class Following {
     await firstValueFrom(this.http.post<void>(`${BASE_URL}/follow-requests/${requestId}/reject`, {}));
   }
 
-  async acceptAndFollowBack(requestId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.post<void>(`${BASE_URL}/follow-requests/${requestId}/accept-and-follow-back`, {}),
-    );
-  }
-
   async removeFollower(followerId: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${BASE_URL}/followers/${followerId}`));
   }

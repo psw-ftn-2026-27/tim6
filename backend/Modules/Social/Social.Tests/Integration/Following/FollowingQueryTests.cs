@@ -138,18 +138,6 @@ public class FollowingQueryTests : BaseIntegrationTest
             .Which.IsFollowedBack.Should().BeFalse();
     }
 
-    [Fact]
-    public async Task Followers_list_flags_a_pending_request_the_user_sent_to_a_follower()
-    {
-        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
-
-        var followers = await GetAsync<List<FollowerDto>>(client, "/api/social/followers");
-
-        var follower = followers.Should().ContainSingle(candidate => candidate.UserId == FollowSeed.ThirdExplorer).Subject;
-        follower.IsFollowedBack.Should().BeFalse();
-        follower.HasPendingRequest.Should().BeTrue();
-    }
-
     private static async Task<T> GetAsync<T>(HttpClient client, string url)
     {
         var response = await client.GetAsync(url);

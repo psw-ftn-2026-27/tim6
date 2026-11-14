@@ -2,7 +2,7 @@ using Shared.Domain.Exceptions;
 
 namespace Social.Domain.Following;
 
-public sealed class FollowRequestSender
+public sealed class FollowRequestProcessor
 {
     public FollowRequestOutcome Send(
         Guid senderId,
@@ -26,17 +26,15 @@ public sealed class FollowRequestSender
         return new FollowRequestOutcome(request, follow);
     }
 
-    public FollowRequestOutcome? FollowBack(
-        Follow acceptedFollow,
-        Follow? existingFollowBack,
-        FollowRequest? pendingFollowBack)
+    public List<Follow> Accept(FollowRequest request, Guid actorId, FollowRequest? reversePendingRequest)
     {
-        if (existingFollowBack is not null || pendingFollowBack is not null)
+        var follows = new List<Follow> { request.Accept(actorId) };
+
+        if (reversePendingRequest is not null)
         {
-            return null;
+            follows.Add(reversePendingRequest.AcceptAutomatically());
         }
 
-        var request = new FollowRequest(acceptedFollow.FollowedUserId, acceptedFollow.FollowerId);
-        return new FollowRequestOutcome(request, request.AcceptAutomatically());
+        return follows;
     }
 }

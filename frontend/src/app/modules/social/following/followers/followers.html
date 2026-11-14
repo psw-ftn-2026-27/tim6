@@ -26,8 +26,6 @@
             <td>
               @if (follower.isFollowedBack) {
                 <span class="meta">Following</span>
-              } @else if (follower.hasPendingRequest) {
-                <span class="meta">Request sent</span>
               } @else {
                 <button
                   class="button button--primary"

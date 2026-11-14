@@ -13,7 +13,7 @@ namespace Social.Tests.Integration.Seeds;
 /// <item>SecondExplorer has a request to Explorer awaiting an answer, and an older request
 /// from Explorer to SecondExplorer was rejected.</item>
 /// <item>Administrator follows ThirdExplorer, who does not follow back.</item>
-/// <item>ThirdExplorer follows SecondExplorer, and SecondExplorer has a request to ThirdExplorer awaiting an answer.</item>
+/// <item>ThirdExplorer follows SecondExplorer, who does not follow back.</item>
 /// <item>ThirdExplorer and Explorer have requests to each other awaiting an answer, and neither follows the other.</item>
 /// </list>
 /// </summary>
@@ -43,7 +43,7 @@ internal static class FollowSeed
     public static readonly Follow SecondExplorerFollowsAdministrator =
         new(WellKnownUsers.SecondExplorer, WellKnownUsers.Administrator);
 
-    public static readonly FollowRequest SecondExplorerAcceptedRequestToAdministrator = new FollowRequestSender()
+    public static readonly FollowRequest SecondExplorerAcceptedRequestToAdministrator = new FollowRequestProcessor()
         .Send(WellKnownUsers.SecondExplorer, WellKnownUsers.Administrator, null, null, AdministratorFollowsSecondExplorer)
         .Request;
 
@@ -58,9 +58,6 @@ internal static class FollowSeed
 
     public static readonly Follow ThirdExplorerFollowsSecondExplorer =
         new(ThirdExplorer, WellKnownUsers.SecondExplorer);
-
-    public static readonly FollowRequest SecondExplorerPendingRequestToThirdExplorer =
-        new(WellKnownUsers.SecondExplorer, ThirdExplorer);
 
     public static readonly FollowRequest ThirdExplorerPendingRequestToExplorer =
         new(ThirdExplorer, WellKnownUsers.Explorer);
@@ -81,7 +78,6 @@ internal static class FollowSeed
         AdministratorFollowsThirdExplorer,
         ThirdExplorerAcceptedRequestToSecondExplorer,
         ThirdExplorerFollowsSecondExplorer,
-        SecondExplorerPendingRequestToThirdExplorer,
         ThirdExplorerPendingRequestToExplorer,
         ExplorerPendingRequestToThirdExplorer
     ];

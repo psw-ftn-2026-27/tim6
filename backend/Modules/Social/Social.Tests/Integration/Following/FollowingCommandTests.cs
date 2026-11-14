@@ -72,18 +72,6 @@ public class FollowingCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task An_unauthenticated_user_cannot_accept_and_follow_back_a_follow_request()
-    {
-        var client = Factory.CreateClient();
-
-        var response = await PostAsync(
-            client,
-            $"/api/social/follow-requests/{FollowSeed.SecondExplorerPendingRequestToExplorer.Id}/accept-and-follow-back");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
     public async Task An_unauthenticated_user_cannot_remove_a_follower()
     {
         var client = Factory.CreateClient();
@@ -276,6 +264,21 @@ public class FollowingCommandTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task Accepting_a_request_also_accepts_the_users_own_pending_request_to_the_sender()
+    {
+        var requestId = FollowSeed.ThirdExplorerPendingRequestToExplorer.Id;
+        var ownRequestId = FollowSeed.ExplorerPendingRequestToThirdExplorer.Id;
+
+        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
+        StoredRequest(ownRequestId).Status.Should().Be(FollowRequestStatus.Accepted);
+        IsFollowing(ThirdExplorer, Explorer).Should().BeTrue();
+        IsFollowing(Explorer, ThirdExplorer).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task An_accepted_request_cannot_be_accepted_again()
     {
         var before = GetStoredState();
@@ -369,100 +372,6 @@ public class FollowingCommandTests : BaseIntegrationTest
         var before = GetStoredState();
 
         var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{Guid.NewGuid()}/reject");
-
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        GetStoredState().Should().BeEquivalentTo(before);
-    }
-
-    // ---- Accepting and following back ----
-
-    [Fact]
-    public async Task Accepting_and_following_back_makes_both_users_follow_each_other()
-    {
-        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
-
-        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
-
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
-        IsFollowing(SecondExplorer, Explorer).Should().BeTrue();
-        IsFollowing(Explorer, SecondExplorer).Should().BeTrue();
-        using var context = Factory.CreateContext<SocialDbContext>();
-        context.FollowRequests.Count(request =>
-            request.SenderId == Explorer
-            && request.RecipientId == SecondExplorer
-            && request.Status == FollowRequestStatus.Accepted).Should().Be(1);
-    }
-
-    [Fact]
-    public async Task Accepting_and_following_back_leaves_the_users_own_pending_request_to_the_sender_unchanged()
-    {
-        var ownRequestId = FollowSeed.ExplorerPendingRequestToThirdExplorer.Id;
-        var ownRequestBefore = StoredRequest(ownRequestId);
-        var requestsBefore = GetStoredState().Requests.Count;
-        var requestId = FollowSeed.ThirdExplorerPendingRequestToExplorer.Id;
-
-        var response = await PostAsync(ClientFor(Explorer), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
-
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
-        IsFollowing(ThirdExplorer, Explorer).Should().BeTrue();
-        IsFollowing(Explorer, ThirdExplorer).Should().BeFalse("the user's own request is still waiting for an answer");
-        var ownRequestAfter = StoredRequest(ownRequestId);
-        ownRequestAfter.Status.Should().Be(FollowRequestStatus.Pending);
-        ownRequestAfter.RespondedAt.Should().Be(ownRequestBefore.RespondedAt);
-        GetStoredState().Requests.Should().HaveCount(requestsBefore, "no second follow-back request may be created");
-    }
-
-    [Fact]
-    public async Task Accepting_and_following_back_creates_no_new_follow_if_the_user_already_follows_the_sender()
-    {
-        var before = GetStoredState();
-        var requestId = FollowSeed.SecondExplorerPendingRequestToThirdExplorer.Id;
-
-        var response = await PostAsync(ClientFor(ThirdExplorer), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
-
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        StoredRequest(requestId).Status.Should().Be(FollowRequestStatus.Accepted);
-        IsFollowing(SecondExplorer, ThirdExplorer).Should().BeTrue();
-        var after = GetStoredState();
-        after.Requests.Should().HaveCount(before.Requests.Count, "no follow-back request is needed");
-        after.Follows.Count(follow => follow.FollowerId == ThirdExplorer && follow.FollowedUserId == SecondExplorer)
-            .Should().Be(1, "the existing follow must stay the only one");
-        after.Follows.Should().HaveCount(before.Follows.Count + 1, "only the accepted request adds a follow");
-    }
-
-    [Fact]
-    public async Task An_answered_request_cannot_be_accepted_and_followed_back()
-    {
-        var before = GetStoredState();
-        var requestId = FollowSeed.AdministratorAcceptedRequestToSecondExplorer.Id;
-
-        var response = await PostAsync(ClientFor(SecondExplorer), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
-
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        GetStoredState().Should().BeEquivalentTo(before);
-    }
-
-    [Fact]
-    public async Task Only_the_recipient_can_accept_and_follow_back()
-    {
-        var before = GetStoredState();
-        var requestId = FollowSeed.SecondExplorerPendingRequestToExplorer.Id;
-
-        var response = await PostAsync(ClientFor(Administrator), $"/api/social/follow-requests/{requestId}/accept-and-follow-back");
-
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        GetStoredState().Should().BeEquivalentTo(before);
-    }
-
-    [Fact]
-    public async Task A_request_that_does_not_exist_cannot_be_accepted_and_followed_back()
-    {
-        var before = GetStoredState();
-
-        var response = await PostAsync(
-            ClientFor(Explorer), $"/api/social/follow-requests/{Guid.NewGuid()}/accept-and-follow-back");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         GetStoredState().Should().BeEquivalentTo(before);

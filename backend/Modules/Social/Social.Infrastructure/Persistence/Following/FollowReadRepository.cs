@@ -66,11 +66,7 @@ internal sealed class FollowReadRepository : IFollowReadRepository
             .Select(follow => new FollowerDto(
                 follow.FollowerId,
                 _dbContext.Follows.Any(other =>
-                    other.FollowerId == followedUserId && other.FollowedUserId == follow.FollowerId),
-                _dbContext.FollowRequests.Any(request =>
-                    request.SenderId == followedUserId
-                    && request.RecipientId == follow.FollowerId
-                    && request.Status == FollowRequestStatus.Pending)))
+                    other.FollowerId == followedUserId && other.FollowedUserId == follow.FollowerId)))
             .ToListAsync();
     }
 }

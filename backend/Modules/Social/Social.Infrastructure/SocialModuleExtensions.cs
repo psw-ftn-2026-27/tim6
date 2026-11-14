@@ -39,7 +39,7 @@ public static class SocialModuleExtensions
         services.AddScoped<BlogAuthoringQueries>();
         services.AddScoped<BlogReadingQueries>();
         services.AddScoped<BlogCommentingService>();
-        services.AddScoped<FollowRequestSender>();
+        services.AddScoped<FollowRequestProcessor>();
         services.AddScoped<FollowingService>();
         services.AddScoped<FollowingQueries>();
         services.AddScoped<ClubAuthoringService>();
