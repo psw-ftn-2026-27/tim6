@@ -27,9 +27,12 @@ frontend/src/
     _base.scss               reset, body, headings, links
     _layout.scss             page container, stack, grid helpers
     _components.scss         global classes: button, card, form field, table
+  environments/              environment.ts (production) and
+                             environment.development.ts (swapped in by
+                             fileReplacements): the GA4 measurement ID       [platform]
   app/
     core/                    auth (state, interceptor, login, register), home,
-                             app.routes.ts                                    [platform]
+                             privacy, app.routes.ts                           [platform]
     shared/
       util/
       api/                   shared types (PageResult, ProblemDetails,
@@ -38,6 +41,7 @@ frontend/src/
       image-uploading/       image upload, see "Shared image upload" below     [platform]
         image-upload/        presentational section: thumbnails, picker, errors
         image-uploading.ts   service: upload, delete, deleteAll
+      analytics/             consent choice and GA4 events, see its README.md  [platform]
     modules/
       <name>/
         api/                 this module's DTO types, mirror the server, no client-only fields
@@ -97,8 +101,10 @@ nothing.
   another module's endpoints, and never shares state with it.
 - A module's route paths are its only surface toward other modules. Renaming or
   removing a path another module links to is a cross-team change; flag it.
-- The one legitimately shared state is the current user (identity, roles) in `core/`.
-  Modules read it; only the platform team writes it.
+- The legitimately shared state is the current user (identity, roles) in `core/` and
+  the analytics consent choice in `shared/analytics/`, both owned by the platform team.
+  Modules read the user and send events through `Analytics`; only the platform writes
+  either state.
 
 ## The Angular subset
 
@@ -128,7 +134,11 @@ construct means adding a lesson, so treat it as a platform decision.
   signal inputs via `withComponentInputBinding`; `inject(Router)` only for navigation
   after a command.
 - No RxJS in student code. `Observable` appears only as the return type of `HttpClient`
-  writes, immediately awaited. No NgRx, no facades.
+  writes, immediately awaited. No NgRx, no facades. Platform exception: `Analytics` in
+  `shared/analytics/` subscribes to `router.events` to record page views; modules never
+  see RxJS.
+- Environment files in `src/environments/` are a platform construct: they hold the GA4
+  measurement ID and nothing else, and only `shared/analytics/` imports them.
 
 ## Styling
 

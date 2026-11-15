@@ -1,0 +1,28 @@
+<section class="stack">
+  <h1>Privacy settings</h1>
+  <p>
+    Explorer uses Google Analytics to see how people move through the app, so the team can
+    improve it. It records which pages you open and your role, never your name, email or what
+    you type. Nothing is sent unless you accept.
+  </p>
+
+  <p>
+    Current choice:
+    @switch (analytics.choice()) {
+      @case ('accepted') {
+        <span class="badge badge--success">Accepted</span>
+      }
+      @case ('rejected') {
+        <span class="badge">Rejected</span>
+      }
+      @default {
+        <span class="badge">No choice made yet</span>
+      }
+    }
+  </p>
+
+  <div class="actions">
+    <button class="button" type="button" (click)="analytics.accept()">Accept</button>
+    <button class="button" type="button" (click)="analytics.reject()">Reject</button>
+  </div>
+</section>
