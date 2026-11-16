@@ -103,4 +103,37 @@ public class ClubTests
 
         deletion.Should().Throw<NotFoundException>();
     }
+
+    [Fact]
+    public void Founder_cannot_request_to_join_their_own_club()
+    {
+        var club = CreateClub();
+
+        var request = () => club.RequestToJoin(WellKnownUsers.Explorer);
+
+        request.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void User_with_a_pending_request_cannot_send_another_request_to_the_same_club()
+    {
+        var club = CreateClub();
+        club.RequestToJoin(WellKnownUsers.SecondExplorer);
+
+        var request = () => club.RequestToJoin(WellKnownUsers.SecondExplorer);
+
+        request.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void User_cannot_withdraw_another_users_request_and_that_request_remains()
+    {
+        var club = CreateClub();
+        club.RequestToJoin(WellKnownUsers.SecondExplorer);
+
+        var withdrawal = () => club.WithdrawJoinRequest(WellKnownUsers.Administrator);
+
+        withdrawal.Should().Throw<DomainException>();
+        club.JoinRequests.Should().ContainSingle(request => request.UserId == WellKnownUsers.SecondExplorer);
+    }
 }
