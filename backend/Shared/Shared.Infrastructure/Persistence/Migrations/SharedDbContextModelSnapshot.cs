@@ -56,6 +56,23 @@ namespace Shared.Infrastructure.Persistence.Migrations
                     b.ToTable("Images", "shared");
                 });
 
+            modelBuilder.Entity("Shared.Domain.Positions.ExplorerPosition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExplorerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExplorerId")
+                        .IsUnique();
+
+                    b.ToTable("ExplorerPositions", "shared");
+                });
+
             modelBuilder.Entity("Shared.Domain.Images.Image", b =>
                 {
                     b.OwnsOne("Shared.Domain.Images.Dimensions", "Dimensions", b1 =>
@@ -78,6 +95,31 @@ namespace Shared.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Dimensions")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Shared.Domain.Positions.ExplorerPosition", b =>
+                {
+                    b.OwnsOne("Shared.Domain.Positions.Coordinates", "Coordinates", b1 =>
+                        {
+                            b1.Property<Guid>("ExplorerPositionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("double precision");
+
+                            b1.HasKey("ExplorerPositionId");
+
+                            b1.ToTable("ExplorerPositions", "shared");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ExplorerPositionId");
+                        });
+
+                    b.Navigation("Coordinates")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618
