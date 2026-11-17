@@ -21,19 +21,28 @@ backend/
   Shared/
     Shared.Domain/                 Entity, AggregateRoot, PageResult,
                                    DomainException, NotFoundException;
-                                   Images/ (Image aggregate)                 [platform]
+                                   Images/ (Image aggregate); Positions/
+                                   (ExplorerPosition aggregate)              [platform]
     Shared.Application/            image capability: ImageUploading,
-                                   ImageReading, port interfaces             [platform]
+                                   ImageReading, port interfaces; position
+                                   capability: ExplorerPositioning,
+                                   Positions/ repository interfaces          [platform]
     Shared.Api/                    ClaimsPrincipal.GetUserId(); image
-                                   controllers under api/shared/images       [platform]
+                                   controllers under api/shared/images;
+                                   position controller under
+                                   api/shared/positions                      [platform]
     Shared.Infrastructure/         AddModuleDbContext (Npgsql, schema-per-
                                    module, per-schema migrations history);
                                    image capability: Persistence/ (schema
                                    `shared`), Images/ (file storage,
-                                   Magick.NET processing), AddSharedImages   [platform]
+                                   Magick.NET processing); position
+                                   capability: Persistence/Positions/;
+                                   AddShared wires both                      [platform]
     Shared.Tests/                  ExplorerApiFactory (per-assembly test DB,
                                    reseed, test JWTs), WellKnownUsers        [platform]
     Shared.Images.Tests/           Unit/ and Integration/ for the image
+                                   capability                                [platform]
+    Shared.Positions.Tests/        Unit/ and Integration/ for the position
                                    capability                                [platform]
   Modules/
     Identity/
@@ -51,12 +60,16 @@ backend/
       <Name>.Tests/                Unit/ and Integration/ folders
 ```
 
-Shared also holds one platform-owned capability with a module's layering: image upload.
-`Shared.Application` is its application layer, and it has its own `SharedDbContext` on the
-`shared` schema, migrations in `Shared.Infrastructure/Persistence/Migrations/`
-(`--context SharedDbContext`), and files stored in the directory set by
-`ImageStorage:Directory`. `Host.Api` wires it like a module, with `AddSharedImages` and
-`AddSharedImagesControllers`.
+Shared also holds two platform-owned capabilities with a module's layering: image upload
+and the explorer position (one current position per explorer, set and read by the explorer
+under `api/shared/positions`). `Shared.Application` is their application layer. Both live
+on one `SharedDbContext` on the `shared` schema, with migrations in
+`Shared.Infrastructure/Persistence/Migrations/` (`--context SharedDbContext`); image files
+are stored in the directory set by `ImageStorage:Directory`. `Host.Api` wires Shared like a
+module, with `AddShared` and `AddSharedControllers`. `AddShared` registers what the
+capabilities share (the `SharedDbContext`, its initializer and `IUnitOfWork`) and then calls
+one internal registration class per capability, `SharedImagesExtensions` and
+`SharedPositionsExtensions`; a new capability adds its own class and one call.
 
 Tests live inside the module folder they test, so a team's ownership is one folder. There
 is no separate tests tree; the arch tests sit in `Host.Tests` beside the host.
@@ -81,11 +94,13 @@ The compiler enforces the layering instead of a reviewer having to spot it.
   user's basic identity data.
 - `Host.Api` references every module's `Infrastructure` (for DI) and `Api` (for controller
   discovery), plus the `Identity` project, `Shared.Infrastructure`, and `Shared.Api`.
-- The Shared image capability follows the same rules: `Shared.Application` references
-  `Shared.Domain` only, `Shared.Api` references `Shared.Application`, and
+- The Shared image and position capabilities follow the same rules: `Shared.Application`
+  references `Shared.Domain` only, `Shared.Api` references `Shared.Application`, and
   `Shared.Infrastructure` references `Shared.Application` and `Shared.Domain`.
-- No module depends on `Shared.Application` or `Shared.Domain.Images`. A module stores an
-  image only as its reference string, `/api/shared/images/{fileName}`.
+- No module depends on `Shared.Application`, `Shared.Domain.Images`, or
+  `Shared.Domain.Positions`. A module stores an image only as its reference string,
+  `/api/shared/images/{fileName}`, and receives a position from its own page, which reads
+  it from `api/shared/positions`.
 
 Verified by ArchUnitNET in `Host.Tests` and run in CI. If you add a project reference,
 expect the arch tests to have an opinion about it.

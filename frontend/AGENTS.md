@@ -33,11 +33,16 @@ frontend/src/
     shared/
       util/
       api/                   shared types (PageResult, ProblemDetails,
-                             ImageReferenceDto), mirror the server, no
-                             client-only fields                                [platform]
+                             ImageReferenceDto, CoordinatesDto), mirror the
+                             server, no client-only fields                     [platform]
       image-uploading/       image upload, see "Shared image upload" below     [platform]
         image-upload/        presentational section: thumbnails, picker, errors
         image-uploading.ts   service: upload, delete, deleteAll
+      geographic-map/        presentational Leaflet map, see "Shared map and
+                             explorer position" below                          [platform]
+      explorer-positioning/  explorer position, see "Shared map and explorer
+                             position" below                                   [platform]
+        explorer-positioning.ts  service: move
     modules/
       <name>/
         api/                 this module's DTO types, mirror the server, no client-only fields
@@ -205,3 +210,37 @@ The page that embeds the section wires it:
   navigates away. Closing or reloading the tab does not destroy the page, so the page's
   `host` listens to `'(window:pagehide)': 'onPageHide()'`, which calls
   `deleteAll(uploaded, true)`.
+
+## Shared map and explorer position
+
+`shared/geographic-map/` is the one map a module page shows. `<app-geographic-map>` is
+presentational: inputs `pins` (`MapPin[]`), `path` (`MapCoordinate[] | null`),
+`selectionEnabled`, `simulatorEnabled` and `explorerPosition` (`MapCoordinate | null`);
+outputs `pathLengthKm` (`number | null`), `locationSelected` and `explorerMoved` (both
+`MapCoordinate`). At most one click mode is on at a time: with `selectionEnabled` a click
+moves the selected-location marker and emits `locationSelected`; with `simulatorEnabled`
+a click only emits `explorerMoved` ("the explorer is here"), and the simulator wins if a
+page turns on both. The map shows one world (tiles do not repeat, panning stops at its
+edges), and every reported longitude is wrapped into −180..180. The map draws
+`explorerPosition` as a round "ja" marker and draws nothing while it is `null`; it never
+moves that marker on a click by itself. The README next to the component has the full
+usage, in Serbian.
+
+The explorer position is one current position per explorer, kept by the server at
+`/api/shared/positions/mine` and set and read only by the `explorer` role. `ExplorerPositioning`
+in `shared/explorer-positioning/` is a plain command service: `move(coordinates)` saves
+it. A module page that turns on the simulator wires it:
+
+- It reads the position as `httpResource<CoordinatesDto | null>` on
+  `/api/shared/positions/mine`. The server answers 204 with no body when the explorer has
+  no position yet; the value is then `null`, which is not an error. The page passes
+  `hasValue() ? value() : null` to `explorerPosition`.
+- On `explorerMoved` it ignores the click while a `move` is pending, empties its error,
+  `await move(coordinates)`, then reloads the resource, so the marker moves only after the
+  server confirmed. On failure it sets the error with `serverMessage(failure, ...)` and the
+  marker stays where it was.
+- It shows the save error, or the read error from `serverMessage(resource.error(), ...)`,
+  under the map.
+- When its own module needs the position, the page reads it from the same resource and
+  passes it to its module's endpoints. Proximity checks and what to do without a position
+  belong to that module, never to the map or the service.
