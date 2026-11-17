@@ -177,6 +177,9 @@ assigned to the platform team, and misalignment is an accepted learning experien
   components, which take `input()`s and raise `output()`s and inject nothing.
 - An image is stored by a module as its reference string, `/api/shared/images/{fileName}`,
   and shown with `<img [src]="reference">`.
+- A feature whose key step the team wants to see in GA4 adds one event method to
+  `Analytics` and calls it after its command succeeds; follow
+  `shared/analytics/README.md`. Page views need nothing, the service records every route.
 - Do not produce Vitest tests unless specifically instructed. Frontend testing is not
   taught; it is a platform-team assignment.
 
