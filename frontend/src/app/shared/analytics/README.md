@@ -57,16 +57,29 @@ lokalni podaci nikad ne stižu u produkcijski property.
 
 1. Pokreni backend i `npm start`.
 2. Otvori tagassistant.google.com, klikni „Add domain" i unesi `http://localhost:4200`.
-   Aplikacija se otvara u novom tabu povezanom sa Tag Assistant-om.
+   Aplikacija se otvara u novom prozoru, sa dodatkom `?gtm_debug=...` u adresi. Proveru
+   radi u tom prozoru: DebugView prikazuje samo saobraćaj iz prozora povezanog sa Tag
+   Assistant-om.
 3. Pre klika na „Accept" Tag Assistant ne nalazi nijedan tag. To je očekivano: bez
    saglasnosti se GA4 skripta ne učitava (P1).
-4. Klikni „Accept", pa uradi radnju koju proveravaš.
+4. Klikni „Accept", pa pređi na drugu stranicu. Stranica na kojoj si kliknuo „Accept" se
+   ne šalje; prvi `page_view` je sledeća promena rute. Zatim uradi radnju koju
+   proveravaš.
 5. U GA4 otvori property „Explorer – razvoj" → Admin → DebugView. Događaj se pojavljuje
    za nekoliko sekundi. Klikni ga i proveri parametre: `role`, `page_location` sa šablonom
    rute i parametre tvog događaja, bez ijednog podatka koji pravila zabranjuju.
 
-U mrežnoj kartici brauzera možeš da proveriš isto bez Tag Assistant-a: pre saglasnosti
-nema zahteva ka `googletagmanager.com` ni `google-analytics.com`.
+Ako DebugView ostane prazan:
+
+- Gore levo, u listi „Debug devices", izaberi najnoviji uređaj. Posle „Reject" i
+  ponovnog „Accept" GA4 te vidi kao novog posetioca, pa se događaji pojavljuju pod novim
+  uređajem, a DebugView i dalje prikazuje stari.
+- Ako je veza sa Tag Assistant-om prekinuta, klikni „Finish" pa ponovo „Connect" i radi
+  u novom prozoru.
+
+Bez Tag Assistant-a: Reports → Realtime prikazuje sve događaje iz poslednjih 30 minuta,
+a klik na ime događaja prikazuje njegove parametre. U mrežnoj kartici brauzera vidiš da
+pre saglasnosti nema zahteva ka `googletagmanager.com` ni `google-analytics.com`.
 
 ## Podešavanja u GA4
 
@@ -88,7 +101,9 @@ nema zahteva ka `googletagmanager.com` ni `google-analytics.com`.
   `/payment/wallets/:id`), bez konkretnih identifikatora i bez parametara upita. Servis
   to radi sam; modul ne šalje preglede stranica.
 - P9. Uz svaki događaj i pregled servis dodaje ulogu: sve uloge korisnika, sortirane i
-  spojene zarezom (npr. `author,tourist`), a `guest` za neulogovanog korisnika.
+  spojene zarezom, a `guest` za neulogovanog korisnika. Danas sistem ima uloge
+  `administrator` i `explorer`, pa vrednosti izgledaju ovako: `explorer`,
+  `administrator`, `guest` (ili `administrator,explorer` za korisnika sa obe uloge).
 - P10. Nijedan događaj ne sadrži ime, prezime, mejl, korisničko ime ni identifikator
   korisnika; GA4 se ne podešava sa User-ID vrednošću.
 - P11. Parametar sme da bude identifikator entiteta koji nije vezan za jednog korisnika
