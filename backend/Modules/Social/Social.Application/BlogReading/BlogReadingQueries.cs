@@ -49,7 +49,12 @@ public sealed class BlogReadingQueries
             .Select(blog => blog with
             {
                 Comments = blog.Comments
-                    .Select(comment => comment with { UserEmail = emails[comment.UserId] })
+                    .Select(comment => comment with
+                    {
+                        UserEmail = emails.TryGetValue(comment.UserId, out var email)
+                        ? email
+                        : null
+                    })
                     .ToList()
             })
             .ToList();

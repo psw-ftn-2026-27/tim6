@@ -22,12 +22,17 @@ public sealed class BlogAuthoringQueries
         var emails = users.ToDictionary(user => user.UserId, user => user.Email);
 
         return blogs
-            .Select(blog => blog with
-            {
-                Comments = blog.Comments
-                    .Select(comment => comment with { UserEmail = emails[comment.UserId] })
-                    .ToList()
-            })
-            .ToList();
+                     .Select(blog => blog with
+                     {
+                         Comments = blog.Comments
+                             .Select(comment => comment with
+                             {
+                                 UserEmail = emails.TryGetValue(comment.UserId, out var email)
+                                     ? email
+                                     : null
+                             })
+                             .ToList()
+                     })
+                     .ToList();
     }
 }
