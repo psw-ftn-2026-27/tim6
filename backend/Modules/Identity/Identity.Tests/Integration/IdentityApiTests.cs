@@ -12,42 +12,84 @@ public sealed class IdentityApiTests : BaseIntegrationTest
     public IdentityApiTests(IdentityApiFactory factory) : base(factory) { }
 
     [Fact]
-    public async Task Existing_user_is_returned_with_email()
+    public async Task existing_user_is_returned_by_id_with_email()
     {
         using var scope = Factory.Services.CreateScope();
         var identityApi = scope.ServiceProvider.GetRequiredService<IIdentityApi>();
 
-        var result = await identityApi.GetUserAsync(WellKnownUsers.Explorer);
+        var result = await identityApi.GetUserByIdAsync(WellKnownUsers.Explorer);
 
-        result.Should().Be(new UserSummaryDto(WellKnownUsers.Explorer, UserSeed.Explorer.Email, true));
+        result.Should().Be(new UserSummaryDto(WellKnownUsers.Explorer, UserSeed.Explorer.Email));
     }
 
     [Fact]
-    public async Task Missing_user_is_returned_without_email()
+    public async Task missing_user_by_id_returns_null()
     {
         var missingUserId = Guid.NewGuid();
         using var scope = Factory.Services.CreateScope();
         var identityApi = scope.ServiceProvider.GetRequiredService<IIdentityApi>();
 
-        var result = await identityApi.GetUserAsync(missingUserId);
+        var result = await identityApi.GetUserByIdAsync(missingUserId);
 
-        result.Should().Be(new UserSummaryDto(missingUserId, null, false));
+        result.Should().BeNull();
     }
 
     [Fact]
-    public async Task Group_lookup_keeps_found_and_missing_users_distinct()
+    public async Task group_lookup_by_ids_returns_each_found_user_once()
     {
         var missingUserId = Guid.NewGuid();
         var userIds = new[] { WellKnownUsers.Explorer, missingUserId, WellKnownUsers.Explorer };
         using var scope = Factory.Services.CreateScope();
         var identityApi = scope.ServiceProvider.GetRequiredService<IIdentityApi>();
 
-        var results = await identityApi.GetUsersAsync(userIds);
+        var results = await identityApi.GetUsersByIdsAsync(userIds);
 
-        results.Should().BeEquivalentTo(
-        [
-            new UserSummaryDto(WellKnownUsers.Explorer, UserSeed.Explorer.Email, true),
-            new UserSummaryDto(missingUserId, null, false)
-        ], options => options.WithStrictOrdering());
+        results.Should().BeEquivalentTo(new Dictionary<Guid, UserSummaryDto>
+        {
+            [WellKnownUsers.Explorer] = new(WellKnownUsers.Explorer, UserSeed.Explorer.Email)
+        });
     }
+
+    [Fact]
+    public async Task existing_user_is_returned_by_email_ignoring_letter_case()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var identityApi = scope.ServiceProvider.GetRequiredService<IIdentityApi>();
+
+        var result = await identityApi.GetUserByEmailAsync(ExplorerEmail.ToUpperInvariant());
+
+        result.Should().Be(new UserSummaryDto(WellKnownUsers.Explorer, UserSeed.Explorer.Email));
+    }
+
+    [Theory]
+    [InlineData("explorer@test")]
+    [InlineData("missing@test.com")]
+    public async Task partial_or_missing_email_returns_null(string email)
+    {
+        using var scope = Factory.Services.CreateScope();
+        var identityApi = scope.ServiceProvider.GetRequiredService<IIdentityApi>();
+
+        var result = await identityApi.GetUserByEmailAsync(email);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task group_lookup_by_emails_returns_each_found_user_once()
+    {
+        var email = ExplorerEmail;
+        var emails = new[] { email.ToUpperInvariant(), "missing@test.com", email };
+        using var scope = Factory.Services.CreateScope();
+        var identityApi = scope.ServiceProvider.GetRequiredService<IIdentityApi>();
+
+        var results = await identityApi.GetUsersByEmailsAsync(emails);
+
+        results.Should().BeEquivalentTo(new Dictionary<string, UserSummaryDto>
+        {
+            [email] = new(WellKnownUsers.Explorer, email)
+        });
+    }
+
+    private static string ExplorerEmail =>
+        UserSeed.Explorer.Email ?? throw new InvalidOperationException("The explorer seed must have an email.");
 }
