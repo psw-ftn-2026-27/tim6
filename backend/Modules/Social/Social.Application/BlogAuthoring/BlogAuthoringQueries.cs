@@ -17,18 +17,17 @@ public sealed class BlogAuthoringQueries
     public async Task<List<BlogDto>> GetByAuthorAsync(Guid authorId)
     {
         var blogs = await _blogReadRepository.GetByAuthorAsync(authorId);
-        var users = await _identityApi.GetUsersAsync(
+        var users = await _identityApi.GetUsersByIdsAsync(
             blogs.SelectMany(blog => blog.Comments).Select(comment => comment.UserId));
-        var emails = users.ToDictionary(user => user.UserId, user => user.Email);
-
+        
         return blogs
                      .Select(blog => blog with
                      {
                          Comments = blog.Comments
                              .Select(comment => comment with
                              {
-                                 UserEmail = emails.TryGetValue(comment.UserId, out var email)
-                                     ? email
+                                 UserEmail = users.TryGetValue(comment.UserId, out var user)
+                                     ? user.Email
                                      : null
                              })
                              .ToList()

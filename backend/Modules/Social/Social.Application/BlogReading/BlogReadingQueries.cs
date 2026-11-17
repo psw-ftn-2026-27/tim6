@@ -41,18 +41,19 @@ public sealed class BlogReadingQueries
 
     private async Task<List<BlogDto>> AddCommentEmailsAsync(IEnumerable<BlogDto> blogs)
     {
-        var users = await _identityApi.GetUsersAsync(
-            blogs.SelectMany(blog => blog.Comments).Select(comment => comment.UserId));
-        var emails = users.ToDictionary(user => user.UserId, user => user.Email);
+        var dtos = blogs.ToList();
+        var users = await _identityApi.GetUsersByIdsAsync(
+            dtos.SelectMany(blog => blog.Comments).Select(comment => comment.UserId)
+        );
 
-        return blogs
+        return dtos
             .Select(blog => blog with
             {
                 Comments = blog.Comments
                     .Select(comment => comment with
                     {
-                        UserEmail = emails.TryGetValue(comment.UserId, out var email)
-                        ? email
+                        UserEmail = users.TryGetValue(comment.UserId, out var user)
+                        ? user.Email
                         : null
                     })
                     .ToList()
