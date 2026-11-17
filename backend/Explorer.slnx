@@ -43,6 +43,7 @@
     <Project Path="Shared/Shared.Domain/Shared.Domain.csproj" />
     <Project Path="Shared/Shared.Images.Tests/Shared.Images.Tests.csproj" />
     <Project Path="Shared/Shared.Infrastructure/Shared.Infrastructure.csproj" />
+    <Project Path="Shared/Shared.Positions.Tests/Shared.Positions.Tests.csproj" />
     <Project Path="Shared/Shared.Tests/Shared.Tests.csproj" />
   </Folder>
   <Project Path="Host.Api/Host.Api.csproj" />

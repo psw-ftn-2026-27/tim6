@@ -28,7 +28,7 @@ builder.Services.AddControllers()
     .AddGamesControllers()
     .AddSocialControllers()
     .AddPaymentControllers()
-    .AddSharedImagesControllers();
+    .AddSharedControllers();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -49,7 +49,7 @@ builder.Services
     .AddGamesModule(builder.Configuration)
     .AddSocialModule(builder.Configuration)
     .AddPaymentModule(builder.Configuration)
-    .AddSharedImages(builder.Configuration);
+    .AddShared(builder.Configuration);
 
 var app = builder.Build();
 

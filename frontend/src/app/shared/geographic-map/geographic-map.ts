@@ -33,19 +33,34 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
   readonly pins = input<readonly MapPin[]>([]);
   readonly path = input<readonly MapCoordinate[] | null>(null);
   readonly selectionEnabled = input(false);
+  // Simulator mode: a click reports where the explorer is. At most one click mode works at a
+  // time, so while the simulator is on, a click never selects a location.
+  readonly simulatorEnabled = input(false);
+  // The explorer's saved position, drawn as the "ja" marker; null draws nothing.
+  readonly explorerPosition = input<MapCoordinate | null>(null);
 
   readonly pathLengthKm = output<number | null>();
   readonly locationSelected = output<MapCoordinate>();
+  readonly explorerMoved = output<MapCoordinate>();
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private map: L.Map | null = null;
   private pinLayer: L.LayerGroup | null = null;
   private pathLayer: L.LayerGroup | null = null;
   private selectedMarker: L.Marker | null = null;
+  private explorerMarker: L.Marker | null = null;
 
   ngAfterViewInit(): void {
-    this.map = L.map(this.host.nativeElement).setView([0, 0], 2);
+    // One world, not repeated copies side by side: panning stops at the world's edges.
+    this.map = L.map(this.host.nativeElement, {
+      maxBounds: [
+        [-90, -180],
+        [90, 180],
+      ],
+      maxBoundsViscosity: 1,
+    }).setView([0, 0], 2);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      noWrap: true,
       maxZoom: 19,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -53,10 +68,11 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
 
     this.pinLayer = L.layerGroup().addTo(this.map);
     this.pathLayer = L.layerGroup().addTo(this.map);
-    this.map.on('click', this.selectLocation, this);
+    this.map.on('click', this.handleClick, this);
 
     this.renderPins();
     this.renderPath(this.path() !== null);
+    this.renderExplorerPosition();
     this.fitContent();
   }
 
@@ -71,6 +87,10 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
 
     if (changes['path']) {
       this.renderPath(true);
+    }
+
+    if (changes['explorerPosition']) {
+      this.renderExplorerPosition();
     }
 
     if (changes['pins'] || changes['path']) {
@@ -112,6 +132,25 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
     }
   }
 
+  private renderExplorerPosition(): void {
+    const position = this.explorerPosition();
+
+    if (position === null) {
+      this.explorerMarker?.remove();
+      this.explorerMarker = null;
+      return;
+    }
+
+    const point = L.latLng(position.latitude, position.longitude);
+    if (this.explorerMarker) {
+      this.explorerMarker.setLatLng(point);
+    } else {
+      this.explorerMarker = L.marker(point, {
+        icon: this.createIcon('geographic-map__explorer-icon'),
+      }).addTo(this.map!);
+    }
+  }
+
   private calculateLength(points: readonly L.LatLng[]): number {
     let lengthInMeters = 0;
     for (let index = 1; index < points.length; index++) {
@@ -133,24 +172,34 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
     }
   }
 
-  private readonly selectLocation = (event: L.LeafletMouseEvent): void => {
-    if (!this.selectionEnabled() || !this.map) {
+  private readonly handleClick = (event: L.LeafletMouseEvent): void => {
+    if (!this.map) {
       return;
     }
 
-    if (this.selectedMarker) {
-      this.selectedMarker.setLatLng(event.latlng);
-    } else {
-      this.selectedMarker = L.marker(event.latlng, {
-        icon: this.createIcon('geographic-map__selected-icon'),
-      }).addTo(this.map);
-    }
+    // After the map is panned across the world's edge, Leaflet reports a longitude outside
+    // −180..180, so the reported coordinate is wrapped back into that range.
+    const wrapped = event.latlng.wrap();
+    const coordinate: MapCoordinate = { latitude: wrapped.lat, longitude: wrapped.lng };
 
-    this.locationSelected.emit({
-      latitude: event.latlng.lat,
-      longitude: event.latlng.lng,
-    });
+    if (this.simulatorEnabled()) {
+      // The "ja" marker does not move here; it moves when the page passes the saved position.
+      this.explorerMoved.emit(coordinate);
+    } else if (this.selectionEnabled()) {
+      this.selectLocation(event.latlng);
+      this.locationSelected.emit(coordinate);
+    }
   };
+
+  private selectLocation(point: L.LatLng): void {
+    if (this.selectedMarker) {
+      this.selectedMarker.setLatLng(point);
+    } else {
+      this.selectedMarker = L.marker(point, {
+        icon: this.createIcon('geographic-map__selected-icon'),
+      }).addTo(this.map!);
+    }
+  }
 
   private createIcon(className: string): L.DivIcon {
     return L.divIcon({
