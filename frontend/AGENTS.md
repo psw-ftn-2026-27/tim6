@@ -128,7 +128,12 @@ construct means adding a lesson, so treat it as a platform decision.
   `@angular/forms/signals`). No Reactive Forms, no template-driven forms. A file input
   is not typed text: the component reads `files` from the `(change)` event's target.
 - Leaving a page: `inject(DestroyRef).onDestroy(...)` and a `host` listener
-  `'(window:pagehide)'`, only to delete images the page uploaded and did not save.
+  `'(window:pagehide)'` delete images the page uploaded and did not save; `onDestroy` also
+  stops a periodic check (next bullet). Nothing else runs on leaving a page.
+- Periodic check: a `setInterval` started on the page, stopped with `clearInterval` in
+  `inject(DestroyRef).onDestroy(...)` and when the work it serves ends; a new check does not
+  start while the previous one is pending. Used only when a card requires repetition
+  (E22, G22); the map README has the example.
 - Routing: `router-outlet`, `routerLink`, `loadChildren`, route parameters bound as
   signal inputs via `withComponentInputBinding`; `inject(Router)` only for navigation
   after a command.
@@ -215,16 +220,26 @@ The page that embeds the section wires it:
 
 `shared/geographic-map/` is the one map a module page shows. `<app-geographic-map>` is
 presentational: inputs `pins` (`MapPin[]`), `path` (`MapCoordinate[] | null`),
-`selectionEnabled`, `simulatorEnabled` and `explorerPosition` (`MapCoordinate | null`);
-outputs `pathLengthKm` (`number | null`), `locationSelected` and `explorerMoved` (both
-`MapCoordinate`). At most one click mode is on at a time: with `selectionEnabled` a click
-moves the selected-location marker and emits `locationSelected`; with `simulatorEnabled`
-a click only emits `explorerMoved` ("the explorer is here"), and the simulator wins if a
-page turns on both. The map shows one world (tiles do not repeat, panning stops at its
-edges), and every reported longitude is wrapped into −180..180. The map draws
-`explorerPosition` as a round "ja" marker and draws nothing while it is `null`; it never
-moves that marker on a click by itself. The README next to the component has the full
-usage, in Serbian.
+`selectionEnabled`, `simulatorEnabled`, `explorerPosition` (`MapCoordinate | null`) and
+`circle` (`MapCircle | null`); outputs `pathLengthKm` (`number | null`), `locationSelected`
+and `explorerMoved` (both `MapCoordinate`) and `pinSelected` (`string`). At most one click
+mode is on at a time: with `selectionEnabled` a click moves the selected-location marker and
+emits `locationSelected`; with `simulatorEnabled` a click only emits `explorerMoved` ("the
+explorer is here"), and the simulator wins if a page turns on both. The map shows one world
+(tiles do not repeat, panning stops at its edges), and every reported longitude is wrapped
+into −180..180. The map draws `explorerPosition` as a round "ja" marker and draws nothing
+while it is `null`; it never moves that marker on a click by itself. The README next to the
+component has the full usage, in Serbian.
+
+- `circle` is `{ center, radiusMeters }`: at most one circle, drawn exactly as given (the
+  map computes nothing), redrawn when it changes, removed on `null`. While it is set, the
+  view fits the whole circle together with the pins and the path. The circle is only a
+  drawing: a click inside it is a click on the map, and pins inside it stay clickable.
+- A `MapPin` may carry an `id` (`string`) set by the page. Clicking such a pin emits only
+  `pinSelected` with that id: no location is selected, `explorerMoved` is not emitted, the
+  "ja" marker does not move. A pin without an `id` behaves as before: its click is a click
+  on the map. The page picks the item from the list it already read and shows it in a
+  section on the same page, never in a dialog or a map popup.
 
 The explorer position is one current position per explorer, kept by the server at
 `/api/shared/positions/mine` and set and read only by the `explorer` role. `ExplorerPositioning`
