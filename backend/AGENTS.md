@@ -66,8 +66,10 @@ under `api/shared/positions`). `Shared.Application` is their application layer. 
 on one `SharedDbContext` on the `shared` schema, with migrations in
 `Shared.Infrastructure/Persistence/Migrations/` (`--context SharedDbContext`); image files
 are stored in the directory set by `ImageStorage:Directory`. `Host.Api` wires Shared like a
-module, with `AddShared` (the `SharedDbContext`, its initializer and `IUnitOfWork`, then
-each capability's services) and `AddSharedControllers`.
+module, with `AddShared` and `AddSharedControllers`. `AddShared` registers what the
+capabilities share (the `SharedDbContext`, its initializer and `IUnitOfWork`) and then calls
+one internal registration class per capability, `SharedImagesExtensions` and
+`SharedPositionsExtensions`; a new capability adds its own class and one call.
 
 Tests live inside the module folder they test, so a team's ownership is one folder. There
 is no separate tests tree; the arch tests sit in `Host.Tests` beside the host.
