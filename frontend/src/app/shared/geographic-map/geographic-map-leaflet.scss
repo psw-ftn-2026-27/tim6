@@ -24,3 +24,11 @@
   background: var(--color-position);
   box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
 }
+
+// The circle around an area of interest: a light fill, so the map under it stays readable.
+.geographic-map__circle {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  fill: var(--color-accent);
+  fill-opacity: 0.12;
+}
