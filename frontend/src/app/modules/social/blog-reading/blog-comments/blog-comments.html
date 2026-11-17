@@ -2,20 +2,24 @@
   @for (comment of comments(); track comment.id) {
     <li class="stack">
       <p>{{ comment.text }}</p>
-      <p class="meta">{{ comment.createdAt }}</p>
+      <p class="meta">
+        {{ comment.userEmail ?? 'Unknown user' }} · Created: {{ formatTime(comment.createdAt) }}, last modified:
+        {{ formatTime(comment.lastModifiedAt) }}
+      </p>
 
-      @if (commentsOpen() && comment.userId === currentUserId()) {
+      @if (canChange(comment)) {
         @if (editingCommentId() === comment.id) {
           <form class="comment-actions" (submit)="saveEdit($event, comment.id)">
             <input type="text" aria-label="Edit comment" [formField]="editForm.text" />
             <button class="button" type="submit" [disabled]="!editForm().valid()">Save</button>
-            <button class="button" type="button" (click)="editingCommentId.set(null)">
-              Cancel
-            </button>
+            <button class="button" type="button" (click)="cancelEdit.emit()">Cancel</button>
           </form>
+          @if (editError()) {
+            <p class="error">{{ editError() }}</p>
+          }
         } @else {
           <div class="comment-actions">
-            <button class="button" type="button" (click)="startEdit(comment)">Edit</button>
+            <button class="button" type="button" (click)="openEdit(comment)">Edit</button>
             <button class="button" type="button" (click)="deleteComment.emit(comment.id)">
               Delete
             </button>

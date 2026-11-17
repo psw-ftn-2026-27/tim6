@@ -52,7 +52,16 @@ internal sealed class BlogReadRepository : IBlogReadRepository
                 blog.Images,
                 blog.Status,
                 blog.Comments
-                    .Select(comment => new CommentDto(comment.Id, comment.UserId, comment.Text, comment.CreatedAt))
+                    .Select(comment => new CommentDto(
+                        comment.Id,
+                        comment.UserId,
+                        null,
+                        comment.Text,
+                        comment.CreatedAt,
+                        // Comments created before LastModifiedAt existed hold the migration's
+                        // default value; they show their creation time instead.
+                        comment.LastModifiedAt == default ? comment.CreatedAt : comment.LastModifiedAt,
+                        comment.CreatedAt.AddMinutes(Comment.EditWindowMinutes)))
                     .ToList()));
     }
 }
