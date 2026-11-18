@@ -4,6 +4,8 @@ import { firstValueFrom } from 'rxjs';
 import {
   CreateTourDto,
   PublishTourDto,
+  RemoveKeyPointDto,
+  SaveKeyPointDto,
   TourDto,
   TourPriceDto,
   TransportTimeDto,
@@ -33,5 +35,21 @@ export class TourAuthoring {
 
   async addTransportTime(id: string, dto: TransportTimeDto): Promise<void> {
     await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/transport-times`, dto));
+  }
+
+  async addKeyPoint(id: string, dto: SaveKeyPointDto): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/key-points`, dto));
+  }
+
+  async updateKeyPoint(id: string, keyPointId: string, dto: SaveKeyPointDto): Promise<void> {
+    await firstValueFrom(
+      this.http.put<void>(`${BASE_URL}/${id}/key-points/${keyPointId}`, dto),
+    );
+  }
+
+  async removeKeyPoint(id: string, keyPointId: string, dto: RemoveKeyPointDto): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<void>(`${BASE_URL}/${id}/key-points/${keyPointId}`, { body: dto }),
+    );
   }
 }

@@ -57,6 +57,43 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                     b.ToTable("TourPreferences", "exploration");
                 });
 
+            modelBuilder.Entity("Exploration.Domain.Tours.KeyPoint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsVisibleWithoutPurchase")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Secret")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TourId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TourId");
+
+                    b.ToTable("KeyPoints", "exploration");
+                });
+
             modelBuilder.Entity("Exploration.Domain.Tours.Tour", b =>
                 {
                     b.Property<Guid>("Id")
@@ -100,6 +137,37 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                     b.ToTable("Tours", "exploration");
                 });
 
+            modelBuilder.Entity("Exploration.Domain.Tours.KeyPoint", b =>
+                {
+                    b.HasOne("Exploration.Domain.Tours.Tour", null)
+                        .WithMany("KeyPoints")
+                        .HasForeignKey("TourId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Exploration.Domain.Tours.Location", "Location", b1 =>
+                        {
+                            b1.Property<Guid>("KeyPointId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("double precision");
+
+                            b1.HasKey("KeyPointId");
+
+                            b1.ToTable("KeyPoints", "exploration");
+
+                            b1.WithOwner()
+                                .HasForeignKey("KeyPointId");
+                        });
+
+                    b.Navigation("Location")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Exploration.Domain.Tours.Tour", b =>
                 {
                     b.OwnsOne("Exploration.Domain.Tours.RecommendedGroupSize", "RecommendedGroupSize", b1 =>
@@ -116,6 +184,22 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("integer")
                                 .HasDefaultValue(1);
+
+                            b1.HasKey("TourId");
+
+                            b1.ToTable("Tours", "exploration");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TourId");
+                        });
+
+                    b.OwnsOne("Exploration.Domain.Tours.TourLength", "Length", b1 =>
+                        {
+                            b1.Property<Guid>("TourId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<double>("Kilometers")
+                                .HasColumnType("double precision");
 
                             b1.HasKey("TourId");
 
@@ -149,10 +233,18 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("TourId");
                         });
 
+                    b.Navigation("Length")
+                        .IsRequired();
+
                     b.Navigation("RecommendedGroupSize")
                         .IsRequired();
 
                     b.Navigation("TransportTimes");
+                });
+
+            modelBuilder.Entity("Exploration.Domain.Tours.Tour", b =>
+                {
+                    b.Navigation("KeyPoints");
                 });
 #pragma warning restore 612, 618
         }
