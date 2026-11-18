@@ -6,7 +6,7 @@
   border: 0.1875rem solid var(--color-surface);
   border-radius: 50% 50% 50% 0;
   background: var(--color-accent);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+  box-shadow: 0 1px 4px var(--color-shadow);
   transform: rotate(-45deg);
 }
 
@@ -22,7 +22,7 @@
   border: 0.1875rem solid var(--color-surface);
   border-radius: var(--radius-full);
   background: var(--color-position);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+  box-shadow: 0 1px 4px var(--color-shadow);
 }
 
 // The circle around an area of interest: a light fill, so the map under it stays readable.

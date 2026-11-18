@@ -4,16 +4,19 @@ header {
   margin-bottom: var(--space-5);
 }
 
+// On a narrow screen the links wrap onto a second row instead of leaving the window.
 nav {
-  display: flex;
-  gap: var(--space-4);
-  padding-block: var(--space-3);
   align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-3);
 }
 
 nav a {
   color: var(--color-text-muted);
   font-weight: 500;
+  padding-block: var(--space-1);
   text-decoration: none;
 }
 
@@ -21,16 +24,25 @@ nav a:hover {
   color: var(--color-accent);
 }
 
+// The user menu: pushed to the right, separated from the module links by a line.
 .nav-user {
   align-items: center;
+  border-left: 1px solid var(--color-border);
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-3);
   margin-left: auto;
+  min-width: 0;
+  padding-left: var(--space-4);
 }
 
-.nav-user span {
+// A long email is shortened with an ellipsis; the full address is in the tooltip.
+.nav-user__email {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 footer {
@@ -63,9 +75,4 @@ footer a {
 .consent-content p {
   flex: 1 1 20rem;
   margin: 0;
-}
-
-.consent-actions {
-  display: flex;
-  gap: var(--space-3);
 }

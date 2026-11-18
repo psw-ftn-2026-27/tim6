@@ -22,26 +22,26 @@
     </div>
 
     <div class="grid">
-      <article class="card experience">
-        <p class="status">Available</p>
+      <article class="card stack experience">
+        <p class="meta"><span class="badge badge--success">Available</span></p>
         <h3>Tours and exploration</h3>
         <p>Browse published tours and follow their stories through carefully selected key points.</p>
       </article>
 
-      <article class="card experience">
-        <p class="status status--planned">Coming soon</p>
+      <article class="card stack experience">
+        <p class="meta"><span class="badge">Coming soon</span></p>
         <h3>Games and challenges</h3>
         <p>The map will become a playground for quizzes and hidden-location challenges.</p>
       </article>
 
-      <article class="card experience">
-        <p class="status">Available</p>
+      <article class="card stack experience">
+        <p class="meta"><span class="badge badge--success">Available</span></p>
         <h3>Traveler community</h3>
         <p>Read published blogs and, once signed in, share stories from your own travels.</p>
       </article>
 
-      <article class="card experience">
-        <p class="status status--planned">Coming soon</p>
+      <article class="card stack experience">
+        <p class="meta"><span class="badge">Coming soon</span></p>
         <h3>Content marketplace</h3>
         <p>Explorer will bring tours, games, bundles, and subscriptions together in one place.</p>
       </article>
@@ -49,7 +49,7 @@
   </section>
 
   @if (!auth.isLoggedIn()) {
-    <section class="closing stack">
+    <section class="card stack closing">
       <h2>Ready to explore?</h2>
       <p>Create an account or sign in to continue to the experiences already available.</p>
       <div class="actions">
