@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { ProductList } from './catalog/product-list/product-list';
 import { Wallet } from './my-wallet/wallet/wallet';
 import { PaymentHome } from './payment-home/payment-home';
 import { WalletDetails } from './wallet-management/wallet-details/wallet-details';
@@ -9,4 +10,5 @@ export const paymentRoutes: Routes = [
   { path: 'wallet', component: Wallet },
   { path: 'wallets', component: WalletList },
   { path: 'wallets/:id', component: WalletDetails },
+  { path: 'catalog', component: ProductList },
 ];

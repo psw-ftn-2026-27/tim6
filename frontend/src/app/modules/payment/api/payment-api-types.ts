@@ -32,3 +32,9 @@ export interface DepositDto {
 export interface CancellationDto {
   reason: string;
 }
+
+export interface ProductDto {
+  id: string;
+  name: string;
+  price: number;
+}
