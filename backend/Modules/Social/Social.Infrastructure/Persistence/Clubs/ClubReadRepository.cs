@@ -64,6 +64,15 @@ internal sealed class ClubReadRepository : IClubReadRepository
             .ToListAsync();
     }
 
+    public Task<List<ClubMemberDto>> GetMembersAsync(Guid clubId)
+    {
+        return _dbContext.Clubs
+            .Where(club => club.Id == clubId)
+            .SelectMany(club => club.Members)
+            .Select(member => new ClubMemberDto(member.UserId, null, member.Role))
+            .ToListAsync();
+    }
+
     private static IQueryable<ClubDto> ProjectToDtos(IQueryable<Club> clubs)
     {
         return clubs

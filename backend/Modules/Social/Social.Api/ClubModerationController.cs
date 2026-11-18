@@ -40,4 +40,24 @@ public sealed class ClubModerationController : ControllerBase
         await _moderationService.RejectJoinRequestAsync(id, User.GetUserId(), applicantId);
         return NoContent();
     }
+
+    [HttpGet("{id:guid}/members")]
+    public async Task<ActionResult<List<ClubMemberDto>>> GetMembers(Guid id)
+    {
+        return await _moderationQueries.GetMembersAsync(id, User.GetUserId());
+    }
+
+    [HttpPost("{id:guid}/members/{memberId:guid}/promote")]
+    public async Task<ActionResult> PromoteToModerator(Guid id, Guid memberId)
+    {
+        await _moderationService.PromoteToModeratorAsync(id, User.GetUserId(), memberId);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}/members/{memberId:guid}")]
+    public async Task<ActionResult> RemoveMember(Guid id, Guid memberId)
+    {
+        await _moderationService.RemoveMemberAsync(id, User.GetUserId(), memberId);
+        return NoContent();
+    }
 }

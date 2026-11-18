@@ -32,10 +32,11 @@
         />
 
         @if (membershipDto.role === 'Owner' || membershipDto.role === 'Moderator') {
-          <p>
+          <p class="moderation-links">
             <a class="button" [routerLink]="['/social/clubs', club.id, 'requests']"
               >Join requests</a
             >
+            <a class="button" [routerLink]="['/social/clubs', club.id, 'members']">Members</a>
           </p>
         }
       }

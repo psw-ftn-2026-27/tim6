@@ -11,6 +11,7 @@ internal static class ClubSeed
 
     public static readonly Club ClubWithSecondExplorersJoinRequest;
     public static readonly Club ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest;
+    public static readonly Club ClubWithTwoModeratorsAndDemoExplorerAsPlainMember;
 
     static ClubSeed()
     {
@@ -21,7 +22,17 @@ internal static class ClubSeed
         ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest.RequestToJoin(WellKnownUsers.SecondExplorer);
         ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest.AcceptJoinRequest(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
         ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest.RequestToJoin(BlogSeed.IdentityDemoExplorer);
+
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember = new(WellKnownUsers.Explorer, "Šetači Petrovaradina", "Šetnje podzemnim galerijama tvrđave.", ["https://example.com/petrovaradin.jpg"], new DateTime(2026, 10, 6, 0, 0, 0, DateTimeKind.Utc));
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.RequestToJoin(WellKnownUsers.SecondExplorer);
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.AcceptJoinRequest(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.PromoteToModerator(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.RequestToJoin(WellKnownUsers.Administrator);
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.AcceptJoinRequest(WellKnownUsers.Explorer, WellKnownUsers.Administrator);
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.PromoteToModerator(WellKnownUsers.Explorer, WellKnownUsers.Administrator);
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.RequestToJoin(BlogSeed.IdentityDemoExplorer);
+        ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.AcceptJoinRequest(WellKnownUsers.Explorer, BlogSeed.IdentityDemoExplorer);
     }
 
-    public static Club[] All => [HikingClub, PhotographyClub, SecondExplorersClub, ClubWithSecondExplorersJoinRequest, ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest];
+    public static Club[] All => [HikingClub, PhotographyClub, SecondExplorersClub, ClubWithSecondExplorersJoinRequest, ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest, ClubWithTwoModeratorsAndDemoExplorerAsPlainMember];
 }

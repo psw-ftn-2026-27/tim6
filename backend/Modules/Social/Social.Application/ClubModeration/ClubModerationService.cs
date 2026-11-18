@@ -31,6 +31,22 @@ public sealed class ClubModerationService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task PromoteToModeratorAsync(Guid clubId, Guid userId, Guid memberId)
+    {
+        var club = await GetClubAsync(clubId);
+
+        club.PromoteToModerator(userId, memberId);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task RemoveMemberAsync(Guid clubId, Guid userId, Guid memberId)
+    {
+        var club = await GetClubAsync(clubId);
+
+        club.RemoveMember(userId, memberId);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     private async Task<Club> GetClubAsync(Guid clubId)
     {
         var club = await _clubRepository.GetByIdAsync(clubId);
