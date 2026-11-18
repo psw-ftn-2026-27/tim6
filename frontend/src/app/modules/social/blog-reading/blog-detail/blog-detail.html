@@ -51,7 +51,12 @@
         [comments]="blog.comments"
         [currentUserId]="auth.user()?.id ?? null"
         [commentsOpen]="blog.status === 'Published'"
+        [loadedAt]="loadedAt()"
+        [editingCommentId]="editingCommentId()"
+        [editError]="editError()"
         (addComment)="add($event)"
+        (startEdit)="startEdit($event)"
+        (cancelEdit)="closeEdit()"
         (editComment)="edit($event)"
         (deleteComment)="remove($event)"
       />

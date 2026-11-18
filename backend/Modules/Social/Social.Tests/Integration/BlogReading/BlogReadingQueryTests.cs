@@ -60,7 +60,25 @@ public class BlogReadingQueryTests : BaseIntegrationTest
         blog!.Id.Should().Be(BlogSeed.CommentedMuseumVisit.Id);
         blog.Title.Should().Be(BlogSeed.CommentedMuseumVisit.Title);
         blog.Status.Should().Be(BlogStatus.Published);
-        blog.Comments.Should().ContainSingle(comment => comment.UserId == WellKnownUsers.Administrator);
+        var seededComment = BlogSeed.CommentedMuseumVisit.Comments.Single();
+        var comment = blog.Comments.Should().ContainSingle(shown => shown.Id == seededComment.Id).Subject;
+        comment.UserId.Should().Be(WellKnownUsers.Administrator);
+        comment.LastModifiedAt.Should().BeCloseTo(seededComment.LastModifiedAt, TimeSpan.FromMilliseconds(1));
+        comment.EditableUntil.Should().BeCloseTo(
+            seededComment.CreatedAt.AddMinutes(Comment.EditWindowMinutes), TimeSpan.FromMilliseconds(1));
+    }
+
+    [Fact]
+    public async Task Comment_is_shown_with_its_authors_email()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var blog = await client.GetFromJsonAsync<BlogDto>(
+            $"/api/social/blogs/{BlogSeed.DemoExplorerCommentedBridgeWalk.Id}", JsonOptions);
+
+        var seededComment = BlogSeed.DemoExplorerCommentedBridgeWalk.Comments.Single();
+        var comment = blog!.Comments.Should().ContainSingle(shown => shown.Id == seededComment.Id).Subject;
+        comment.UserEmail.Should().Be(BlogSeed.IdentityDemoExplorerEmail);
     }
 
     [Fact]

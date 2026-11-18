@@ -145,15 +145,55 @@ public class BlogTests
     }
 
     [Fact]
+    public void New_comment_was_last_modified_when_it_was_created()
+    {
+        var blog = CreatePublishedBlog();
+
+        blog.AddComment(WellKnownUsers.Administrator, "Odlična tura!");
+
+        var comment = blog.Comments.Single();
+        comment.LastModifiedAt.Should().Be(comment.CreatedAt);
+    }
+
+    [Fact]
     public void User_edits_their_own_comment()
     {
         var blog = CreatePublishedBlog();
         blog.AddComment(WellKnownUsers.Administrator, "Odlična tura!");
         var comment = blog.Comments.Single();
 
-        blog.UpdateComment(comment.Id, WellKnownUsers.Administrator, "Ipak prosečna tura.");
+        blog.UpdateComment(comment.Id, WellKnownUsers.Administrator, "Ipak prosečna tura.", comment.CreatedAt.AddMinutes(1));
 
         blog.Comments.Single().Text.Should().Be("Ipak prosečna tura.");
+    }
+
+    [Fact]
+    public void Edit_in_the_fourteenth_minute_changes_the_text_and_modification_time_but_not_the_creation_time()
+    {
+        var blog = CreatePublishedBlog();
+        blog.AddComment(WellKnownUsers.Administrator, "Odlična tura!");
+        var comment = blog.Comments.Single();
+        var createdAt = comment.CreatedAt;
+        var now = createdAt.AddMinutes(14);
+
+        blog.UpdateComment(comment.Id, WellKnownUsers.Administrator, "Ipak prosečna tura.", now);
+
+        comment.Text.Should().Be("Ipak prosečna tura.");
+        comment.LastModifiedAt.Should().Be(now);
+        comment.CreatedAt.Should().Be(createdAt);
+    }
+
+    [Fact]
+    public void Comment_edited_in_the_fourteenth_minute_cannot_be_edited_exactly_fifteen_minutes_after_posting()
+    {
+        var blog = CreatePublishedBlog();
+        blog.AddComment(WellKnownUsers.Administrator, "Odlična tura!");
+        var comment = blog.Comments.Single();
+        blog.UpdateComment(comment.Id, WellKnownUsers.Administrator, "Ipak prosečna tura.", comment.CreatedAt.AddMinutes(14));
+
+        var update = () => blog.UpdateComment(comment.Id, WellKnownUsers.Administrator, "Ipak loša tura.", comment.CreatedAt.AddMinutes(15));
+
+        update.Should().Throw<DomainException>();
     }
 
     [Fact]
@@ -163,7 +203,7 @@ public class BlogTests
         blog.AddComment(WellKnownUsers.Administrator, "Odlična tura!");
         var comment = blog.Comments.Single();
 
-        var update = () => blog.UpdateComment(comment.Id, WellKnownUsers.Explorer, "Izmena tuđeg komentara.");
+        var update = () => blog.UpdateComment(comment.Id, WellKnownUsers.Explorer, "Izmena tuđeg komentara.", comment.CreatedAt.AddMinutes(1));
 
         update.Should().Throw<NotFoundException>();
     }
@@ -175,9 +215,22 @@ public class BlogTests
         blog.AddComment(WellKnownUsers.Administrator, "Odlična tura!");
         var comment = blog.Comments.Single();
 
-        blog.DeleteComment(comment.Id, WellKnownUsers.Administrator);
+        blog.DeleteComment(comment.Id, WellKnownUsers.Administrator, comment.CreatedAt.AddMinutes(1));
 
         blog.Comments.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Comment_cannot_be_deleted_exactly_fifteen_minutes_after_posting_and_stays_on_the_blog()
+    {
+        var blog = CreatePublishedBlog();
+        blog.AddComment(WellKnownUsers.Administrator, "Odlična tura!");
+        var comment = blog.Comments.Single();
+
+        var deletion = () => blog.DeleteComment(comment.Id, WellKnownUsers.Administrator, comment.CreatedAt.AddMinutes(15));
+
+        deletion.Should().Throw<DomainException>();
+        blog.Comments.Should().ContainSingle(remaining => remaining.Id == comment.Id);
     }
 
     [Fact]

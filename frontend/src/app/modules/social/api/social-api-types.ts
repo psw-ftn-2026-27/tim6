@@ -3,8 +3,11 @@ export type BlogStatus = 'Draft' | 'Published' | 'Closed';
 export interface CommentDto {
   id: string;
   userId: string;
+  userEmail: string | null;
   text: string;
   createdAt: string;
+  lastModifiedAt: string;
+  editableUntil: string;
 }
 
 export interface BlogDto {

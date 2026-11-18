@@ -5,12 +5,16 @@ namespace Social.Tests.Integration.Seeds;
 
 internal static class BlogSeed
 {
+    public static readonly Guid IdentityDemoExplorer = Guid.Parse("20000000-0000-0000-0000-000000000001");
+    public const string IdentityDemoExplorerEmail = "explorer1@explorer.dev";
+
     public static readonly Blog FortressImpressions = new(WellKnownUsers.Explorer, "Utisci sa tvrđave", "Obilazak Petrovaradinske tvrđave ostavio je snažan utisak: podzemne galerije, Sahat kula i pogled na Dunav.", ["https://example.com/tvrdjava.jpg"]);
     public static readonly Blog CityNotes = new(WellKnownUsers.Explorer, "Beleške iz grada", "Kratke beleške sa šetnje centrom grada.", ["https://example.com/centar.jpg"]);
     public static readonly Blog SecondExplorersDiary = new(WellKnownUsers.SecondExplorer, "Tuđi dnevnik", "Beleške drugog autora, vidljive samo njemu.", ["https://example.com/dnevnik.jpg"]);
     public static readonly Blog PublishedRiverbank;
     public static readonly Blog CommentedMuseumVisit;
     public static readonly Blog ArchivedLakeTrip;
+    public static readonly Blog DemoExplorerCommentedBridgeWalk;
 
     static BlogSeed()
     {
@@ -24,7 +28,11 @@ internal static class BlogSeed
         ArchivedLakeTrip = new(WellKnownUsers.Explorer, "Izlet na jezero", "Završen opis izleta na Palićko jezero.", ["https://example.com/jezero.jpg"]);
         ArchivedLakeTrip.Publish();
         ArchivedLakeTrip.Archive();
+
+        DemoExplorerCommentedBridgeWalk = new(WellKnownUsers.Explorer, "Šetnja preko mosta", "Utisci sa šetnje preko Mosta slobode.", ["https://example.com/most.jpg"]);
+        DemoExplorerCommentedBridgeWalk.Publish();
+        DemoExplorerCommentedBridgeWalk.AddComment(IdentityDemoExplorer, "Divan pogled sa mosta!");
     }
 
-    public static Blog[] All => [FortressImpressions, CityNotes, SecondExplorersDiary, PublishedRiverbank, CommentedMuseumVisit, ArchivedLakeTrip];
+    public static Blog[] All => [FortressImpressions, CityNotes, SecondExplorersDiary, PublishedRiverbank, CommentedMuseumVisit, ArchivedLakeTrip, DemoExplorerCommentedBridgeWalk];
 }

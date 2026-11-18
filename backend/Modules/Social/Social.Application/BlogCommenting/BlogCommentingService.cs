@@ -27,7 +27,9 @@ public sealed class BlogCommentingService
     {
         var blog = await GetBlogAsync(blogId);
 
-        blog.UpdateComment(commentId, userId, dto.Text);
+        var now = DateTime.UtcNow;
+
+        blog.UpdateComment(commentId, userId, dto.Text, now);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -35,7 +37,9 @@ public sealed class BlogCommentingService
     {
         var blog = await GetBlogAsync(blogId);
 
-        blog.DeleteComment(commentId, userId);
+        var now = DateTime.UtcNow;
+
+        blog.DeleteComment(commentId, userId, now);
         await _unitOfWork.SaveChangesAsync();
     }
 

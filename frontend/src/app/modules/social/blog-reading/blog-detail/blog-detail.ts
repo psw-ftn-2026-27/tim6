@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MarkdownComponent } from 'ngx-markdown';
 import { Auth } from '../../../../core/auth/auth';
@@ -30,8 +30,17 @@ export class BlogDetail {
     return canFollowAuthor ? `/api/social/users/${authorId}/follow-status` : undefined;
   });
 
+  // The moment the blog was last loaded. Reading the blog makes this recompute whenever a load
+  // or reload delivers it, so the edit and delete buttons are re-evaluated then, not by a clock.
+  protected readonly loadedAt = computed(() => {
+    const blog = this.detail.hasValue() ? this.detail.value() : undefined;
+    return blog ? Date.now() : 0;
+  });
+
   protected readonly followPending = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly editingCommentId = signal<string | null>(null);
+  protected readonly editError = signal<string | null>(null);
 
   protected async follow(recipientId: string): Promise<void> {
     this.followPending.set(true);
@@ -50,19 +59,33 @@ export class BlogDetail {
     this.error.set(null);
     try {
       await this.blogReading.addComment(this.id(), { text });
+      this.closeEdit();
       this.detail.reload();
     } catch (failure) {
       this.error.set(serverMessage(failure, 'Could not add the comment.'));
     }
   }
 
+  protected startEdit(commentId: string): void {
+    this.editingCommentId.set(commentId);
+    this.editError.set(null);
+  }
+
+  protected closeEdit(): void {
+    this.editingCommentId.set(null);
+    this.editError.set(null);
+  }
+
+  // A rejected edit keeps the form open with the typed text and shows the message below it.
   protected async edit(edit: CommentEdit): Promise<void> {
     this.error.set(null);
+    this.editError.set(null);
     try {
       await this.blogReading.updateComment(this.id(), edit.commentId, { text: edit.text });
+      this.closeEdit();
       this.detail.reload();
     } catch (failure) {
-      this.error.set(serverMessage(failure, 'Could not update the comment.'));
+      this.editError.set(serverMessage(failure, 'Could not update the comment.'));
     }
   }
 
@@ -70,6 +93,7 @@ export class BlogDetail {
     this.error.set(null);
     try {
       await this.blogReading.deleteComment(this.id(), commentId);
+      this.closeEdit();
       this.detail.reload();
     } catch (failure) {
       this.error.set(serverMessage(failure, 'Could not delete the comment.'));

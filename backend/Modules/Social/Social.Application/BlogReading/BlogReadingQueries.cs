@@ -1,3 +1,4 @@
+using Identity.Contracts;
 using Shared.Domain;
 using Shared.Domain.Exceptions;
 using Social.Application.Blogs;
@@ -8,10 +9,12 @@ namespace Social.Application.BlogReading;
 public sealed class BlogReadingQueries
 {
     private readonly IBlogReadRepository _blogReadRepository;
+    private readonly IIdentityApi _identityApi;
 
-    public BlogReadingQueries(IBlogReadRepository blogReadRepository)
+    public BlogReadingQueries(IBlogReadRepository blogReadRepository, IIdentityApi identityApi)
     {
         _blogReadRepository = blogReadRepository;
+        _identityApi = identityApi;
     }
 
     public async Task<BlogDto> GetByIdAsync(Guid id)
@@ -22,14 +25,39 @@ public sealed class BlogReadingQueries
             throw new NotFoundException($"Blog {id} does not exist.");
         }
 
-        return blog;
+        var blogs = await AddCommentEmailsAsync([blog]);
+        return blogs.Single();
     }
 
-    public Task<PageResult<BlogDto>> GetPublishedAsync(int page, int pageSize)
+    public async Task<PageResult<BlogDto>> GetPublishedAsync(int page, int pageSize)
     {
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, 100);
 
-        return _blogReadRepository.GetPublishedAsync(page, pageSize);
+        var blogs = await _blogReadRepository.GetPublishedAsync(page, pageSize);
+        var items = await AddCommentEmailsAsync(blogs.Items);
+        return new PageResult<BlogDto>(items, blogs.TotalCount);
+    }
+
+    private async Task<List<BlogDto>> AddCommentEmailsAsync(IEnumerable<BlogDto> blogs)
+    {
+        var dtos = blogs.ToList();
+        var users = await _identityApi.GetUsersByIdsAsync(
+            dtos.SelectMany(blog => blog.Comments).Select(comment => comment.UserId)
+        );
+
+        return dtos
+            .Select(blog => blog with
+            {
+                Comments = blog.Comments
+                    .Select(comment => comment with
+                    {
+                        UserEmail = users.TryGetValue(comment.UserId, out var user)
+                        ? user.Email
+                        : null
+                    })
+                    .ToList()
+            })
+            .ToList();
     }
 }
