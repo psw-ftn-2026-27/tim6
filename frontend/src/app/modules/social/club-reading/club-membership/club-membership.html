@@ -1,0 +1,26 @@
+<section class="membership">
+  @switch (status()) {
+    @case ('None') {
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="pending()"
+        (click)="requestToJoin.emit()"
+      >
+        Request to join
+      </button>
+    }
+    @case ('Pending') {
+      <span class="badge badge--warning">Request pending</span>
+      <button class="button" type="button" [disabled]="pending()" (click)="withdraw.emit()">
+        Withdraw request
+      </button>
+    }
+    @case ('Member') {
+      <span class="badge badge--success">Member</span>
+    }
+    @case ('Closed') {
+      <span class="badge badge--danger">Club is closed</span>
+    }
+  }
+</section>

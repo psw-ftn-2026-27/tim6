@@ -87,3 +87,9 @@ export interface UpdateClubDto {
   description: string;
   images: string[];
 }
+
+export type ClubMembershipStatus = 'None' | 'Pending' | 'Member' | 'Closed';
+
+export interface ClubMembershipDto {
+  status: ClubMembershipStatus;
+}

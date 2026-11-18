@@ -12,6 +12,11 @@ public sealed class Club : AggregateRoot
     public string Description { get; private set; }
     public List<string> Images { get; private set; }
     public DateTime CreatedAt { get; private set; }
+    public ClubStatus Status { get; private set; }
+    private readonly List<ClubMember> _members = [];
+    public IReadOnlyList<ClubMember> Members => _members;
+    private readonly List<ClubJoinRequest> _joinRequests = [];
+    public IReadOnlyList<ClubJoinRequest> JoinRequests => _joinRequests;
 
     private Club()
     {
@@ -30,6 +35,8 @@ public sealed class Club : AggregateRoot
         Description = description;
         Images = images;
         CreatedAt = createdAt;
+        Status = ClubStatus.Active;
+        _members.Add(new ClubMember(ownerId, ClubRole.Owner));
     }
 
     public void Update(Guid userId, string name, string description, List<string> images)
@@ -45,6 +52,35 @@ public sealed class Club : AggregateRoot
     public void Delete(Guid userId)
     {
         EnsureOwner(userId);
+    }
+
+    public void RequestToJoin(Guid userId)
+    {
+        if (Status != ClubStatus.Active)
+        {
+            throw new DomainException("Only an active club accepts join requests.");
+        }
+        if (_members.Any(member => member.UserId == userId))
+        {
+            throw new DomainException("A member cannot request to join the club.");
+        }
+        if (_joinRequests.Any(request => request.UserId == userId))
+        {
+            throw new DomainException("A join request to this club is already pending.");
+        }
+
+        _joinRequests.Add(new ClubJoinRequest(userId, DateTime.UtcNow));
+    }
+
+    public void WithdrawJoinRequest(Guid userId)
+    {
+        var request = _joinRequests.FirstOrDefault(request => request.UserId == userId);
+        if (request is null)
+        {
+            throw new DomainException("There is no pending join request to withdraw.");
+        }
+
+        _joinRequests.Remove(request);
     }
 
     private void EnsureOwner(Guid userId)
