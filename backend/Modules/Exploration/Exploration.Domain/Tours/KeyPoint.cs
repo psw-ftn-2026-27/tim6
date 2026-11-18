@@ -25,7 +25,7 @@ public sealed class KeyPoint : Entity
         bool isVisibleWithoutPurchase, int order)
         : base(Guid.NewGuid())
     {
-        EnsureValidContent(name, description, image, location);
+        EnsureValidContent(name, description, image);
 
         Name = name;
         Description = description;
@@ -39,7 +39,7 @@ public sealed class KeyPoint : Entity
     internal void Update(string name, string description, string image, string? secret, Location location,
         bool isVisibleWithoutPurchase)
     {
-        EnsureValidContent(name, description, image, location);
+        EnsureValidContent(name, description, image);
 
         Name = name;
         Description = description;
@@ -54,7 +54,7 @@ public sealed class KeyPoint : Entity
         Order = order;
     }
 
-    private static void EnsureValidContent(string name, string description, string image, Location location)
+    private static void EnsureValidContent(string name, string description, string image)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -67,10 +67,6 @@ public sealed class KeyPoint : Entity
         if (string.IsNullOrWhiteSpace(image))
         {
             throw new DomainException("A key point requires an image.");
-        }
-        if (location is null)
-        {
-            throw new DomainException("A key point requires a location.");
         }
     }
 }
