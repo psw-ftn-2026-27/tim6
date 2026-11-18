@@ -6,8 +6,11 @@ namespace Exploration.Domain.Tours;
 public sealed class Tour : AggregateRoot
 {
     private const int MinimumDescriptionLengthForPublishing = 100;
+    private const int MinimumKeyPointsForPublishing = 2;
+    private const int MinimumKeyPointsForLength = 2;
 
     private readonly List<TransportTime> _transportTimes = [];
+    private readonly List<KeyPoint> _keyPoints = [];
 
     public Guid AuthorId { get; private set; }
     public string Name { get; private set; }
@@ -19,6 +22,8 @@ public sealed class Tour : AggregateRoot
     public DateTime? ArchivedAt { get; private set; }
     public IReadOnlyList<TransportTime> TransportTimes => _transportTimes;
     public RecommendedGroupSize RecommendedGroupSize { get; private set; }
+    public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints;
+    public TourLength Length { get; private set; }
 
     private Tour()
     {
@@ -26,6 +31,7 @@ public sealed class Tour : AggregateRoot
         Description = null!;
         Tags = null!;
         RecommendedGroupSize = null!;
+        Length = null!;
     }
 
     public Tour(Guid authorId, string name, string description, TourDifficulty difficulty, List<string> tags,
@@ -56,6 +62,7 @@ public sealed class Tour : AggregateRoot
         Tags = tags;
         RecommendedGroupSize = recommendedGroupSize;
         Status = TourStatus.Draft;
+        Length = new TourLength(0);
     }
 
     public void AddTransportTime(TransportMode transport, int minutes)
@@ -90,6 +97,10 @@ public sealed class Tour : AggregateRoot
         {
             throw new DomainException("A tour can be published only with at least one transport time.");
         }
+        if (_keyPoints.Count < MinimumKeyPointsForPublishing)
+        {
+            throw new DomainException($"A tour can be published only with at least {MinimumKeyPointsForPublishing} key points.");
+        }
 
         Status = TourStatus.Published;
         PublishedAt = DateTime.UtcNow;
@@ -115,5 +126,61 @@ public sealed class Tour : AggregateRoot
 
         Status = TourStatus.Published;
         ArchivedAt = null;
+    }
+
+    public void AddKeyPoint(string name, string description, string image, string? secret, Location location,
+        bool isVisibleWithoutPurchase, TourLength length)
+    {
+        EnsureKeyPointsEditable();
+
+        _keyPoints.Add(new KeyPoint(name, description, image, secret, location, isVisibleWithoutPurchase,
+            _keyPoints.Count + 1));
+        SetLength(length);
+    }
+
+    public void UpdateKeyPoint(Guid keyPointId, string name, string description, string image, string? secret,
+        Location location, bool isVisibleWithoutPurchase, TourLength length)
+    {
+        EnsureKeyPointsEditable();
+
+        GetKeyPoint(keyPointId).Update(name, description, image, secret, location, isVisibleWithoutPurchase);
+        SetLength(length);
+    }
+
+    public void RemoveKeyPoint(Guid keyPointId, TourLength length)
+    {
+        EnsureKeyPointsEditable();
+
+        _keyPoints.Remove(GetKeyPoint(keyPointId));
+        var order = 1;
+        foreach (var keyPoint in _keyPoints.OrderBy(keyPoint => keyPoint.Order))
+        {
+            keyPoint.MoveTo(order);
+            order++;
+        }
+        SetLength(length);
+    }
+
+    private void EnsureKeyPointsEditable()
+    {
+        if (Status != TourStatus.Draft)
+        {
+            throw new DomainException("Key points can be changed only while the tour is a draft.");
+        }
+    }
+
+    private KeyPoint GetKeyPoint(Guid keyPointId)
+    {
+        var keyPoint = _keyPoints.FirstOrDefault(keyPoint => keyPoint.Id == keyPointId);
+        if (keyPoint is null)
+        {
+            throw new NotFoundException($"Key point {keyPointId} does not exist.");
+        }
+        return keyPoint;
+    }
+
+    private void SetLength(TourLength length)
+    {
+        Length = _keyPoints.Count < MinimumKeyPointsForLength ? new TourLength(0) : length;
     }
 }

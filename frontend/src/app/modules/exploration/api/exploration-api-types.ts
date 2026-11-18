@@ -51,3 +51,39 @@ export interface TourPriceDto {
 export interface PublishTourDto {
   price: TourPriceDto | null;
 }
+
+export interface LocationDto {
+  latitude: number;
+  longitude: number;
+}
+
+export interface KeyPointDto {
+  id: string;
+  order: number;
+  name: string;
+  description: string;
+  image: string;
+  secret: string | null;
+  location: LocationDto;
+  isVisibleWithoutPurchase: boolean;
+}
+
+export interface TourKeyPointsDto {
+  status: TourStatus;
+  keyPoints: KeyPointDto[];
+  lengthInKilometers: number;
+}
+
+export interface SaveKeyPointDto {
+  name: string;
+  description: string;
+  image: string;
+  secret: string | null;
+  location: LocationDto;
+  isVisibleWithoutPurchase: boolean;
+  lengthInKilometers: number;
+}
+
+export interface RemoveKeyPointDto {
+  lengthInKilometers: number;
+}
