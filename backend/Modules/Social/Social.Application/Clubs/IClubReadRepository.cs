@@ -1,5 +1,6 @@
 using Shared.Domain;
 using Social.Application.ClubMembership;
+using Social.Application.ClubModeration;
 
 namespace Social.Application.Clubs;
 
@@ -9,4 +10,5 @@ public interface IClubReadRepository
     Task<List<ClubDto>> GetByOwnerAsync(Guid ownerId);
     Task<PageResult<ClubDto>> GetPageAsync(int page, int pageSize);
     Task<ClubMembershipDto?> GetMembershipAsync(Guid clubId, Guid userId);
+    Task<List<ClubJoinRequestDto>> GetJoinRequestsAsync(Guid clubId);
 }

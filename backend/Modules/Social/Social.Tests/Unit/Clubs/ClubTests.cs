@@ -136,4 +136,46 @@ public class ClubTests
         withdrawal.Should().Throw<DomainException>();
         club.JoinRequests.Should().ContainSingle(request => request.UserId == WellKnownUsers.SecondExplorer);
     }
+
+    [Fact]
+    public void Plain_member_cannot_accept_a_join_request_and_the_request_remains()
+    {
+        var club = CreateClubWithAPlainMemberAndAPendingRequest();
+
+        var acceptance = () => club.AcceptJoinRequest(WellKnownUsers.SecondExplorer, WellKnownUsers.Administrator);
+
+        acceptance.Should().Throw<DomainException>();
+        club.JoinRequests.Should().ContainSingle(request => request.UserId == WellKnownUsers.Administrator);
+    }
+
+    [Fact]
+    public void Plain_member_cannot_reject_a_join_request_and_the_request_remains()
+    {
+        var club = CreateClubWithAPlainMemberAndAPendingRequest();
+
+        var rejection = () => club.RejectJoinRequest(WellKnownUsers.SecondExplorer, WellKnownUsers.Administrator);
+
+        rejection.Should().Throw<DomainException>();
+        club.JoinRequests.Should().ContainSingle(request => request.UserId == WellKnownUsers.Administrator);
+    }
+
+    [Fact]
+    public void User_without_a_pending_request_cannot_be_accepted_and_does_not_become_a_member()
+    {
+        var club = CreateClub();
+
+        var acceptance = () => club.AcceptJoinRequest(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
+
+        acceptance.Should().Throw<DomainException>();
+        club.Members.Should().NotContain(member => member.UserId == WellKnownUsers.SecondExplorer);
+    }
+
+    private static Club CreateClubWithAPlainMemberAndAPendingRequest()
+    {
+        var club = CreateClub();
+        club.RequestToJoin(WellKnownUsers.SecondExplorer);
+        club.AcceptJoinRequest(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
+        club.RequestToJoin(WellKnownUsers.Administrator);
+        return club;
+    }
 }

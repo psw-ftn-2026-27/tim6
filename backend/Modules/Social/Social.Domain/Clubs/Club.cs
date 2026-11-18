@@ -74,13 +74,55 @@ public sealed class Club : AggregateRoot
 
     public void WithdrawJoinRequest(Guid userId)
     {
-        var request = _joinRequests.FirstOrDefault(request => request.UserId == userId);
+        RemovePendingJoinRequest(userId);
+    }
+
+    public void AcceptJoinRequest(Guid resolverId, Guid applicantId)
+    {
+        EnsureCanResolve(resolverId);
+        EnsureActive();
+        RemovePendingJoinRequest(applicantId);
+        _members.Add(new ClubMember(applicantId, ClubRole.Member));
+    }
+
+    public void RejectJoinRequest(Guid resolverId, Guid applicantId)
+    {
+        EnsureCanResolve(resolverId);
+        EnsureActive();
+        RemovePendingJoinRequest(applicantId);
+    }
+
+    public bool CanResolveJoinRequests(Guid userId)
+    {
+        return _members.Any(member =>
+            member.UserId == userId && (member.Role == ClubRole.Owner || member.Role == ClubRole.Moderator));
+    }
+
+    private void RemovePendingJoinRequest(Guid applicantId)
+    {
+        var request = _joinRequests.FirstOrDefault(request => request.UserId == applicantId);
         if (request is null)
         {
-            throw new DomainException("There is no pending join request to withdraw.");
+            throw new DomainException("There is no pending join request from this user.");
         }
 
         _joinRequests.Remove(request);
+    }
+
+    private void EnsureActive()
+    {
+        if (Status != ClubStatus.Active)
+        {
+            throw new DomainException("Join requests can be resolved only while the club is active.");
+        }
+    }
+
+    private void EnsureCanResolve(Guid resolverId)
+    {
+        if (!CanResolveJoinRequests(resolverId))
+        {
+            throw new DomainException("Only the owner or a moderator of the club can resolve join requests.");
+        }
     }
 
     private void EnsureOwner(Guid userId)

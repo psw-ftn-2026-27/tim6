@@ -33,4 +33,16 @@ public class ClubMembershipQueryTests : BaseIntegrationTest
 
         membership!.Status.Should().Be(ClubMembershipStatus.Member);
     }
+
+    [Fact]
+    public async Task Founder_sees_that_they_are_a_member_with_the_owner_role()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+
+        var membership = await client.GetFromJsonAsync<ClubMembershipDto>(
+            $"/api/social/clubs/{ClubSeed.HikingClub.Id}/membership", JsonOptions);
+
+        membership!.Status.Should().Be(ClubMembershipStatus.Member);
+        membership.Role.Should().Be(ClubRole.Owner);
+    }
 }
