@@ -1,4 +1,5 @@
 using Exploration.Application;
+using Exploration.Application.KeyPointAuthoring;
 using Exploration.Application.TourAuthoring;
 using Exploration.Application.TourBrowsing;
 using Exploration.Application.TourPreferenceEditing;
@@ -29,6 +30,8 @@ public static class ExplorationModuleExtensions
 
         services.AddScoped<TourAuthoringService>();
         services.AddScoped<TourAuthoringQueries>();
+        services.AddScoped<KeyPointAuthoringService>();
+        services.AddScoped<KeyPointAuthoringQueries>();
         services.AddScoped<TourBrowsingQueries>();
         services.AddScoped<TourPreferenceEditingService>();
         services.AddScoped<TourPreferenceEditingQueries>();

@@ -14,10 +14,20 @@ public class TourTests
     private static Tour CreateTour(string description) =>
         new(WellKnownUsers.Explorer, "Šetnja tvrđavom", description, TourDifficulty.Easy, ["istorija"], new RecommendedGroupSize(2, 6));
 
+    private static void AddKeyPoint(Tour tour, TourLength length) =>
+        tour.AddKeyPoint("Sahat kula", "Sat na tvrđavi.", "/api/shared/images/sahat-kula.jpg", null, new Location(45.25, 19.86), false, length);
+
+    private static void AddTwoKeyPoints(Tour tour)
+    {
+        AddKeyPoint(tour, new TourLength(0));
+        AddKeyPoint(tour, new TourLength(1.5));
+    }
+
     private static Tour CreatePublishedTour()
     {
         var tour = CreateTour(LongDescription);
         tour.AddTransportTime(TransportMode.Walking, 120);
+        AddTwoKeyPoints(tour);
         tour.Publish(FreePrice);
         return tour;
     }
@@ -103,6 +113,7 @@ public class TourTests
     {
         var tour = CreateTour(LongDescription);
         tour.AddTransportTime(TransportMode.Bicycle, 45);
+        AddTwoKeyPoints(tour);
 
         tour.Publish(FreePrice);
 
@@ -115,6 +126,7 @@ public class TourTests
     {
         var tour = CreateTour("Kratak opis.");
         tour.AddTransportTime(TransportMode.Walking, 120);
+        AddTwoKeyPoints(tour);
 
         var publishing = () => tour.Publish(FreePrice);
 
@@ -125,6 +137,7 @@ public class TourTests
     public void Tour_without_a_transport_time_cannot_be_published()
     {
         var tour = CreateTour(LongDescription);
+        AddTwoKeyPoints(tour);
 
         var publishing = () => tour.Publish(FreePrice);
 
@@ -136,6 +149,7 @@ public class TourTests
     {
         var tour = CreateTour(LongDescription);
         tour.AddTransportTime(TransportMode.Walking, 120);
+        AddTwoKeyPoints(tour);
 
         var publishing = () => tour.Publish(null);
 
@@ -147,6 +161,7 @@ public class TourTests
     {
         var tour = CreateTour(LongDescription);
         tour.AddTransportTime(TransportMode.Car, 30);
+        AddTwoKeyPoints(tour);
         tour.Publish(FreePrice);
 
         var publishing = () => tour.Publish(FreePrice);
@@ -216,5 +231,97 @@ public class TourTests
         var publishing = () => tour.Publish(FreePrice);
 
         publishing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Tour_with_fewer_than_two_key_points_cannot_be_published()
+    {
+        var tour = CreateTour(LongDescription);
+        tour.AddTransportTime(TransportMode.Walking, 120);
+        AddKeyPoint(tour, new TourLength(0));
+
+        var publishing = () => tour.Publish(FreePrice);
+
+        publishing.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Remaining_key_points_are_renumbered_without_gaps_after_a_middle_one_is_removed()
+    {
+        var tour = CreateTour(LongDescription);
+        AddKeyPoint(tour, new TourLength(0));
+        AddKeyPoint(tour, new TourLength(1.5));
+        AddKeyPoint(tour, new TourLength(3));
+        var middle = tour.KeyPoints.Single(keyPoint => keyPoint.Order == 2);
+
+        tour.RemoveKeyPoint(middle.Id, new TourLength(2));
+
+        tour.KeyPoints.Select(keyPoint => keyPoint.Order).Should().BeEquivalentTo([1, 2]);
+    }
+
+    [Fact]
+    public void Tour_with_at_least_two_key_points_keeps_the_length_received_with_the_change()
+    {
+        var tour = CreateTour(LongDescription);
+        AddKeyPoint(tour, new TourLength(0));
+
+        AddKeyPoint(tour, new TourLength(2.4));
+
+        tour.Length.Should().Be(new TourLength(2.4));
+    }
+
+    [Fact]
+    public void Tour_with_one_key_point_has_a_length_of_zero_whatever_length_it_receives()
+    {
+        var tour = CreateTour(LongDescription);
+
+        AddKeyPoint(tour, new TourLength(5));
+
+        tour.Length.Should().Be(new TourLength(0));
+    }
+
+    [Fact]
+    public void Key_point_cannot_be_added_to_a_tour_that_is_not_a_draft()
+    {
+        var tour = CreatePublishedTour();
+
+        var addition = () => AddKeyPoint(tour, new TourLength(3));
+
+        addition.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Key_point_cannot_be_changed_on_a_tour_that_is_not_a_draft()
+    {
+        var tour = CreatePublishedTour();
+        var keyPoint = tour.KeyPoints[0];
+
+        var change = () => tour.UpdateKeyPoint(keyPoint.Id, "Novi naziv", "Novi opis.", "/api/shared/images/nova.jpg", null, new Location(45.26, 19.87), true, new TourLength(1.5));
+
+        change.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Key_point_cannot_be_removed_from_a_tour_that_is_not_a_draft()
+    {
+        var tour = CreatePublishedTour();
+        var keyPoint = tour.KeyPoints[0];
+
+        var removal = () => tour.RemoveKeyPoint(keyPoint.Id, new TourLength(0));
+
+        removal.Should().Throw<DomainException>();
+    }
+
+    [Theory]
+    [InlineData("", "Sat na tvrđavi.", "/api/shared/images/sahat-kula.jpg")]
+    [InlineData("Sahat kula", "   ", "/api/shared/images/sahat-kula.jpg")]
+    [InlineData("Sahat kula", "Sat na tvrđavi.", "")]
+    public void Key_point_requires_a_name_a_description_and_an_image(string name, string description, string image)
+    {
+        var tour = CreateTour(LongDescription);
+
+        var addition = () => tour.AddKeyPoint(name, description, image, null, new Location(45.25, 19.86), false, new TourLength(0));
+
+        addition.Should().Throw<DomainException>();
     }
 }
