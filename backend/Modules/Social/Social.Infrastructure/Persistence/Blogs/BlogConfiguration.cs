@@ -44,5 +44,9 @@ internal static class BlogConfiguration
         builder.ToTable("Votes");
         builder.Property(vote => vote.Id).ValueGeneratedNever();
         builder.Property(vote => vote.Sign).HasConversion<string>().HasMaxLength(20);
+
+        builder.HasIndex("BlogId", nameof(Vote.UserId))
+            .IsUnique()
+            .HasDatabaseName("IX_Votes_BlogId_UserId");
     }
 }

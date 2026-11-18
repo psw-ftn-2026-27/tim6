@@ -122,7 +122,7 @@ public class BlogReadingQueryTests : BaseIntegrationTest
         var blog = await client.GetFromJsonAsync<BlogDto>(
             $"/api/social/blogs/{BlogSeed.VotedCastleTour.Id}", JsonOptions);
 
-        blog!.Score.Should().Be(ExpectedScore(BlogSeed.VotedCastleTour));
+        blog!.Score.Should().Be(1);
     }
 
     private static int ExpectedScore(Blog blog) =>

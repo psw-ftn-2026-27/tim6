@@ -35,10 +35,11 @@ namespace Social.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Votes_BlogId",
+                name: "IX_Votes_BlogId_UserId",
                 schema: "social",
                 table: "Votes",
-                column: "BlogId");
+                columns: new[] { "BlogId", "UserId" },
+                unique: true);
         }
 
         /// <inheritdoc />

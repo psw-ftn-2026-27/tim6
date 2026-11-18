@@ -13,7 +13,7 @@ using Social.Infrastructure.Persistence;
 namespace Social.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SocialDbContext))]
-    [Migration("20261118144050_DodatoOcenjivanjeBloga")]
+    [Migration("20261118213256_DodatoOcenjivanjeBloga")]
     partial class DodatoOcenjivanjeBloga
     {
         /// <inheritdoc />
@@ -114,7 +114,9 @@ namespace Social.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BlogId");
+                    b.HasIndex("BlogId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Votes_BlogId_UserId");
 
                     b.ToTable("Votes", "social");
                 });

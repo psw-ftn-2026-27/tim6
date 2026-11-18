@@ -111,7 +111,9 @@ namespace Social.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BlogId");
+                    b.HasIndex("BlogId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Votes_BlogId_UserId");
 
                     b.ToTable("Votes", "social");
                 });
