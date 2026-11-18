@@ -38,11 +38,16 @@ readonly path: MapCoordinate[] = [
   emituje dužinu u kilometrima. Kada se putanja ukloni, emituje `null`.
 - `selectionEnabled` dozvoljava izbor lokacije klikom. Svaki sledeći klik premešta
   isti izabrani pin i emituje nove koordinate.
+- `showSelectedLocation` (podrazumevano `true`) sa vrednošću `false` ne crta izabrani pin,
+  a klik i dalje emituje `locationSelected`. Koristi ga stranica koja izabrane tačke sama
+  prikazuje kao pinove (npr. ključne tačke u E21), da posle uklanjanja tačke na mapi ne
+  ostane izabrani pin.
 - `pathLengthKm` emituje `number | null`, a `locationSelected` emituje
   `MapCoordinate`.
 
-Roditelj je odgovoran za validaciju obavezne lokacije i čuvanje koordinata. Komponenta
-ne pronalazi trasu; prikazuje samo geometriju koju dobije.
+Roditelj je odgovoran za validaciju obavezne lokacije i čuvanje koordinata. Za `path`
+komponenta ne pronalazi trasu; prikazuje samo geometriju koju dobije. Liniju po ulicama
+crta poseban ulaz `route` (odeljak „Ruta po ulicama“).
 
 Mapa prikazuje jedan svet: pločice se ne ponavljaju levo i desno, a mapa ne može da se
 pomeri preko ruba sveta. Pre nego što javi klik, mapa uz to svodi geografsku dužinu u
@@ -154,7 +159,7 @@ Ulaz `circle` (`MapCircle | null`) crta najviše jedan krug: `center` (`MapCoord
 `radiusMeters` (poluprečnik u metrima). Mapa krug ne računa i ne menja; crta ga tačno onako
 kako ga dobije. Kad stranica promeni centar ili poluprečnik, krug se ponovo nacrta, a kad
 prosledi `null`, krug nestaje. Kad krug postoji, mapa namesti prikaz tako da se ceo krug vidi,
-zajedno sa pinovima i putanjom.
+zajedno sa pinovima, putanjom i tačkama rute.
 
 Krug je samo crtež preko mape: klik unutar kruga radi isto kao klik bilo gde drugde (izbor
 lokacije, simulator ili ništa), a pinovi unutar kruga se i dalje mogu kliknuti.
@@ -185,6 +190,64 @@ protected readonly circle = computed<MapCircle | null>(() => {
   (locationSelected)="center.set($event)"
 />
 ```
+
+## Ruta po ulicama
+
+Ulaz `route` (`MapCoordinate[] | null`) su tačke rute redom. Mapa između njih nacrta jednu
+liniju po ulicama, za pešaka, i javi njenu ukupnu dužinu. Rutu računa biblioteka
+`leaflet-routing-machine` preko javnog pešačkog OSRM servera FOSSGIS-a
+(`routing.openstreetmap.de`). Javni server je namenjen razvoju i umerenoj upotrebi, ne
+produkciji. Ruta je odvojena od `path`: stranica može da koristi jedno, drugo ili oba.
+
+- `routeLengthKm` emituje `number | null`: ukupnu dužinu rute kroz sve tačke redom, u
+  kilometrima, kako je vrati server. Kada stranica prosledi `null`, linija nestaje i emituje
+  se `null`, kao kod `path`.
+- `routeFailed` se emituje kad server ne odgovori ili vrati grešku. Linija tada nestaje, a
+  dužina se ne emituje. Tekst poruke je stranice, a ne mape.
+- Sa manje od dve tačke mapa ne zove server: linije nema, a `routeLengthKm` emituje `0`. To
+  nije greška.
+- Server se zove samo kad stranica prosledi novu listu tačaka, nikad pri pomeranju ili
+  zumiranju mape. Pri svakoj novoj listi mapa namesti prikaz tako da se vide sve tačke rute,
+  zajedno sa pinovima, putanjom i krugom. Do novog ishoda ostaje stara linija. Javlja se
+  samo ishod za poslednju listu; ishod ranijeg računanja koji stigne kasnije se zanemaruje.
+- Na mapi je samo linija: bez markera biblioteke, bez prevlačenja i bez panela sa uputstvima.
+  Linija je samo crtež, pa klik na nju radi isto kao klik na mapu.
+
+E21: stranica od ključnih tačaka koje već ima napravi listu tačaka redom, a ispod mape
+prikaže dužinu ili svoju rezervnu poruku. Poruka nestaje sa prvim sledećim uspešnim ishodom.
+
+```ts
+// Ključne tačke ture redom; stranica ih već ima.
+protected readonly keyPoints = signal<MapCoordinate[]>([]);
+protected readonly routeLengthKm = signal<number | null>(null);
+protected readonly routeFailed = signal(false);
+
+protected onRouteLength(lengthKm: number | null): void {
+  this.routeLengthKm.set(lengthKm);
+  this.routeFailed.set(false);
+}
+```
+
+```html
+<app-geographic-map
+  [pins]="keyPoints()"
+  [route]="keyPoints()"
+  [selectionEnabled]="true"
+  [showSelectedLocation]="false"
+  (locationSelected)="keyPoints.set([...keyPoints(), $event])"
+  (routeLengthKm)="onRouteLength($event)"
+  (routeFailed)="routeFailed.set(true)"
+/>
+
+@if (routeFailed()) {
+  <p class="error">The route could not be calculated.</p>
+} @else if (routeLengthKm() !== null) {
+  <p>Route length: {{ routeLengthKm()?.toFixed(1) }} km</p>
+}
+```
+
+Kad autor doda, ukloni ili premesti tačku, stranica postavi nov niz (`keyPoints.set([...])`),
+a mapa sama ponovo izračuna rutu. Izmena postojećeg niza na mestu se ne primećuje.
 
 ## Izbor pina
 
