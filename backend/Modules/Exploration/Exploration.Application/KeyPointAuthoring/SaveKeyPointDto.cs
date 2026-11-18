@@ -1,3 +1,5 @@
+using Exploration.Application.Tours;
+
 namespace Exploration.Application.KeyPointAuthoring;
 
 public sealed record SaveKeyPointDto(
