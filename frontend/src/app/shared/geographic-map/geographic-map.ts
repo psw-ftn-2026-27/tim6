@@ -10,7 +10,10 @@ import {
   input,
   output,
 } from '@angular/core';
-import * as L from 'leaflet';
+// The default import is Leaflet's own object. leaflet-routing-machine adds `L.Routing` to that
+// object when it loads; a `* as L` import is a copy made earlier and would never see it.
+import L from 'leaflet';
+import 'leaflet-routing-machine';
 
 export interface MapCoordinate {
   latitude: number;
@@ -43,6 +46,9 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
   readonly pins = input<readonly MapPin[]>([]);
   readonly path = input<readonly MapCoordinate[] | null>(null);
   readonly selectionEnabled = input(false);
+  // With false, a selection click is still reported, but the map draws no marker of its own;
+  // a page that shows its points as pins uses it, so a removed point leaves nothing behind.
+  readonly showSelectedLocation = input(true);
   // Simulator mode: a click reports where the explorer is. At most one click mode works at a
   // time, so while the simulator is on, a click never selects a location.
   readonly simulatorEnabled = input(false);
@@ -50,8 +56,12 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
   readonly explorerPosition = input<MapCoordinate | null>(null);
   // At most one circle, drawn exactly as given; null draws nothing.
   readonly circle = input<MapCircle | null>(null);
+  // Points of a walking route along the streets, in order; null draws nothing.
+  readonly route = input<readonly MapCoordinate[] | null>(null);
 
   readonly pathLengthKm = output<number | null>();
+  readonly routeLengthKm = output<number | null>();
+  readonly routeFailed = output<void>();
   readonly locationSelected = output<MapCoordinate>();
   readonly explorerMoved = output<MapCoordinate>();
   readonly pinSelected = output<string>();
@@ -63,6 +73,15 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
   private selectedMarker: L.Marker | null = null;
   private explorerMarker: L.Marker | null = null;
   private circleShape: L.Circle | null = null;
+  private routeLayer: L.LayerGroup | null = null;
+  // The public walking OSRM server of FOSSGIS, meant for development and moderate use. The
+  // cast is there because the types package marks options as required that are never used here.
+  private readonly router: L.Routing.IRouter = L.Routing.osrmv1({
+    serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+    profile: 'foot',
+  } as L.Routing.OSRMOptions);
+  // Counts route requests, so an outcome of an older request can be recognised and ignored.
+  private routeRequest = 0;
 
   ngAfterViewInit(): void {
     // One world, not repeated copies side by side: panning stops at the world's edges.
@@ -82,10 +101,14 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
 
     this.pinLayer = L.layerGroup().addTo(this.map);
     this.pathLayer = L.layerGroup().addTo(this.map);
+    this.routeLayer = L.layerGroup().addTo(this.map);
     this.map.on('click', this.handleClick, this);
 
     this.renderPins();
     this.renderPath(this.path() !== null);
+    if (this.route() !== null) {
+      this.renderRoute();
+    }
     this.renderExplorerPosition();
     this.renderCircle();
     this.fitContent();
@@ -104,6 +127,11 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
       this.renderPath(true);
     }
 
+    // Only a new list of points asks for a route; panning and zooming never do.
+    if (changes['route']) {
+      this.renderRoute();
+    }
+
     if (changes['explorerPosition']) {
       this.renderExplorerPosition();
     }
@@ -112,12 +140,19 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
       this.renderCircle();
     }
 
-    if (changes['pins'] || changes['path'] || changes['circle']) {
+    if (changes['showSelectedLocation'] && !this.showSelectedLocation()) {
+      this.selectedMarker?.remove();
+      this.selectedMarker = null;
+    }
+
+    if (changes['pins'] || changes['path'] || changes['route'] || changes['circle']) {
       this.fitContent();
     }
   }
 
   ngOnDestroy(): void {
+    // A route that arrives after the map is gone is ignored.
+    this.routeRequest++;
     this.map?.remove();
   }
 
@@ -157,6 +192,52 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
     if (emitLength) {
       this.pathLengthKm.emit(this.calculateLength(points));
     }
+  }
+
+  private renderRoute(): void {
+    // A new list makes every earlier request outdated.
+    this.routeRequest++;
+    const request = this.routeRequest;
+    const route = this.route();
+
+    if (route === null) {
+      this.routeLayer?.clearLayers();
+      this.routeLengthKm.emit(null);
+      return;
+    }
+
+    if (route.length < 2) {
+      // Fewer than two points is not a route: the server is not asked and the length is 0.
+      this.routeLayer?.clearLayers();
+      this.routeLengthKm.emit(0);
+      return;
+    }
+
+    const waypoints = route.map((point) =>
+      L.Routing.waypoint(L.latLng(point.latitude, point.longitude)),
+    );
+    // Only the router is used, not the library's control, so there are no markers to drag
+    // and no panel with directions. The old line stays until the new outcome arrives.
+    this.router.route(waypoints, (error, routes) => {
+      if (request !== this.routeRequest) {
+        return;
+      }
+
+      this.routeLayer?.clearLayers();
+      // The first route is the best one; the server may add alternatives after it.
+      const found = routes?.[0];
+      if (error || !found?.coordinates || !found.summary) {
+        this.routeFailed.emit();
+        return;
+      }
+
+      // Not interactive: the line is only a drawing, so a click on it reaches the map.
+      L.polyline(found.coordinates, {
+        interactive: false,
+        className: 'geographic-map__route',
+      }).addTo(this.routeLayer!);
+      this.routeLengthKm.emit(found.summary.totalDistance / 1000);
+    });
   }
 
   private renderExplorerPosition(): void {
@@ -214,6 +295,9 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
     const coordinates = [
       ...this.pins().map((pin) => L.latLng(pin.latitude, pin.longitude)),
       ...(this.path() ?? []).map((point) => L.latLng(point.latitude, point.longitude)),
+      // The route's points, not its line: the view fits at once, without a second jump when
+      // the line arrives.
+      ...(this.route() ?? []).map((point) => L.latLng(point.latitude, point.longitude)),
     ];
     const circle = this.circle();
 
@@ -247,7 +331,9 @@ export class GeographicMap implements AfterViewInit, OnChanges, OnDestroy {
       // The "ja" marker does not move here; it moves when the page passes the saved position.
       this.explorerMoved.emit(coordinate);
     } else if (this.selectionEnabled()) {
-      this.selectLocation(event.latlng);
+      if (this.showSelectedLocation()) {
+        this.selectLocation(event.latlng);
+      }
       this.locationSelected.emit(coordinate);
     }
   };

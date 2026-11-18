@@ -32,3 +32,11 @@
   fill: var(--color-accent);
   fill-opacity: 0.12;
 }
+
+// The walking route along the streets: thicker than the straight path, so the two differ.
+.geographic-map__route {
+  stroke: var(--color-accent);
+  stroke-width: 5;
+  stroke-opacity: 0.8;
+  fill: none;
+}
