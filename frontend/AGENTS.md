@@ -233,11 +233,14 @@ The page that embeds the section wires it:
 
 `shared/geographic-map/` is the one map a module page shows. `<app-geographic-map>` is
 presentational: inputs `pins` (`MapPin[]`), `path` (`MapCoordinate[] | null`),
-`selectionEnabled`, `simulatorEnabled`, `explorerPosition` (`MapCoordinate | null`) and
-`circle` (`MapCircle | null`); outputs `pathLengthKm` (`number | null`), `locationSelected`
-and `explorerMoved` (both `MapCoordinate`) and `pinSelected` (`string`). At most one click
-mode is on at a time: with `selectionEnabled` a click moves the selected-location marker and
-emits `locationSelected`; with `simulatorEnabled` a click only emits `explorerMoved` ("the
+`selectionEnabled`, `showSelectedLocation` (default `true`), `simulatorEnabled`,
+`explorerPosition` (`MapCoordinate | null`), `circle` (`MapCircle | null`) and `route`
+(`MapCoordinate[] | null`); outputs `pathLengthKm` and `routeLengthKm` (both
+`number | null`), `routeFailed` (no value), `locationSelected` and `explorerMoved` (both
+`MapCoordinate`) and `pinSelected` (`string`). At most one click mode is on at a time: with
+`selectionEnabled` a click moves the selected-location marker (drawn only while
+`showSelectedLocation` is `true`, so a page that shows its points as pins can turn it off)
+and emits `locationSelected`; with `simulatorEnabled` a click only emits `explorerMoved` ("the
 explorer is here"), and the simulator wins if a page turns on both. The map shows one world
 (tiles do not repeat, panning stops at its edges), and every reported longitude is wrapped
 into −180..180. The map draws `explorerPosition` as a round "ja" marker and draws nothing
@@ -246,8 +249,17 @@ component has the full usage, in Serbian.
 
 - `circle` is `{ center, radiusMeters }`: at most one circle, drawn exactly as given (the
   map computes nothing), redrawn when it changes, removed on `null`. While it is set, the
-  view fits the whole circle together with the pins and the path. The circle is only a
-  drawing: a click inside it is a click on the map, and pins inside it stay clickable.
+  view fits the whole circle together with the pins, the path and the route points. The
+  circle is only a drawing: a click inside it is a click on the map, and pins inside it stay
+  clickable.
+- `route` is the points of a walking route, in order, separate from `path`. The map asks the
+  public FOSSGIS walking OSRM server through `leaflet-routing-machine`'s router only when a new
+  array arrives (never on pan or zoom), draws only the line (no library markers, dragging or
+  directions panel), fits the view to the route points like the pins and the path, and emits
+  `routeLengthKm` as the server's total length. With fewer than two points it calls nothing
+  and emits `0`; on `null` it emits `null`, like `path`. On a
+  failure the line disappears and `routeFailed` is emitted; the message is the page's. The
+  old line stays until the new outcome, and an outcome for an older array is ignored.
 - A `MapPin` may carry an `id` (`string`) set by the page. Clicking such a pin emits only
   `pinSelected` with that id: no location is selected, `explorerMoved` is not emitted, the
   "ja" marker does not move. A pin without an `id` behaves as before: its click is a click
