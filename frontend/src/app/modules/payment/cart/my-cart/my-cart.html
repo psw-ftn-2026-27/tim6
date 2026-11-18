@@ -1,0 +1,65 @@
+<div class="stack">
+  <p><a routerLink="/payment">Nazad</a></p>
+
+  <h1>Korpa</h1>
+
+  @if (cart.isLoading()) {
+    <p>Učitavanje korpe...</p>
+  } @else if (cart.error()) {
+    <p class="notice notice--danger" role="alert">
+      Korpu nije moguće učitati. Prijavite se i pokušajte ponovo.
+    </p>
+  } @else {
+    @if (cart.value(); as current) {
+      <div class="card total">
+        <p class="meta">Ukupna cena</p>
+        <p class="total__amount">{{ current.totalPrice }} EC</p>
+      </div>
+
+      @if (error()) {
+        <p class="notice notice--danger" role="alert">{{ error() }}</p>
+      }
+
+      @if (current.items.length === 0) {
+        <div class="empty">
+          <p>Korpa je prazna.</p>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Naziv</th>
+                <th scope="col">Cena</th>
+                <th scope="col">Uklanjanje</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of current.items; track item.entityId) {
+                <tr>
+                  <td>
+                    {{ item.name }}
+                    @if (!item.isAvailable) {
+                      <span class="badge badge--warning">nedostupno</span>
+                    }
+                  </td>
+                  <td>{{ item.price }} EC</td>
+                  <td>
+                    <button
+                      class="button"
+                      type="button"
+                      [disabled]="pending()"
+                      (click)="removeItem(item.entityId)"
+                    >
+                      Ukloni
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</div>

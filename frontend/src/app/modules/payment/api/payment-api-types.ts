@@ -35,6 +35,19 @@ export interface CancellationDto {
 
 export interface ProductDto {
   id: string;
+  entityId: string;
   name: string;
   price: number;
+}
+
+export interface CartItemDto {
+  entityId: string;
+  name: string;
+  price: number;
+  isAvailable: boolean;
+}
+
+export interface CartDto {
+  items: CartItemDto[];
+  totalPrice: number;
 }

@@ -25,7 +25,7 @@ internal sealed class ProductReadRepository : IProductReadRepository
         var items = await inOffer
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(product => new ProductDto(product.Id, product.Name, product.Price))
+            .Select(product => new ProductDto(product.Id, product.EntityId, product.Name, product.Price))
             .ToListAsync();
 
         return new PageResult<ProductDto>(items, totalCount);

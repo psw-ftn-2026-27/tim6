@@ -23,6 +23,23 @@ namespace Payment.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Payment.Domain.Carts.Cart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Carts", "payment");
+                });
+
             modelBuilder.Entity("Payment.Domain.Products.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -101,6 +118,37 @@ namespace Payment.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Wallets", "payment");
+                });
+
+            modelBuilder.Entity("Payment.Domain.Carts.Cart", b =>
+                {
+                    b.OwnsMany("Payment.Domain.Carts.CartItem", "Items", b1 =>
+                        {
+                            b1.Property<Guid>("CartId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<Guid>("EntityId");
+
+                            b1.Property<string>("Name")
+                                .IsRequired();
+
+                            b1.Property<int>("Price");
+
+                            b1.HasKey("CartId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Carts", "payment");
+
+                            b1
+                                .ToJson("Items")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CartId");
+                        });
+
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Payment.Domain.Wallets.Transaction", b =>
