@@ -11,4 +11,5 @@ public interface IClubReadRepository
     Task<PageResult<ClubDto>> GetPageAsync(int page, int pageSize);
     Task<ClubMembershipDto?> GetMembershipAsync(Guid clubId, Guid userId);
     Task<List<ClubJoinRequestDto>> GetJoinRequestsAsync(Guid clubId);
+    Task<List<ClubMemberDto>> GetMembersAsync(Guid clubId);
 }

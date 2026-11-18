@@ -56,11 +56,8 @@ public sealed class Club : AggregateRoot
 
     public void RequestToJoin(Guid userId)
     {
-        if (Status != ClubStatus.Active)
-        {
-            throw new DomainException("Only an active club accepts join requests.");
-        }
-        if (_members.Any(member => member.UserId == userId))
+        EnsureActive();
+        if (FindMember(userId) is not null)
         {
             throw new DomainException("A member cannot request to join the club.");
         }
@@ -92,10 +89,33 @@ public sealed class Club : AggregateRoot
         RemovePendingJoinRequest(applicantId);
     }
 
+    public void PromoteToModerator(Guid promoterId, Guid memberId)
+    {
+        EnsureActive();
+        if (promoterId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can promote a member to moderator.");
+        }
+
+        GetMember(memberId).PromoteToModerator();
+    }
+
+    public void RemoveMember(Guid removerId, Guid memberId)
+    {
+        EnsureActive();
+        var member = GetMember(memberId);
+        if (!CanRemove(removerId, member))
+        {
+            throw new DomainException("The owner can remove any other member, and a moderator only a plain member.");
+        }
+
+        _members.Remove(member);
+    }
+
     public bool CanResolveJoinRequests(Guid userId)
     {
-        return _members.Any(member =>
-            member.UserId == userId && (member.Role == ClubRole.Owner || member.Role == ClubRole.Moderator));
+        var member = FindMember(userId);
+        return member is not null && (member.Role == ClubRole.Owner || member.Role == ClubRole.Moderator);
     }
 
     private void RemovePendingJoinRequest(Guid applicantId)
@@ -113,8 +133,41 @@ public sealed class Club : AggregateRoot
     {
         if (Status != ClubStatus.Active)
         {
-            throw new DomainException("Join requests can be resolved only while the club is active.");
+            throw new DomainException("This action is possible only while the club is active.");
         }
+    }
+
+    private ClubMember? FindMember(Guid userId)
+    {
+        return _members.FirstOrDefault(member => member.UserId == userId);
+    }
+
+    private ClubMember GetMember(Guid memberId)
+    {
+        var member = FindMember(memberId);
+        if (member is null)
+        {
+            throw new DomainException("This user is not a member of the club.");
+        }
+        return member;
+    }
+
+    private bool CanRemove(Guid removerId, ClubMember member)
+    {
+        var remover = FindMember(removerId);
+        if (remover is null)
+        {
+            return false;
+        }
+        if (remover.Role == ClubRole.Owner)
+        {
+            return member.Role != ClubRole.Owner;
+        }
+        if (remover.Role == ClubRole.Moderator)
+        {
+            return member.Role == ClubRole.Member;
+        }
+        return false;
     }
 
     private void EnsureCanResolve(Guid resolverId)

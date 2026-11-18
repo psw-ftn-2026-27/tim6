@@ -22,15 +22,8 @@ public sealed class ClubModerationQueries
 
     public async Task<List<ClubJoinRequestDto>> GetJoinRequestsAsync(Guid clubId, Guid userId)
     {
-        var club = await _clubRepository.GetByIdAsync(clubId);
-        if (club is null)
-        {
-            throw new NotFoundException($"Club {clubId} does not exist.");
-        }
-        if (!club.CanResolveJoinRequests(userId))
-        {
-            throw new DomainException("Only the owner or a moderator of the club can see its join requests.");
-        }
+        await EnsureOwnerOrModeratorAsync(clubId, userId,
+            "Only the owner or a moderator of the club can see its join requests.");
 
         var requests = await _clubReadRepository.GetJoinRequestsAsync(clubId);
         var users = await _identityApi.GetUsersByIdsAsync(requests.Select(request => request.UserId));
@@ -43,5 +36,36 @@ public sealed class ClubModerationQueries
                     : null
             })
             .ToList();
+    }
+
+    public async Task<List<ClubMemberDto>> GetMembersAsync(Guid clubId, Guid userId)
+    {
+        await EnsureOwnerOrModeratorAsync(clubId, userId,
+            "Only the owner or a moderator of the club can see its members.");
+
+        var members = await _clubReadRepository.GetMembersAsync(clubId);
+        var users = await _identityApi.GetUsersByIdsAsync(members.Select(member => member.UserId));
+
+        return members
+            .Select(member => member with
+            {
+                UserEmail = users.TryGetValue(member.UserId, out var user)
+                    ? user.Email
+                    : null
+            })
+            .ToList();
+    }
+
+    private async Task EnsureOwnerOrModeratorAsync(Guid clubId, Guid userId, string deniedMessage)
+    {
+        var club = await _clubRepository.GetByIdAsync(clubId);
+        if (club is null)
+        {
+            throw new NotFoundException($"Club {clubId} does not exist.");
+        }
+        if (!club.CanResolveJoinRequests(userId))
+        {
+            throw new DomainException(deniedMessage);
+        }
     }
 }
