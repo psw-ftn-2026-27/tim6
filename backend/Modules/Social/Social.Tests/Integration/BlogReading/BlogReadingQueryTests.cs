@@ -100,4 +100,31 @@ public class BlogReadingQueryTests : BaseIntegrationTest
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task Published_blogs_are_listed_with_their_score()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var blogs = await client.GetFromJsonAsync<PageResult<BlogDto>>("/api/social/blogs/published", JsonOptions);
+
+        blogs!.Items.Should().Contain(blog => blog.Id == BlogSeed.VotedCastleTour.Id);
+        blogs.Items.Should().Contain(blog => blog.Id == BlogSeed.PublishedRiverbank.Id && blog.Score == 0);
+        blogs.Items.Should().OnlyContain(blog =>
+            blog.Score == ExpectedScore(BlogSeed.All.Single(seeded => seeded.Id == blog.Id)));
+    }
+
+    [Fact]
+    public async Task Published_blog_is_shown_with_its_score()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+
+        var blog = await client.GetFromJsonAsync<BlogDto>(
+            $"/api/social/blogs/{BlogSeed.VotedCastleTour.Id}", JsonOptions);
+
+        blog!.Score.Should().Be(ExpectedScore(BlogSeed.VotedCastleTour));
+    }
+
+    private static int ExpectedScore(Blog blog) =>
+        blog.Votes.Count(vote => vote.Sign == VoteSign.Up) - blog.Votes.Count(vote => vote.Sign == VoteSign.Down);
 }

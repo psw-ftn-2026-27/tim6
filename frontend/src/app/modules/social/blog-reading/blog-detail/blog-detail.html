@@ -47,6 +47,17 @@
         />
       }
 
+      @if (myVote.error()) {
+        <p class="error">Could not load your vote.</p>
+      }
+
+      <app-blog-vote
+        [score]="blog.score"
+        [canVote]="auth.isLoggedIn() && blog.status === 'Published'"
+        [mySign]="myVote.hasValue() ? myVote.value().sign : null"
+        (vote)="vote($event)"
+      />
+
       <app-blog-comments
         [comments]="blog.comments"
         [currentUserId]="auth.user()?.id ?? null"

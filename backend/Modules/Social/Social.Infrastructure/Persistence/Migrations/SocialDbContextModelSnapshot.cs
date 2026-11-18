@@ -90,6 +90,32 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.ToTable("Comments", "social");
                 });
 
+            modelBuilder.Entity("Social.Domain.Blogs.Vote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BlogId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sign")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("VotedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogId");
+
+                    b.ToTable("Votes", "social");
+                });
+
             modelBuilder.Entity("Social.Domain.Clubs.Club", b =>
                 {
                     b.Property<Guid>("Id")
@@ -214,6 +240,15 @@ namespace Social.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Social.Domain.Blogs.Vote", b =>
+                {
+                    b.HasOne("Social.Domain.Blogs.Blog", null)
+                        .WithMany("Votes")
+                        .HasForeignKey("BlogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Social.Domain.Clubs.Club", b =>
                 {
                     b.OwnsMany("Social.Domain.Clubs.ClubJoinRequest", "JoinRequests", b1 =>
@@ -254,6 +289,8 @@ namespace Social.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Social.Domain.Blogs.Blog", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Votes");
                 });
 
             modelBuilder.Entity("Social.Domain.Clubs.Club", b =>

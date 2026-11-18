@@ -15,6 +15,7 @@ internal static class BlogSeed
     public static readonly Blog CommentedMuseumVisit;
     public static readonly Blog ArchivedLakeTrip;
     public static readonly Blog DemoExplorerCommentedBridgeWalk;
+    public static readonly Blog VotedCastleTour;
 
     static BlogSeed()
     {
@@ -32,7 +33,13 @@ internal static class BlogSeed
         DemoExplorerCommentedBridgeWalk = new(WellKnownUsers.Explorer, "Šetnja preko mosta", "Utisci sa šetnje preko Mosta slobode.", ["https://example.com/most.jpg"]);
         DemoExplorerCommentedBridgeWalk.Publish();
         DemoExplorerCommentedBridgeWalk.AddComment(IdentityDemoExplorer, "Divan pogled sa mosta!");
+
+        VotedCastleTour = new(WellKnownUsers.SecondExplorer, "Obilazak zamka", "Utisci sa obilaska dvorca Fantast.", ["https://example.com/zamak.jpg"]);
+        VotedCastleTour.Publish();
+        VotedCastleTour.CastVote(WellKnownUsers.Administrator, VoteSign.Up, DateTime.UtcNow);
+        VotedCastleTour.CastVote(WellKnownUsers.Explorer, VoteSign.Up, DateTime.UtcNow);
+        VotedCastleTour.CastVote(WellKnownUsers.SecondExplorer, VoteSign.Down, DateTime.UtcNow);
     }
 
-    public static Blog[] All => [FortressImpressions, CityNotes, SecondExplorersDiary, PublishedRiverbank, CommentedMuseumVisit, ArchivedLakeTrip, DemoExplorerCommentedBridgeWalk];
+    public static Blog[] All => [FortressImpressions, CityNotes, SecondExplorersDiary, PublishedRiverbank, CommentedMuseumVisit, ArchivedLakeTrip, DemoExplorerCommentedBridgeWalk, VotedCastleTour];
 }
