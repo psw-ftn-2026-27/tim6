@@ -56,11 +56,8 @@ public sealed class Club : AggregateRoot
 
     public void RequestToJoin(Guid userId)
     {
-        if (Status != ClubStatus.Active)
-        {
-            throw new DomainException("Only an active club accepts join requests.");
-        }
-        if (_members.Any(member => member.UserId == userId))
+        EnsureActive();
+        if (FindMember(userId) is not null)
         {
             throw new DomainException("A member cannot request to join the club.");
         }
@@ -117,8 +114,8 @@ public sealed class Club : AggregateRoot
 
     public bool CanResolveJoinRequests(Guid userId)
     {
-        return _members.Any(member =>
-            member.UserId == userId && (member.Role == ClubRole.Owner || member.Role == ClubRole.Moderator));
+        var member = FindMember(userId);
+        return member is not null && (member.Role == ClubRole.Owner || member.Role == ClubRole.Moderator);
     }
 
     private void RemovePendingJoinRequest(Guid applicantId)
@@ -140,9 +137,14 @@ public sealed class Club : AggregateRoot
         }
     }
 
+    private ClubMember? FindMember(Guid userId)
+    {
+        return _members.FirstOrDefault(member => member.UserId == userId);
+    }
+
     private ClubMember GetMember(Guid memberId)
     {
-        var member = _members.FirstOrDefault(member => member.UserId == memberId);
+        var member = FindMember(memberId);
         if (member is null)
         {
             throw new DomainException("This user is not a member of the club.");
@@ -152,7 +154,7 @@ public sealed class Club : AggregateRoot
 
     private bool CanRemove(Guid removerId, ClubMember member)
     {
-        var remover = _members.FirstOrDefault(remover => remover.UserId == removerId);
+        var remover = FindMember(removerId);
         if (remover is null)
         {
             return false;
