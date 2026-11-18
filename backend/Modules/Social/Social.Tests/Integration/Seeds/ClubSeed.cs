@@ -10,12 +10,18 @@ internal static class ClubSeed
     public static readonly Club SecondExplorersClub = new(WellKnownUsers.SecondExplorer, "Tuđi klub", "Klub drugog osnivača.", ["https://example.com/tudji-klub.jpg"], new DateTime(2026, 10, 3, 0, 0, 0, DateTimeKind.Utc));
 
     public static readonly Club ClubWithSecondExplorersJoinRequest;
+    public static readonly Club ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest;
 
     static ClubSeed()
     {
         ClubWithSecondExplorersJoinRequest = new(WellKnownUsers.Explorer, "Ljubitelji tvrđava", "Obilasci tvrđava uz Dunav.", ["https://example.com/tvrdjava.jpg"], new DateTime(2026, 10, 4, 0, 0, 0, DateTimeKind.Utc));
         ClubWithSecondExplorersJoinRequest.RequestToJoin(WellKnownUsers.SecondExplorer);
+
+        ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest = new(WellKnownUsers.Explorer, "Biciklisti Dunavskog keja", "Vožnje biciklom uz Dunav.", ["https://example.com/kej.jpg"], new DateTime(2026, 10, 5, 0, 0, 0, DateTimeKind.Utc));
+        ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest.RequestToJoin(WellKnownUsers.SecondExplorer);
+        ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest.AcceptJoinRequest(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
+        ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest.RequestToJoin(BlogSeed.IdentityDemoExplorer);
     }
 
-    public static Club[] All => [HikingClub, PhotographyClub, SecondExplorersClub, ClubWithSecondExplorersJoinRequest];
+    public static Club[] All => [HikingClub, PhotographyClub, SecondExplorersClub, ClubWithSecondExplorersJoinRequest, ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest];
 }
