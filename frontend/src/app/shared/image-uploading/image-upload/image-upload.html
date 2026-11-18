@@ -1,5 +1,5 @@
 <div class="picker">
-  <label class="button" [class.button--disabled]="remaining() <= 0">
+  <label class="button picker__button" [class.picker__button--disabled]="remaining() <= 0">
     Add images
     <input
       class="file-input"
@@ -40,7 +40,7 @@
 @if (allErrors().length > 0) {
   <ul class="errors" role="alert">
     @for (error of allErrors(); track $index) {
-      <li class="error-item">
+      <li class="notice notice--danger error-item">
         <span class="error-icon" aria-hidden="true">!</span>
         <div class="error-text">
           <span class="error-file">{{ error.fileName }}</span>

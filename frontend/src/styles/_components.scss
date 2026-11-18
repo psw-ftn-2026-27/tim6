@@ -19,11 +19,6 @@
   background: var(--color-bg);
 }
 
-.button:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.5;

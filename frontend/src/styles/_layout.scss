@@ -13,3 +13,35 @@
   gap: var(--space-4);
   grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
 }
+
+// A centred column for one form or card: .narrow for a form with content,
+// .narrow--small for a short form such as log in.
+.narrow {
+  margin-inline: auto;
+  max-width: var(--narrow-width);
+}
+
+.narrow--small {
+  max-width: var(--narrow-width-small);
+}
+
+// A row of buttons or links that belong together; wraps on a narrow screen.
+.actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+// The page title on the left and the page's main action on the right.
+.page-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.page-header h1 {
+  margin: 0;
+}
