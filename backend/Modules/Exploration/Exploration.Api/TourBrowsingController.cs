@@ -23,4 +23,10 @@ public sealed class TourBrowsingController : ControllerBase
     {
         return await _browsingQueries.GetPublishedAsync(page, pageSize);
     }
+
+    [HttpGet("{id:guid}/preview")]
+    public async Task<ActionResult<TourPreviewDto>> GetPreview(Guid id)
+    {
+        return await _browsingQueries.GetPreviewAsync(id);
+    }
 }

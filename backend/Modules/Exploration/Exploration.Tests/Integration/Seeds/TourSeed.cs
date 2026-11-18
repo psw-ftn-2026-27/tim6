@@ -12,6 +12,8 @@ internal static class TourSeed
     public static readonly Tour PublishedVineyards;
     public static readonly Tour PublishedMonasteries;
     public static readonly Tour ArchivedSalashes;
+    public static readonly Tour PublishedFortressUndergroundWithPreview;
+    public static readonly Tour PublishedPalicWithoutPreview;
 
     static TourSeed()
     {
@@ -39,7 +41,21 @@ internal static class TourSeed
         ArchivedSalashes.AddKeyPoint("Poslednji salaš", "Ručak od domaćih namirnica.", "/api/shared/images/poslednji-salas.jpg", null, new Location(45.3100, 19.7500), false, new TourLength(5.6));
         ArchivedSalashes.Publish(new TourPrice(true, null));
         ArchivedSalashes.Archive();
+
+        PublishedFortressUndergroundWithPreview = new(WellKnownUsers.Explorer, "Podzemlje Petrovaradina", "Tura vodi od Sahat kule kroz podzemne vojne galerije Petrovaradinske tvrđave do Leopoldove kapije, uz priču o opsadama i graditeljima tvrđave.", TourDifficulty.Moderate, ["istorija"], new RecommendedGroupSize(2, 8));
+        PublishedFortressUndergroundWithPreview.AddTransportTime(TransportMode.Walking, 120);
+        PublishedFortressUndergroundWithPreview.AddTransportTime(TransportMode.Bicycle, 50);
+        PublishedFortressUndergroundWithPreview.AddKeyPoint("Sahat kula", "Polazna tačka ture, kula sa satom na tvrđavi.", "/api/shared/images/sahat-kula.jpg", "Kazaljke su obrnute: mala pokazuje minute.", new Location(45.2528, 19.8628), true, new TourLength(0));
+        PublishedFortressUndergroundWithPreview.AddKeyPoint("Podzemne galerije", "Ulaz u podzemne vojne galerije tvrđave.", "/api/shared/images/podzemne-galerije.jpg", "Iza treće kapije je zazidan prolaz.", new Location(45.2515, 19.8650), false, new TourLength(1.2));
+        PublishedFortressUndergroundWithPreview.AddKeyPoint("Leopoldova kapija", "Kraj ture, kod Leopoldove kapije.", "/api/shared/images/leopoldova-kapija.jpg", null, new Location(45.2500, 19.8670), true, new TourLength(2.4));
+        PublishedFortressUndergroundWithPreview.Publish(new TourPrice(false, 500));
+
+        PublishedPalicWithoutPreview = new(WellKnownUsers.Explorer, "Palićko jezero", "Tura obilazi obalu Palićkog jezera, od Velike terase i Ženskog štranda do Vile Lujze, uz priču o banjskom letovalištu s početka dvadesetog veka.", TourDifficulty.Easy, ["priroda", "istorija"], new RecommendedGroupSize(1, 10));
+        PublishedPalicWithoutPreview.AddTransportTime(TransportMode.Walking, 80);
+        PublishedPalicWithoutPreview.AddKeyPoint("Velika terasa", "Polazna tačka ture, na obali jezera.", "/api/shared/images/velika-terasa.jpg", "Na stubu terase je urezana godina gradnje.", new Location(46.0990, 19.7600), false, new TourLength(0));
+        PublishedPalicWithoutPreview.AddKeyPoint("Vila Lujza", "Kraj ture, kod Vile Lujze.", "/api/shared/images/vila-lujza.jpg", null, new Location(46.1010, 19.7680), false, new TourLength(1.8));
+        PublishedPalicWithoutPreview.Publish(new TourPrice(false, 300));
     }
 
-    public static Tour[] All => [FortressWalk, CityStroll, SecondExplorersTrail, PublishableRiverside, PublishedVineyards, PublishedMonasteries, ArchivedSalashes];
+    public static Tour[] All => [FortressWalk, CityStroll, SecondExplorersTrail, PublishableRiverside, PublishedVineyards, PublishedMonasteries, ArchivedSalashes, PublishedFortressUndergroundWithPreview, PublishedPalicWithoutPreview];
 }
