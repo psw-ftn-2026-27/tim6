@@ -74,26 +74,14 @@ public sealed class Club : AggregateRoot
 
     public void WithdrawJoinRequest(Guid userId)
     {
-        var request = _joinRequests.FirstOrDefault(request => request.UserId == userId);
-        if (request is null)
-        {
-            throw new DomainException("There is no pending join request to withdraw.");
-        }
-
-        _joinRequests.Remove(request);
+        RemovePendingJoinRequest(userId);
     }
 
     public void AcceptJoinRequest(Guid resolverId, Guid applicantId)
     {
         EnsureCanResolve(resolverId);
         EnsureActive();
-        var request = _joinRequests.FirstOrDefault(request => request.UserId == applicantId);
-        if (request is null)
-        {
-            throw new DomainException("There is no pending join request to accept.");
-        }
-
-        _joinRequests.Remove(request);
+        RemovePendingJoinRequest(applicantId);
         _members.Add(new ClubMember(applicantId, ClubRole.Member));
     }
 
@@ -101,19 +89,24 @@ public sealed class Club : AggregateRoot
     {
         EnsureCanResolve(resolverId);
         EnsureActive();
-        var request = _joinRequests.FirstOrDefault(request => request.UserId == applicantId);
-        if (request is null)
-        {
-            throw new DomainException("There is no pending join request to reject.");
-        }
-
-        _joinRequests.Remove(request);
+        RemovePendingJoinRequest(applicantId);
     }
 
     public bool CanResolveJoinRequests(Guid userId)
     {
         return _members.Any(member =>
             member.UserId == userId && (member.Role == ClubRole.Owner || member.Role == ClubRole.Moderator));
+    }
+
+    private void RemovePendingJoinRequest(Guid applicantId)
+    {
+        var request = _joinRequests.FirstOrDefault(request => request.UserId == applicantId);
+        if (request is null)
+        {
+            throw new DomainException("There is no pending join request from this user.");
+        }
+
+        _joinRequests.Remove(request);
     }
 
     private void EnsureActive()
