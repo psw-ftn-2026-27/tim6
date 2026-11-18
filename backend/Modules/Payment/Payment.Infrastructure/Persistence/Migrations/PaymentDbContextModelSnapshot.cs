@@ -70,6 +70,63 @@ namespace Payment.Infrastructure.Persistence.Migrations
                     b.ToTable("Products", "payment");
                 });
 
+            modelBuilder.Entity("Payment.Domain.PurchaseTokens.PurchaseToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "EntityId");
+
+                    b.ToTable("PurchaseTokens", "payment");
+                });
+
+            modelBuilder.Entity("Payment.Domain.Wallets.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalletId");
+
+                    b.ToTable("Payments", "payment");
+                });
+
             modelBuilder.Entity("Payment.Domain.Wallets.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -151,6 +208,15 @@ namespace Payment.Infrastructure.Persistence.Migrations
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("Payment.Domain.Wallets.Payment", b =>
+                {
+                    b.HasOne("Payment.Domain.Wallets.Wallet", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Payment.Domain.Wallets.Transaction", b =>
                 {
                     b.HasOne("Payment.Domain.Wallets.Wallet", null)
@@ -162,6 +228,8 @@ namespace Payment.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Payment.Domain.Wallets.Wallet", b =>
                 {
+                    b.Navigation("Payments");
+
                     b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618

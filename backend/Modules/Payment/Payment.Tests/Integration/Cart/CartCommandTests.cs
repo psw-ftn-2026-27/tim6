@@ -65,6 +65,21 @@ public class CartCommandTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task Adding_a_product_the_buyer_already_purchased_is_rejected_and_the_cart_stays_the_same()
+    {
+        var client = Factory.CreateClientFor(WalletSeed.ReturningBuyer, "explorer");
+        var cartId = CartSeed.ReturningBuyersCartWithPaidTour.Id;
+        using var arrangeContext = Factory.CreateContext<PaymentDbContext>();
+        var itemCountBefore = arrangeContext.Carts.Single(cart => cart.Id == cartId).Items.Count;
+
+        var response = await client.PostAsync($"/api/payment/carts/mine/items/{PurchaseTokenSeed.ReturningBuyersFreeTour.EntityId}", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var assertContext = Factory.CreateContext<PaymentDbContext>();
+        assertContext.Carts.Single(cart => cart.Id == cartId).Items.Count.Should().Be(itemCountBefore);
+    }
+
+    [Fact]
     public async Task Adding_a_product_that_does_not_exist_is_rejected_and_nothing_is_stored()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");

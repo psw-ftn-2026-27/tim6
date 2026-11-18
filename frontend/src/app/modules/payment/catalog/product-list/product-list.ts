@@ -60,7 +60,8 @@ export class ProductList {
       await this.catalog.addToCart(product.entityId);
       this.addOutcome.set({ productId: product.id, added: true, message: 'Dodato u korpu.' });
     } catch (failure) {
-      // The server says why it refused: already in the cart, not in the offer, or not found.
+      // The server says why it refused: already in the cart, already purchased, not in the offer,
+      // or not found.
       this.addOutcome.set({
         productId: product.id,
         added: false,
