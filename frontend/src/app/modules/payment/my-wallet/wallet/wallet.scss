@@ -4,6 +4,12 @@
   margin: 0;
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
 // A cancelled payment does not count toward the balance, so its amount is struck through.
 .cancelled td:first-child {
   color: var(--color-text-muted);

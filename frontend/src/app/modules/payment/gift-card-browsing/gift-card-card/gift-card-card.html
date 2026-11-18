@@ -1,0 +1,18 @@
+<article class="card stack">
+  <div class="card-heading">
+    <strong>{{ giftCard().amount }} EC</strong>
+    <span
+      class="status"
+      [class.status--valid]="giftCard().status === 'Valid'"
+      [class.status--redeemed]="giftCard().status === 'Redeemed'"
+      [class.status--expired]="giftCard().status === 'Expired'"
+    >
+      {{ statusLabel(giftCard().status) }}
+    </span>
+  </div>
+
+  <p>{{ giftCard().message }}</p>
+  <p class="meta">{{ personLabel() }}: {{ personEmail() ?? 'Email unavailable' }}</p>
+  <p class="meta">Sent: {{ dateTime(giftCard().createdAt) }}</p>
+  <p class="meta">Valid until: {{ dateTime(giftCard().expiresAt) }}</p>
+</article>

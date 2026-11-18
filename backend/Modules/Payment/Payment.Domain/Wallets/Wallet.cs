@@ -28,6 +28,16 @@ public sealed class Wallet : AggregateRoot
         _transactions.Add(new Transaction(administratorId, amount, createdAt));
     }
 
+    public void Spend(int amount, DateTime createdAt)
+    {
+        if (amount > Balance())
+        {
+            throw new DomainException("The wallet does not have enough EC.");
+        }
+
+        _transactions.Add(new Transaction(amount, createdAt));
+    }
+
     public void CancelTransaction(Guid transactionId, string reason, DateTime cancelledAt)
     {
         var transaction = _transactions.FirstOrDefault(transaction => transaction.Id == transactionId);
