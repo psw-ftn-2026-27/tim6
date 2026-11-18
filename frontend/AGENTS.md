@@ -27,9 +27,12 @@ frontend/src/
     _base.scss               reset, body, headings, links
     _layout.scss             page container, stack, grid helpers
     _components.scss         global classes: button, card, form field, table
+  environments/              environment.ts (production) and
+                             environment.development.ts (swapped in by
+                             fileReplacements): the GA4 measurement ID       [platform]
   app/
     core/                    auth (state, interceptor, login, register), home,
-                             app.routes.ts                                    [platform]
+                             privacy, app.routes.ts                           [platform]
     shared/
       util/
       api/                   shared types (PageResult, ProblemDetails,
@@ -43,6 +46,7 @@ frontend/src/
       explorer-positioning/  explorer position, see "Shared map and explorer
                              position" below                                   [platform]
         explorer-positioning.ts  service: move
+      analytics/             consent choice and GA4 events, see its README.md  [platform]
     modules/
       <name>/
         api/                 this module's DTO types, mirror the server, no client-only fields
@@ -102,8 +106,10 @@ nothing.
   another module's endpoints, and never shares state with it.
 - A module's route paths are its only surface toward other modules. Renaming or
   removing a path another module links to is a cross-team change; flag it.
-- The one legitimately shared state is the current user (identity, roles) in `core/`.
-  Modules read it; only the platform team writes it.
+- The legitimately shared state is the current user (identity, roles) in `core/` and
+  the analytics consent choice in `shared/analytics/`, both owned by the platform team.
+  Modules read the user and send events through `Analytics`; only the platform writes
+  either state.
 
 ## The Angular subset
 
@@ -138,7 +144,11 @@ construct means adding a lesson, so treat it as a platform decision.
   signal inputs via `withComponentInputBinding`; `inject(Router)` only for navigation
   after a command.
 - No RxJS in student code. `Observable` appears only as the return type of `HttpClient`
-  writes, immediately awaited. No NgRx, no facades.
+  writes, immediately awaited. No NgRx, no facades. Platform exception: `Analytics` in
+  `shared/analytics/` subscribes to `router.events` to record page views; modules never
+  see RxJS.
+- Environment files in `src/environments/` are a platform construct: they hold the GA4
+  measurement ID and nothing else, and only `shared/analytics/` imports them.
 
 ## Styling
 
@@ -177,6 +187,9 @@ assigned to the platform team, and misalignment is an accepted learning experien
   components, which take `input()`s and raise `output()`s and inject nothing.
 - An image is stored by a module as its reference string, `/api/shared/images/{fileName}`,
   and shown with `<img [src]="reference">`.
+- A feature whose key step the team wants to see in GA4 adds one event method to
+  `Analytics` and calls it after its command succeeds; follow
+  `shared/analytics/README.md`. Page views need nothing, the service records every route.
 - Do not produce Vitest tests unless specifically instructed. Frontend testing is not
   taught; it is a platform-team assignment.
 
@@ -220,11 +233,14 @@ The page that embeds the section wires it:
 
 `shared/geographic-map/` is the one map a module page shows. `<app-geographic-map>` is
 presentational: inputs `pins` (`MapPin[]`), `path` (`MapCoordinate[] | null`),
-`selectionEnabled`, `simulatorEnabled`, `explorerPosition` (`MapCoordinate | null`) and
-`circle` (`MapCircle | null`); outputs `pathLengthKm` (`number | null`), `locationSelected`
-and `explorerMoved` (both `MapCoordinate`) and `pinSelected` (`string`). At most one click
-mode is on at a time: with `selectionEnabled` a click moves the selected-location marker and
-emits `locationSelected`; with `simulatorEnabled` a click only emits `explorerMoved` ("the
+`selectionEnabled`, `showSelectedLocation` (default `true`), `simulatorEnabled`,
+`explorerPosition` (`MapCoordinate | null`), `circle` (`MapCircle | null`) and `route`
+(`MapCoordinate[] | null`); outputs `pathLengthKm` and `routeLengthKm` (both
+`number | null`), `routeFailed` (no value), `locationSelected` and `explorerMoved` (both
+`MapCoordinate`) and `pinSelected` (`string`). At most one click mode is on at a time: with
+`selectionEnabled` a click moves the selected-location marker (drawn only while
+`showSelectedLocation` is `true`, so a page that shows its points as pins can turn it off)
+and emits `locationSelected`; with `simulatorEnabled` a click only emits `explorerMoved` ("the
 explorer is here"), and the simulator wins if a page turns on both. The map shows one world
 (tiles do not repeat, panning stops at its edges), and every reported longitude is wrapped
 into −180..180. The map draws `explorerPosition` as a round "ja" marker and draws nothing
@@ -233,8 +249,17 @@ component has the full usage, in Serbian.
 
 - `circle` is `{ center, radiusMeters }`: at most one circle, drawn exactly as given (the
   map computes nothing), redrawn when it changes, removed on `null`. While it is set, the
-  view fits the whole circle together with the pins and the path. The circle is only a
-  drawing: a click inside it is a click on the map, and pins inside it stay clickable.
+  view fits the whole circle together with the pins, the path and the route points. The
+  circle is only a drawing: a click inside it is a click on the map, and pins inside it stay
+  clickable.
+- `route` is the points of a walking route, in order, separate from `path`. The map asks the
+  public FOSSGIS walking OSRM server through `leaflet-routing-machine`'s router only when a new
+  array arrives (never on pan or zoom), draws only the line (no library markers, dragging or
+  directions panel), fits the view to the route points like the pins and the path, and emits
+  `routeLengthKm` as the server's total length. With fewer than two points it calls nothing
+  and emits `0`; on `null` it emits `null`, like `path`. On a
+  failure the line disappears and `routeFailed` is emitted; the message is the page's. The
+  old line stays until the new outcome, and an outcome for an older array is ignored.
 - A `MapPin` may carry an `id` (`string`) set by the page. Clicking such a pin emits only
   `pinSelected` with that id: no location is selected, `explorerMoved` is not emitted, the
   "ja" marker does not move. A pin without an `id` behaves as before: its click is a click
