@@ -44,4 +44,29 @@ public sealed class ClubModerationQueries
             })
             .ToList();
     }
+
+    public async Task<List<ClubMemberDto>> GetMembersAsync(Guid clubId, Guid userId)
+    {
+        var club = await _clubRepository.GetByIdAsync(clubId);
+        if (club is null)
+        {
+            throw new NotFoundException($"Club {clubId} does not exist.");
+        }
+        if (!club.CanResolveJoinRequests(userId))
+        {
+            throw new DomainException("Only the owner or a moderator of the club can see its members.");
+        }
+
+        var members = await _clubReadRepository.GetMembersAsync(clubId);
+        var users = await _identityApi.GetUsersByIdsAsync(members.Select(member => member.UserId));
+
+        return members
+            .Select(member => member with
+            {
+                UserEmail = users.TryGetValue(member.UserId, out var user)
+                    ? user.Email
+                    : null
+            })
+            .ToList();
+    }
 }

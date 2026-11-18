@@ -102,3 +102,9 @@ export interface ClubJoinRequestDto {
   userEmail: string | null;
   sentAt: string;
 }
+
+export interface ClubMemberDto {
+  userId: string;
+  userEmail: string | null;
+  role: ClubRole;
+}

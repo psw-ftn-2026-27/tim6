@@ -1,4 +1,5 @@
 using Shared.Domain;
+using Shared.Domain.Exceptions;
 
 namespace Social.Domain.Clubs;
 
@@ -13,5 +14,15 @@ public sealed class ClubMember : Entity
     {
         UserId = userId;
         Role = role;
+    }
+
+    public void PromoteToModerator()
+    {
+        if (Role != ClubRole.Member)
+        {
+            throw new DomainException("Only a plain member can be promoted to moderator.");
+        }
+
+        Role = ClubRole.Moderator;
     }
 }

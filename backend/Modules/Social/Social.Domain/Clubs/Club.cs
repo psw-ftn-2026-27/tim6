@@ -92,6 +92,29 @@ public sealed class Club : AggregateRoot
         RemovePendingJoinRequest(applicantId);
     }
 
+    public void PromoteToModerator(Guid promoterId, Guid memberId)
+    {
+        EnsureActive();
+        if (promoterId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can promote a member to moderator.");
+        }
+
+        GetMember(memberId).PromoteToModerator();
+    }
+
+    public void RemoveMember(Guid removerId, Guid memberId)
+    {
+        EnsureActive();
+        var member = GetMember(memberId);
+        if (!CanRemove(removerId, member))
+        {
+            throw new DomainException("The owner can remove any other member, and a moderator only a plain member.");
+        }
+
+        _members.Remove(member);
+    }
+
     public bool CanResolveJoinRequests(Guid userId)
     {
         return _members.Any(member =>
@@ -113,8 +136,36 @@ public sealed class Club : AggregateRoot
     {
         if (Status != ClubStatus.Active)
         {
-            throw new DomainException("Join requests can be resolved only while the club is active.");
+            throw new DomainException("This action is possible only while the club is active.");
         }
+    }
+
+    private ClubMember GetMember(Guid memberId)
+    {
+        var member = _members.FirstOrDefault(member => member.UserId == memberId);
+        if (member is null)
+        {
+            throw new DomainException("This user is not a member of the club.");
+        }
+        return member;
+    }
+
+    private bool CanRemove(Guid removerId, ClubMember member)
+    {
+        var remover = _members.FirstOrDefault(remover => remover.UserId == removerId);
+        if (remover is null)
+        {
+            return false;
+        }
+        if (remover.Role == ClubRole.Owner)
+        {
+            return member.Role != ClubRole.Owner;
+        }
+        if (remover.Role == ClubRole.Moderator)
+        {
+            return member.Role == ClubRole.Member;
+        }
+        return false;
     }
 
     private void EnsureCanResolve(Guid resolverId)

@@ -37,4 +37,30 @@ public class ClubModerationQueryTests : BaseIntegrationTest
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task Owner_sees_the_clubs_members_with_their_email_and_role()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var club = ClubSeed.ClubWithTwoModeratorsAndDemoExplorerAsPlainMember;
+
+        var members = await client.GetFromJsonAsync<List<ClubMemberDto>>(
+            $"/api/social/clubs/{club.Id}/members", JsonOptions);
+
+        members!.Select(member => (member.UserId, member.Role)).Should().BeEquivalentTo(
+            club.Members.Select(member => (member.UserId, member.Role)));
+        members!.Single(member => member.UserId == BlogSeed.IdentityDemoExplorer)
+            .UserEmail.Should().Be(BlogSeed.IdentityDemoExplorerEmail);
+    }
+
+    [Fact]
+    public async Task User_who_is_neither_owner_nor_moderator_does_not_see_the_clubs_members()
+    {
+        var client = Factory.CreateClientFor(BlogSeed.IdentityDemoExplorer, "explorer");
+
+        var response = await client.GetAsync(
+            $"/api/social/clubs/{ClubSeed.ClubWithTwoModeratorsAndDemoExplorerAsPlainMember.Id}/members");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

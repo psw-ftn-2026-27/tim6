@@ -11,6 +11,7 @@ import { MyClubs } from './club-authoring/my-clubs/my-clubs';
 import { ClubDetail } from './club-reading/club-detail/club-detail';
 import { ClubList } from './club-reading/club-list/club-list';
 import { ClubJoinRequests } from './club-moderation/club-join-requests/club-join-requests';
+import { ClubMembers } from './club-moderation/club-members/club-members';
 
 export const socialRoutes: Routes = [
   { path: '', component: BlogList },
@@ -23,6 +24,7 @@ export const socialRoutes: Routes = [
   { path: 'clubs/mine', component: MyClubs },
   { path: 'clubs/create', component: CreateClub },
   { path: 'clubs/:id/requests', component: ClubJoinRequests },
+  { path: 'clubs/:id/members', component: ClubMembers },
   { path: 'clubs/:id', component: ClubDetail },
   { path: ':id', component: BlogDetail },
 ];
