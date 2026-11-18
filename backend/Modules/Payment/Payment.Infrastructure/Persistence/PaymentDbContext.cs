@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Payment.Application;
 using Payment.Domain.Carts;
 using Payment.Domain.Products;
+using Payment.Domain.PurchaseTokens;
 using Payment.Domain.Wallets;
 using Payment.Infrastructure.Persistence.Carts;
 using Payment.Infrastructure.Persistence.Products;
+using Payment.Infrastructure.Persistence.PurchaseTokens;
 using Payment.Infrastructure.Persistence.Wallets;
 
 namespace Payment.Infrastructure.Persistence;
@@ -16,6 +18,7 @@ internal sealed class PaymentDbContext : DbContext, IUnitOfWork
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<PurchaseToken> PurchaseTokens => Set<PurchaseToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -23,5 +26,6 @@ internal sealed class PaymentDbContext : DbContext, IUnitOfWork
         builder.ConfigureWallets();
         builder.ConfigureProducts();
         builder.ConfigureCarts();
+        builder.ConfigurePurchaseTokens();
     }
 }

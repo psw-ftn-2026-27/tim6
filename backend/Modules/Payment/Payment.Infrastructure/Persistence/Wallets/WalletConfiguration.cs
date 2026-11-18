@@ -10,6 +10,7 @@ internal static class WalletConfiguration
     {
         ConfigureWallet(modelBuilder.Entity<Wallet>());
         ConfigureTransaction(modelBuilder.Entity<Transaction>());
+        ConfigurePayment(modelBuilder.Entity<Payment.Domain.Wallets.Payment>());
     }
 
     private static void ConfigureWallet(EntityTypeBuilder<Wallet> builder)
@@ -22,11 +23,24 @@ internal static class WalletConfiguration
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Navigation(wallet => wallet.Transactions).AutoInclude();
+
+        builder.HasMany(wallet => wallet.Payments)
+            .WithOne()
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(wallet => wallet.Payments).AutoInclude();
     }
 
     private static void ConfigureTransaction(EntityTypeBuilder<Transaction> builder)
     {
         builder.ToTable("Transactions");
         builder.Property(transaction => transaction.Id).ValueGeneratedNever();
+    }
+
+    private static void ConfigurePayment(EntityTypeBuilder<Payment.Domain.Wallets.Payment> builder)
+    {
+        builder.ToTable("Payments");
+        builder.Property(payment => payment.Id).ValueGeneratedNever();
     }
 }

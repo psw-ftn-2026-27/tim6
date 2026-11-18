@@ -41,4 +41,14 @@ public sealed class Cart : AggregateRoot
 
         _items.Remove(item);
     }
+
+    public void Checkout()
+    {
+        if (_items.Count == 0)
+        {
+            throw new DomainException("An empty cart cannot be purchased.");
+        }
+
+        _items.Clear();
+    }
 }
