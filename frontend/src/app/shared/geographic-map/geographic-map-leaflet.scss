@@ -13,3 +13,22 @@
 .geographic-map__selected-icon span {
   background: var(--color-danger);
 }
+
+// The explorer's own position ("ja"): a round dot, unlike the drop-shaped pins.
+.geographic-map__explorer-icon span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0.1875rem solid var(--color-surface);
+  border-radius: var(--radius-full);
+  background: var(--color-position);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+}
+
+// The circle around an area of interest: a light fill, so the map under it stays readable.
+.geographic-map__circle {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  fill: var(--color-accent);
+  fill-opacity: 0.12;
+}

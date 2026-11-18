@@ -9,5 +9,13 @@ internal static class ClubSeed
     public static readonly Club PhotographyClub = new(WellKnownUsers.Explorer, "Foto šetnje", "Fotografisanje gradskih znamenitosti.", ["https://example.com/foto1.jpg", "https://example.com/foto2.jpg"], new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc));
     public static readonly Club SecondExplorersClub = new(WellKnownUsers.SecondExplorer, "Tuđi klub", "Klub drugog osnivača.", ["https://example.com/tudji-klub.jpg"], new DateTime(2026, 10, 3, 0, 0, 0, DateTimeKind.Utc));
 
-    public static Club[] All => [HikingClub, PhotographyClub, SecondExplorersClub];
+    public static readonly Club ClubWithSecondExplorersJoinRequest;
+
+    static ClubSeed()
+    {
+        ClubWithSecondExplorersJoinRequest = new(WellKnownUsers.Explorer, "Ljubitelji tvrđava", "Obilasci tvrđava uz Dunav.", ["https://example.com/tvrdjava.jpg"], new DateTime(2026, 10, 4, 0, 0, 0, DateTimeKind.Utc));
+        ClubWithSecondExplorersJoinRequest.RequestToJoin(WellKnownUsers.SecondExplorer);
+    }
+
+    public static Club[] All => [HikingClub, PhotographyClub, SecondExplorersClub, ClubWithSecondExplorersJoinRequest];
 }

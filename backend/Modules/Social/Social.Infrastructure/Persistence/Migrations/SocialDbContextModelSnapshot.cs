@@ -73,6 +73,9 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("text");
@@ -111,9 +114,37 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Clubs", "social");
+                });
+
+            modelBuilder.Entity("Social.Domain.Clubs.ClubMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.ToTable("ClubMembers", "social");
                 });
 
             modelBuilder.Entity("Social.Domain.Following.Follow", b =>
@@ -183,9 +214,51 @@ namespace Social.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Social.Domain.Clubs.Club", b =>
+                {
+                    b.OwnsMany("Social.Domain.Clubs.ClubJoinRequest", "JoinRequests", b1 =>
+                        {
+                            b1.Property<Guid>("ClubId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<DateTime>("SentAt");
+
+                            b1.Property<Guid>("UserId");
+
+                            b1.HasKey("ClubId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Clubs", "social");
+
+                            b1
+                                .ToJson("JoinRequests")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ClubId");
+                        });
+
+                    b.Navigation("JoinRequests");
+                });
+
+            modelBuilder.Entity("Social.Domain.Clubs.ClubMember", b =>
+                {
+                    b.HasOne("Social.Domain.Clubs.Club", null)
+                        .WithMany("Members")
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Social.Domain.Blogs.Blog", b =>
                 {
                     b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("Social.Domain.Clubs.Club", b =>
+                {
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }

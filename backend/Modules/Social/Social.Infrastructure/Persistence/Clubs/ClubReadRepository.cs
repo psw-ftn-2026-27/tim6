@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shared.Domain;
+using Social.Application.ClubMembership;
 using Social.Application.Clubs;
 using Social.Domain.Clubs;
 
@@ -35,6 +36,18 @@ internal sealed class ClubReadRepository : IClubReadRepository
             .ToListAsync();
 
         return new PageResult<ClubDto>(items, totalCount);
+    }
+
+    public Task<ClubMembershipDto?> GetMembershipAsync(Guid clubId, Guid userId)
+    {
+        return _dbContext.Clubs
+            .Where(club => club.Id == clubId)
+            .Select(club => new ClubMembershipDto(
+                club.Members.Any(member => member.UserId == userId) ? ClubMembershipStatus.Member
+                : club.Status == ClubStatus.Closed ? ClubMembershipStatus.Closed
+                : club.JoinRequests.Any(request => request.UserId == userId) ? ClubMembershipStatus.Pending
+                : ClubMembershipStatus.None))
+            .FirstOrDefaultAsync();
     }
 
     private static IQueryable<ClubDto> ProjectToDtos(IQueryable<Club> clubs)

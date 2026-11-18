@@ -27,11 +27,13 @@ public sealed class WalletManagementQueries
         pageSize = Math.Clamp(pageSize, 1, 100);
 
         var wallets = await _walletReadRepository.GetPageAsync(page, pageSize);
-        var users = await _identityApi.GetUsersAsync(wallets.Items.Select(wallet => wallet.UserId));
-        var emails = users.ToDictionary(user => user.UserId, user => user.Email);
+        var users = await _identityApi.GetUsersByIdsAsync(wallets.Items.Select(wallet => wallet.UserId));
 
         var items = wallets.Items
-            .Select(wallet => new WalletSummaryDto(wallet.Id, emails[wallet.UserId], wallet.Balance))
+            .Select(wallet => new WalletSummaryDto(
+                wallet.Id,
+                users.GetValueOrDefault(wallet.UserId)?.Email,
+                wallet.Balance))
             .ToList();
         return new PageResult<WalletSummaryDto>(items, wallets.TotalCount);
     }
@@ -45,7 +47,7 @@ public sealed class WalletManagementQueries
         }
 
         var transactions = await _walletReadRepository.GetTransactionsAsync(wallet.Id);
-        var user = await _identityApi.GetUserAsync(wallet.UserId);
-        return new WalletDetailsDto(wallet.Id, user.Email, wallet.Balance(), transactions);
+        var user = await _identityApi.GetUserByIdAsync(wallet.UserId);
+        return new WalletDetailsDto(wallet.Id, user?.Email, wallet.Balance(), transactions);
     }
 }

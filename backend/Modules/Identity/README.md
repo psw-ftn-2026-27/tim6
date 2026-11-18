@@ -40,7 +40,7 @@ Metoda `AddIdentityModule` registruje sve delove modula i jedino je mesto koje `
 
 ## Projekat Identity.Contracts
 
-Sadrži minimalnu javnu površinu koju drugi moduli smeju da referenciraju. Interfejs `IIdentityApi` nudi pojedinačnu i grupnu pretragu, a `UserSummaryDto` za svaki traženi identifikator vraća email i eksplicitan podatak da li korisnik postoji. Ovaj projekat ne zavisi od implementacije modula niti od drugih projekata.
+Sadrži minimalnu javnu površinu koju drugi moduli smeju da referenciraju. Interfejs `IIdentityApi` nudi pojedinačnu i grupnu pretragu po identifikatoru i email-u. `UserSummaryDto` sadrži identifikator i nullable email pronađenog korisnika, pošto je takvo polje ASP.NET Identity korisnika; pojedinačna pretraga vraća `null` DTO kada korisnik ne postoji, a grupna rečnik samo pronađenih korisnika. Ovaj projekat ne zavisi od implementacije modula niti od drugih projekata.
 
 ## Projekat Identity.Tests
 

@@ -16,6 +16,21 @@
           <img [src]="image" alt="" />
         }
       </div>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      @if (membership.error()) {
+        <p class="error">Could not load the membership status.</p>
+      } @else if (membership.value(); as membershipDto) {
+        <app-club-membership
+          [status]="membershipDto.status"
+          [pending]="membershipPending()"
+          (requestToJoin)="requestToJoin()"
+          (withdraw)="withdrawJoinRequest()"
+        />
+      }
     }
   }
 </div>

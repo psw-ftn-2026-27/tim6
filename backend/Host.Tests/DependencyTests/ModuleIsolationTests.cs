@@ -21,15 +21,16 @@ public class ModuleIsolationTests : BaseArchitectureTests
         }
     }
 
-    // A module stores an image only as its reference string, so it never touches the Shared image capability's types.
+    // A module stores an image only as its reference string and receives a position from its own page,
+    // so it never touches the types of the Shared image and position capabilities.
     [Theory]
     [MemberData(nameof(ModuleNames))]
-    public void Module_does_not_depend_on_the_shared_image_capability(string module)
+    public void Module_does_not_depend_on_the_shared_capabilities(string module)
     {
         foreach (var assembly in Layers.Select(layer => $"{module}.{layer}"))
         {
             AssertNoDependency(assembly, "Shared.Application");
-            AssertNoNamespaceDependency(assembly, "Shared.Domain.Images");
+            AssertNoNamespaceDependency(assembly, "Shared.Domain.Images", "Shared.Domain.Positions");
         }
     }
 
