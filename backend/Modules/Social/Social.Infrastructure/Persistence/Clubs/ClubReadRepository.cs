@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shared.Domain;
+using Social.Application.ClubMembership;
+using Social.Application.ClubModeration;
 using Social.Application.Clubs;
 using Social.Domain.Clubs;
 
@@ -35,6 +37,40 @@ internal sealed class ClubReadRepository : IClubReadRepository
             .ToListAsync();
 
         return new PageResult<ClubDto>(items, totalCount);
+    }
+
+    public Task<ClubMembershipDto?> GetMembershipAsync(Guid clubId, Guid userId)
+    {
+        return _dbContext.Clubs
+            .Where(club => club.Id == clubId)
+            .Select(club => new ClubMembershipDto(
+                club.Members.Any(member => member.UserId == userId) ? ClubMembershipStatus.Member
+                : club.Status == ClubStatus.Closed ? ClubMembershipStatus.Closed
+                : club.JoinRequests.Any(request => request.UserId == userId) ? ClubMembershipStatus.Pending
+                : ClubMembershipStatus.None,
+                club.Members
+                    .Where(member => member.UserId == userId)
+                    .Select(member => (ClubRole?)member.Role)
+                    .FirstOrDefault()))
+            .FirstOrDefaultAsync();
+    }
+
+    public Task<List<ClubJoinRequestDto>> GetJoinRequestsAsync(Guid clubId)
+    {
+        return _dbContext.Clubs
+            .Where(club => club.Id == clubId)
+            .SelectMany(club => club.JoinRequests)
+            .Select(request => new ClubJoinRequestDto(request.UserId, null, request.SentAt))
+            .ToListAsync();
+    }
+
+    public Task<List<ClubMemberDto>> GetMembersAsync(Guid clubId)
+    {
+        return _dbContext.Clubs
+            .Where(club => club.Id == clubId)
+            .SelectMany(club => club.Members)
+            .Select(member => new ClubMemberDto(member.UserId, null, member.Role))
+            .ToListAsync();
     }
 
     private static IQueryable<ClubDto> ProjectToDtos(IQueryable<Club> clubs)

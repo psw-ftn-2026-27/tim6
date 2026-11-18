@@ -16,6 +16,30 @@
           <img [src]="image" alt="" />
         }
       </div>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      @if (membership.error()) {
+        <p class="error">Could not load the membership status.</p>
+      } @else if (membership.value(); as membershipDto) {
+        <app-club-membership
+          [status]="membershipDto.status"
+          [pending]="membershipPending()"
+          (requestToJoin)="requestToJoin()"
+          (withdraw)="withdrawJoinRequest()"
+        />
+
+        @if (membershipDto.role === 'Owner' || membershipDto.role === 'Moderator') {
+          <p class="moderation-links">
+            <a class="button" [routerLink]="['/social/clubs', club.id, 'requests']"
+              >Join requests</a
+            >
+            <a class="button" [routerLink]="['/social/clubs', club.id, 'members']">Members</a>
+          </p>
+        }
+      }
     }
   }
 </div>

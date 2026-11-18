@@ -1,0 +1,169 @@
+<div class="stack">
+  <h1>Key points</h1>
+
+  <p><a routerLink="/exploration/mine">Back to my tours</a></p>
+
+  @if (tour.isLoading() && !tour.hasValue()) {
+    <p>Loading the tour...</p>
+  } @else if (tour.error()) {
+    <p class="error">The tour was not found.</p>
+  } @else if (tour.hasValue()) {
+    <app-geographic-map
+      [pins]="route()"
+      [route]="route()"
+      [selectionEnabled]="isDraft()"
+      [showSelectedLocation]="false"
+      (locationSelected)="onLocationSelected($event)"
+      (routeLengthKm)="onRouteLength($event)"
+      (routeFailed)="onRouteFailed()"
+    />
+
+    @if (routeFailed()) {
+      <p class="error">The route could not be calculated.</p>
+    }
+
+    <p>Tour length: {{ tour.value().lengthInKilometers.toFixed(1) }} km</p>
+
+    <ol class="key-points">
+      @for (point of keyPoints(); track point.id) {
+        <li class="card key-point">
+          <img class="image" [src]="point.image" alt="" />
+          <div class="stack">
+            <h2>{{ point.order }}. {{ point.name }}</h2>
+            <p>{{ point.description }}</p>
+            @if (point.secret) {
+              <p class="meta">Secret: {{ point.secret }}</p>
+            }
+            <p class="meta">
+              @if (point.isVisibleWithoutPurchase) {
+                Visible without purchase
+              } @else {
+                Visible after purchase
+              }
+            </p>
+            @if (isDraft()) {
+              <div class="actions">
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending() || pendingFiles().length > 0"
+                  (click)="startEdit(point)"
+                >
+                  Edit
+                </button>
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending() || routeFailed()"
+                  (click)="remove(point.id)"
+                >
+                  Delete
+                </button>
+              </div>
+            }
+          </div>
+        </li>
+      } @empty {
+        <li>The tour has no key points yet.</li>
+      }
+    </ol>
+
+    @if (isDraft()) {
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <form class="card stack" (submit)="save($event)">
+        <h2>
+          @if (editingId()) {
+            Edit key point
+          } @else {
+            Add key point
+          }
+        </h2>
+
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" type="text" [formField]="form.name" />
+          @if (form.name().touched()) {
+            @for (message of form.name().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" rows="4" [formField]="form.description"></textarea>
+          @if (form.description().touched()) {
+            @for (message of form.description().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <div class="field">
+          <label for="secret">Secret (optional)</label>
+          <input id="secret" type="text" [formField]="form.secret" />
+        </div>
+
+        <label>
+          <input type="checkbox" [formField]="form.isVisibleWithoutPurchase" />
+          Visible without purchase
+        </label>
+
+        <div class="field">
+          <span>Image</span>
+          <app-image-upload
+            [images]="images()"
+            [pending]="pendingFiles()"
+            [errors]="imageErrors()"
+            [maxImages]="1"
+            (filesSelected)="uploadFiles($event)"
+            (removeImage)="removeImage($event)"
+          />
+          @if (images().length === 0) {
+            <p class="error">An image is required.</p>
+          }
+        </div>
+
+        <div class="field">
+          <span>Location</span>
+          @if (location(); as chosen) {
+            <p class="meta">{{ chosen.latitude.toFixed(5) }}, {{ chosen.longitude.toFixed(5) }}</p>
+          } @else {
+            <p class="error">Choose the location by clicking on the map.</p>
+          }
+        </div>
+
+        <div class="actions">
+          <button
+            class="button button--primary"
+            type="submit"
+            [disabled]="
+              !form().valid() ||
+              images().length === 0 ||
+              location() === null ||
+              routeLengthKm() === null ||
+              routeFailed() ||
+              pendingFiles().length > 0 ||
+              pending()
+            "
+          >
+            Save
+          </button>
+          @if (editingId()) {
+            <button
+              class="button"
+              type="button"
+              [disabled]="pending() || pendingFiles().length > 0"
+              (click)="cancelEdit()"
+            >
+              Cancel
+            </button>
+          }
+        </div>
+      </form>
+    }
+  }
+</div>

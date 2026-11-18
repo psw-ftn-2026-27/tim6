@@ -53,3 +53,9 @@ export interface GiftCardDto {
   expiresAt: string;
   status: GiftCardStatus;
 }
+
+export interface ProductDto {
+  id: string;
+  name: string;
+  price: number;
+}

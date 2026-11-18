@@ -1,0 +1,11 @@
+:host {
+  display: block;
+  margin-top: var(--space-5);
+}
+
+.membership {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

@@ -44,6 +44,9 @@
             <td>{{ tour.recommendedGroupSize.min }}–{{ tour.recommendedGroupSize.max }}</td>
             <td>{{ tour.archivedAt }}</td>
             <td class="actions">
+              <a class="button" [routerLink]="['/exploration/mine', tour.id, 'key-points']">
+                Key points
+              </a>
               @if (tour.status !== 'Archived') {
                 <button class="button" type="button" (click)="select(tour.id)">Add time</button>
               }

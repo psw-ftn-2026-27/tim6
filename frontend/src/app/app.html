@@ -8,7 +8,7 @@
 
     <span class="nav-user">
       @if (auth.user(); as user) {
-        <span>{{ user.email }}</span>
+        <span class="nav-user__email" [title]="user.email">{{ user.email }}</span>
         <button class="button" type="button" (click)="auth.logout()">Logout</button>
       } @else {
         <a routerLink="/login">Login</a>
@@ -21,3 +21,25 @@
 <main class="container stack">
   <router-outlet />
 </main>
+
+<footer>
+  <div class="container">
+    <a routerLink="/privacy">Privacy settings</a>
+  </div>
+</footer>
+
+@if (analytics.choice() === null) {
+  <section class="consent" aria-label="Analytics consent">
+    <div class="container consent-content">
+      <p>
+        Explorer would like to use Google Analytics to see how people move through the app. It
+        records pages and your role, never your name, email or what you type. Nothing is sent
+        unless you accept.
+      </p>
+      <div class="actions">
+        <button class="button" type="button" (click)="analytics.accept()">Accept</button>
+        <button class="button" type="button" (click)="analytics.reject()">Reject</button>
+      </div>
+    </div>
+  </section>
+}

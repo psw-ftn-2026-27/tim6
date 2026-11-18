@@ -1,0 +1,12 @@
+.table td {
+  vertical-align: middle;
+}
+
+.sent {
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}

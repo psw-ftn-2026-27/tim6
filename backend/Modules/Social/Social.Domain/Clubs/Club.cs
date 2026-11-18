@@ -12,6 +12,11 @@ public sealed class Club : AggregateRoot
     public string Description { get; private set; }
     public List<string> Images { get; private set; }
     public DateTime CreatedAt { get; private set; }
+    public ClubStatus Status { get; private set; }
+    private readonly List<ClubMember> _members = [];
+    public IReadOnlyList<ClubMember> Members => _members;
+    private readonly List<ClubJoinRequest> _joinRequests = [];
+    public IReadOnlyList<ClubJoinRequest> JoinRequests => _joinRequests;
 
     private Club()
     {
@@ -30,6 +35,8 @@ public sealed class Club : AggregateRoot
         Description = description;
         Images = images;
         CreatedAt = createdAt;
+        Status = ClubStatus.Active;
+        _members.Add(new ClubMember(ownerId, ClubRole.Owner));
     }
 
     public void Update(Guid userId, string name, string description, List<string> images)
@@ -45,6 +52,130 @@ public sealed class Club : AggregateRoot
     public void Delete(Guid userId)
     {
         EnsureOwner(userId);
+    }
+
+    public void RequestToJoin(Guid userId)
+    {
+        EnsureActive();
+        if (FindMember(userId) is not null)
+        {
+            throw new DomainException("A member cannot request to join the club.");
+        }
+        if (_joinRequests.Any(request => request.UserId == userId))
+        {
+            throw new DomainException("A join request to this club is already pending.");
+        }
+
+        _joinRequests.Add(new ClubJoinRequest(userId, DateTime.UtcNow));
+    }
+
+    public void WithdrawJoinRequest(Guid userId)
+    {
+        RemovePendingJoinRequest(userId);
+    }
+
+    public void AcceptJoinRequest(Guid resolverId, Guid applicantId)
+    {
+        EnsureCanResolve(resolverId);
+        EnsureActive();
+        RemovePendingJoinRequest(applicantId);
+        _members.Add(new ClubMember(applicantId, ClubRole.Member));
+    }
+
+    public void RejectJoinRequest(Guid resolverId, Guid applicantId)
+    {
+        EnsureCanResolve(resolverId);
+        EnsureActive();
+        RemovePendingJoinRequest(applicantId);
+    }
+
+    public void PromoteToModerator(Guid promoterId, Guid memberId)
+    {
+        EnsureActive();
+        if (promoterId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can promote a member to moderator.");
+        }
+
+        GetMember(memberId).PromoteToModerator();
+    }
+
+    public void RemoveMember(Guid removerId, Guid memberId)
+    {
+        EnsureActive();
+        var member = GetMember(memberId);
+        if (!CanRemove(removerId, member))
+        {
+            throw new DomainException("The owner can remove any other member, and a moderator only a plain member.");
+        }
+
+        _members.Remove(member);
+    }
+
+    public bool CanResolveJoinRequests(Guid userId)
+    {
+        var member = FindMember(userId);
+        return member is not null && (member.Role == ClubRole.Owner || member.Role == ClubRole.Moderator);
+    }
+
+    private void RemovePendingJoinRequest(Guid applicantId)
+    {
+        var request = _joinRequests.FirstOrDefault(request => request.UserId == applicantId);
+        if (request is null)
+        {
+            throw new DomainException("There is no pending join request from this user.");
+        }
+
+        _joinRequests.Remove(request);
+    }
+
+    private void EnsureActive()
+    {
+        if (Status != ClubStatus.Active)
+        {
+            throw new DomainException("This action is possible only while the club is active.");
+        }
+    }
+
+    private ClubMember? FindMember(Guid userId)
+    {
+        return _members.FirstOrDefault(member => member.UserId == userId);
+    }
+
+    private ClubMember GetMember(Guid memberId)
+    {
+        var member = FindMember(memberId);
+        if (member is null)
+        {
+            throw new DomainException("This user is not a member of the club.");
+        }
+        return member;
+    }
+
+    private bool CanRemove(Guid removerId, ClubMember member)
+    {
+        var remover = FindMember(removerId);
+        if (remover is null)
+        {
+            return false;
+        }
+        if (remover.Role == ClubRole.Owner)
+        {
+            return member.Role != ClubRole.Owner;
+        }
+        if (remover.Role == ClubRole.Moderator)
+        {
+            return member.Role == ClubRole.Member;
+        }
+        return false;
+    }
+
+    private void EnsureCanResolve(Guid resolverId)
+    {
+        if (!CanResolveJoinRequests(resolverId))
+        {
+            throw new DomainException("Only the owner or a moderator of the club can resolve join requests.");
+        }
     }
 
     private void EnsureOwner(Guid userId)

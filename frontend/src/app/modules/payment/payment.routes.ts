@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { ProductList } from './catalog/product-list/product-list';
 import { GiftCardList } from './gift-card-browsing/gift-card-list/gift-card-list';
 import { CreateGiftCard } from './gift-card-sending/create-gift-card/create-gift-card';
 import { Wallet } from './my-wallet/wallet/wallet';
@@ -13,4 +14,5 @@ export const paymentRoutes: Routes = [
   { path: 'gift-cards', component: GiftCardList },
   { path: 'wallets', component: WalletList },
   { path: 'wallets/:id', component: WalletDetails },
+  { path: 'catalog', component: ProductList },
 ];
