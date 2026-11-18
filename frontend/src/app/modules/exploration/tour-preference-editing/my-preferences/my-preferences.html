@@ -1,10 +1,12 @@
-<div class="card stack">
+<div class="card stack narrow">
   <h1>My preferences</h1>
 
   @if (preference.isLoading()) {
     <p>Loading your preferences...</p>
   } @else if (preference.error()) {
-    <p class="error">Could not load your preferences. Log in and try again.</p>
+    <p class="notice notice--danger" role="alert">
+      Could not load your preferences. Log in and try again.
+    </p>
   } @else {
     @if (preference.value(); as saved) {
       <dl class="stack">
@@ -27,7 +29,7 @@
       </dl>
 
       @if (deleteError()) {
-        <p class="error">{{ deleteError() }}</p>
+        <p class="notice notice--danger" role="alert">{{ deleteError() }}</p>
       }
 
       <p class="actions">
@@ -39,12 +41,14 @@
         </button>
       </p>
     } @else {
-      <p>You have no preferences yet.</p>
+      <div class="empty">
+        <p>You have no preferences yet.</p>
+      </div>
     }
 
     @if (!preference.value() || editing()) {
       <form class="stack" (submit)="save($event)">
-        <fieldset class="field">
+        <fieldset class="choices">
           <legend>Difficulties</legend>
           <label><input type="checkbox" [formField]="form.easy" /> Easy</label>
           <label><input type="checkbox" [formField]="form.moderate" /> Moderate</label>
@@ -65,19 +69,18 @@
           <input id="tags" type="text" [formField]="form.tags" />
         </div>
 
-        <div class="field">
+        <div class="choices">
           <label>
-            <input type="checkbox" [formField]="form.applyToSearch" /> Search opens with my preferences
+            <input type="checkbox" [formField]="form.applyToSearch" /> Search opens with my
+            preferences
           </label>
         </div>
 
         @if (saveError()) {
-          <p class="error">{{ saveError() }}</p>
+          <p class="notice notice--danger" role="alert">{{ saveError() }}</p>
         }
 
-        <button class="button button--primary" type="submit" [disabled]="pending()">
-          Sačuvaj
-        </button>
+        <button class="button button--primary" type="submit" [disabled]="pending()">Sačuvaj</button>
       </form>
     }
   }
