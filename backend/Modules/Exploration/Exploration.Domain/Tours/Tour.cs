@@ -38,22 +38,7 @@ public sealed class Tour : AggregateRoot
         RecommendedGroupSize recommendedGroupSize)
         : base(Guid.NewGuid())
     {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new DomainException("A tour requires a name.");
-        }
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            throw new DomainException("A tour requires a description.");
-        }
-        if (tags is null || tags.Count == 0)
-        {
-            throw new DomainException("A tour requires at least one tag.");
-        }
-        if (recommendedGroupSize is null)
-        {
-            throw new DomainException("A tour requires a recommended group size.");
-        }
+        EnsureValidDetails(name, description, tags, recommendedGroupSize);
 
         AuthorId = authorId;
         Name = name;
@@ -81,26 +66,7 @@ public sealed class Tour : AggregateRoot
 
     public void Publish(TourPrice? price)
     {
-        if (Status != TourStatus.Draft)
-        {
-            throw new DomainException("Only a draft tour can be published.");
-        }
-        if (price is null)
-        {
-            throw new DomainException("A tour can be published only after choosing whether it is free or paid.");
-        }
-        if (Description.Length < MinimumDescriptionLengthForPublishing)
-        {
-            throw new DomainException($"A tour can be published only with a description of at least {MinimumDescriptionLengthForPublishing} characters.");
-        }
-        if (_transportTimes.Count == 0)
-        {
-            throw new DomainException("A tour can be published only with at least one transport time.");
-        }
-        if (_keyPoints.Count < MinimumKeyPointsForPublishing)
-        {
-            throw new DomainException($"A tour can be published only with at least {MinimumKeyPointsForPublishing} key points.");
-        }
+        EnsurePublishable(price);
 
         Status = TourStatus.Published;
         PublishedAt = DateTime.UtcNow;
@@ -159,6 +125,51 @@ public sealed class Tour : AggregateRoot
             order++;
         }
         SetLength(length);
+    }
+
+    private static void EnsureValidDetails(string name, string description, List<string> tags,
+        RecommendedGroupSize recommendedGroupSize)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new DomainException("A tour requires a name.");
+        }
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new DomainException("A tour requires a description.");
+        }
+        if (tags is null || tags.Count == 0)
+        {
+            throw new DomainException("A tour requires at least one tag.");
+        }
+        if (recommendedGroupSize is null)
+        {
+            throw new DomainException("A tour requires a recommended group size.");
+        }
+    }
+
+    private void EnsurePublishable(TourPrice? price)
+    {
+        if (Status != TourStatus.Draft)
+        {
+            throw new DomainException("Only a draft tour can be published.");
+        }
+        if (price is null)
+        {
+            throw new DomainException("A tour can be published only after choosing whether it is free or paid.");
+        }
+        if (Description.Length < MinimumDescriptionLengthForPublishing)
+        {
+            throw new DomainException($"A tour can be published only with a description of at least {MinimumDescriptionLengthForPublishing} characters.");
+        }
+        if (_transportTimes.Count == 0)
+        {
+            throw new DomainException("A tour can be published only with at least one transport time.");
+        }
+        if (_keyPoints.Count < MinimumKeyPointsForPublishing)
+        {
+            throw new DomainException($"A tour can be published only with at least {MinimumKeyPointsForPublishing} key points.");
+        }
     }
 
     private void EnsureKeyPointsEditable()
