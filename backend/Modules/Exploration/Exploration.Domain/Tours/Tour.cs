@@ -1,5 +1,6 @@
 using Shared.Domain;
 using Shared.Domain.Exceptions;
+using Shared.Domain.Conversations;
 
 namespace Exploration.Domain.Tours;
 
@@ -92,6 +93,20 @@ public sealed class Tour : AggregateRoot
 
         Status = TourStatus.Published;
         ArchivedAt = null;
+    }
+
+    public ConversationRole GetConversationRole(Guid userId, bool hasPurchased)
+    {
+        if (userId == AuthorId)
+        {
+            return ConversationRole.Privileged;
+        }
+        if (hasPurchased)
+        {
+            return ConversationRole.Participant;
+        }
+
+        throw new DomainException("Only the tour author and its buyers may join the conversation.");
     }
 
     public void AddKeyPoint(string name, string description, string image, string? secret, Location location,

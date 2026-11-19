@@ -7,6 +7,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Exploration.Domain\Exploration.Domain.csproj" />
     <ProjectReference Include="..\Exploration.Contracts\Exploration.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\Identity.Contracts\Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Payment\Payment.Contracts\Payment.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

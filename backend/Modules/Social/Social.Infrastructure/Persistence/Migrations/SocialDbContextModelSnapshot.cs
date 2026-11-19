@@ -24,6 +24,68 @@ namespace Social.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Shared.Domain.Conversations.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "CreatedAt", "Id");
+
+                    b.ToTable("ChatMessages", "social");
+                });
+
+            modelBuilder.Entity("Shared.Domain.Conversations.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Conversations", "social");
+                });
+
+            modelBuilder.Entity("Shared.Domain.Conversations.ConversationParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ConversationParticipants", "social");
+                });
+
             modelBuilder.Entity("Social.Domain.Blogs.Blog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -233,6 +295,97 @@ namespace Social.Infrastructure.Persistence.Migrations
                     b.ToTable("FollowRequests", "social");
                 });
 
+            modelBuilder.Entity("Shared.Domain.Conversations.ChatMessage", b =>
+                {
+                    b.HasOne("Shared.Domain.Conversations.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Shared.Domain.Conversations.MessageContent", "Content", b1 =>
+                        {
+                            b1.Property<Guid>("ChatMessageId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("Content");
+
+                            b1.HasKey("ChatMessageId");
+
+                            b1.ToTable("ChatMessages", "social");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ChatMessageId");
+                        });
+
+                    b.Navigation("Content");
+                });
+
+            modelBuilder.Entity("Shared.Domain.Conversations.Conversation", b =>
+                {
+                    b.OwnsOne("Shared.Domain.Conversations.ConversationContext", "Context", b1 =>
+                        {
+                            b1.Property<Guid>("ConversationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid?>("ContextId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("ContextId");
+
+                            b1.Property<string>("Type")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("ContextType");
+
+                            b1.HasKey("ConversationId");
+
+                            b1.HasIndex("Type", "ContextId");
+
+                            b1.ToTable("Conversations", "social");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ConversationId");
+                        });
+
+                    b.Navigation("Context")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Shared.Domain.Conversations.ConversationParticipant", b =>
+                {
+                    b.HasOne("Shared.Domain.Conversations.Conversation", null)
+                        .WithMany("Participants")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Shared.Domain.Conversations.ConversationMute", "Mute", b1 =>
+                        {
+                            b1.Property<Guid>("ConversationParticipantId");
+
+                            b1.Property<DateTime?>("EndsAt");
+
+                            b1.Property<bool>("IsPermanent");
+
+                            b1.HasKey("ConversationParticipantId");
+
+                            b1.ToTable("ConversationParticipants", "social");
+
+                            b1
+                                .ToJson("Mute")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ConversationParticipantId");
+                        });
+
+                    b.Navigation("Mute");
+                });
+
             modelBuilder.Entity("Social.Domain.Blogs.Comment", b =>
                 {
                     b.HasOne("Social.Domain.Blogs.Blog", null)
@@ -286,6 +439,11 @@ namespace Social.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ClubId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Shared.Domain.Conversations.Conversation", b =>
+                {
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("Social.Domain.Blogs.Blog", b =>

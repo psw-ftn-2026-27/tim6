@@ -6,6 +6,8 @@ using Social.Domain.Following;
 using Social.Infrastructure.Persistence.Blogs;
 using Social.Infrastructure.Persistence.Clubs;
 using Social.Infrastructure.Persistence.Following;
+using Social.Infrastructure.Persistence.Conversations;
+using Shared.Domain.Conversations;
 
 namespace Social.Infrastructure.Persistence;
 
@@ -17,6 +19,8 @@ internal sealed class SocialDbContext : DbContext, IUnitOfWork
     public DbSet<Club> Clubs => Set<Club>();
     public DbSet<Follow> Follows => Set<Follow>();
     public DbSet<FollowRequest> FollowRequests => Set<FollowRequest>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -25,5 +29,6 @@ internal sealed class SocialDbContext : DbContext, IUnitOfWork
         builder.ConfigureFollows();
         builder.ConfigureFollowRequests();
         builder.ConfigureClubs();
+        builder.ConfigureConversations();
     }
 }

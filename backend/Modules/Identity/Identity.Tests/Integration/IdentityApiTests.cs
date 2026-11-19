@@ -90,6 +90,31 @@ public sealed class IdentityApiTests : BaseIntegrationTest
         });
     }
 
+    [Fact]
+    public async Task partial_email_search_returns_a_stable_page_and_total_count()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var identityApi = scope.ServiceProvider.GetRequiredService<IIdentityApi>();
+
+        var result = await identityApi.SearchUsersAsync("EXPLORER", 1, 1);
+
+        result.Items.Should().ContainSingle();
+        result.Items[0].Should().Be(new UserSummaryDto(WellKnownUsers.Explorer, ExplorerEmail));
+        result.TotalCount.Should().BeGreaterThanOrEqualTo(1);
+    }
+
+    [Fact]
+    public async Task missing_email_search_returns_an_empty_page()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var identityApi = scope.ServiceProvider.GetRequiredService<IIdentityApi>();
+
+        var result = await identityApi.SearchUsersAsync("nobody-with-this-email", 1, 20);
+
+        result.Items.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
+    }
+
     private static string ExplorerEmail =>
         UserSeed.Explorer.Email ?? throw new InvalidOperationException("The explorer seed must have an email.");
 }

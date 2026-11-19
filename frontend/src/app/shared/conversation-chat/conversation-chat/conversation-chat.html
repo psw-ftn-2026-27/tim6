@@ -1,0 +1,95 @@
+<section class="conversation stack" aria-label="Conversation">
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (hasMore()) {
+    <button
+      class="button load-older"
+      type="button"
+      [disabled]="loading()"
+      (click)="loadOlderMessages.emit()"
+    >
+      {{ loading() ? 'Loading...' : 'Load older messages' }}
+    </button>
+  }
+
+  <ol class="messages">
+    @for (message of messages(); track message.id) {
+      <li class="message" [class.message--mine]="message.authorId === currentUserId()">
+        <div class="message__heading">
+          <strong>{{ message.authorLabel }}</strong>
+          <time [attr.datetime]="message.createdAt">{{ message.createdAt | date: 'short' }}</time>
+        </div>
+        @if (message.isDeleted) {
+          <p class="deleted">Message was deleted</p>
+        } @else {
+          <p>{{ message.content }}</p>
+          @if (message.canDelete) {
+            @if (confirmingMessageId() === message.id) {
+              <p>Are you sure you want to delete this message?</p>
+              <div class="actions">
+                <button class="button" type="button" [disabled]="pending()" (click)="confirmingMessageId.set(null)">Cancel</button>
+                <button class="button button--primary" type="button" [disabled]="pending()" (click)="confirmDelete()">Confirm deletion</button>
+              </div>
+            } @else {
+              <button
+                class="button"
+                type="button"
+                [disabled]="pending()"
+                (click)="requestDelete(message.id)"
+              >
+                Delete message
+              </button>
+            }
+          }
+        }
+        @if (message.moderationTarget; as participant) {
+          <div class="message__moderation">
+            @if (participant.isPermanentlyMuted) {
+              <span class="meta">Muted permanently</span>
+            } @else if (participant.mutedUntil) {
+              <span class="meta">Muted until {{ participant.mutedUntil | date: 'short' }}</span>
+            }
+            @if (participant.isPermanentlyMuted || participant.mutedUntil) {
+              <button class="button" type="button" [disabled]="pending()" (click)="unmuteParticipant.emit(participant.userId)">Unmute {{ participant.label }}</button>
+            } @else {
+              <span class="meta">Moderate {{ participant.label }}:</span>
+              <button class="button" type="button" [disabled]="pending()" (click)="muteParticipant.emit({ participantId: participant.userId, duration: 'FifteenMinutes' })">Mute 15 min</button>
+              <button class="button" type="button" [disabled]="pending()" (click)="muteParticipant.emit({ participantId: participant.userId, duration: 'OneHour' })">Mute 1 h</button>
+              <button class="button" type="button" [disabled]="pending()" (click)="muteParticipant.emit({ participantId: participant.userId, duration: 'TwentyFourHours' })">Mute 24 h</button>
+              <button class="button" type="button" [disabled]="pending()" (click)="muteParticipant.emit({ participantId: participant.userId, duration: 'Permanent' })">Mute permanently</button>
+            }
+          </div>
+        }
+      </li>
+    } @empty {
+      @if (!loading()) {
+        <li class="empty">No messages yet.</li>
+      }
+    }
+  </ol>
+
+  @if (isMuted()) {
+    <p class="error">You are muted{{ muteDescription() ? ' ' + muteDescription() : '' }}.</p>
+  }
+
+  <form class="composer" (submit)="submit($event)">
+    <div class="field">
+      <label for="conversation-message">Message</label>
+      <textarea id="conversation-message" rows="3" [formField]="messageForm.content"></textarea>
+      @if (messageForm.content().touched()) {
+        @for (validationError of messageForm.content().errors(); track $index) {
+          <p class="error">{{ validationError.message }}</p>
+        }
+      }
+    </div>
+    <button
+      class="button button--primary"
+      type="submit"
+      [disabled]="!messageForm().valid() || pending() || isMuted()"
+    >
+      Send
+    </button>
+  </form>
+</section>

@@ -122,3 +122,63 @@ export interface ClubMemberDto {
   userEmail: string | null;
   role: ClubRole;
 }
+
+export type ConversationRole = 'Participant' | 'Privileged';
+
+export interface ConversationParticipantDto {
+  userId: string;
+  userEmail: string | null;
+  role: ConversationRole;
+  mutedUntil: string | null;
+  isPermanentlyMuted: boolean;
+}
+
+export interface ConversationDto {
+  id: string;
+  contextType: string;
+  contextId: string | null;
+  participants: ConversationParticipantDto[];
+  createdAt: string;
+}
+
+export interface ConversationSummaryDto {
+  id: string;
+  createdAt: string;
+  participantIds: string[];
+  otherParticipantEmail: string | null;
+}
+
+export interface ChatMessageDto {
+  id: string;
+  conversationId: string;
+  authorId: string;
+  content: string | null;
+  createdAt: string;
+  isDeleted: boolean;
+  deletedAt: string | null;
+}
+
+export interface MessageCursorDto {
+  createdAt: string;
+  id: string;
+}
+
+export interface MessagePageDto {
+  items: ChatMessageDto[];
+  nextCursor: MessageCursorDto | null;
+  hasMore: boolean;
+}
+
+export interface ConversationUserDto {
+  userId: string;
+  email: string | null;
+}
+
+export interface UserSearchPageDto {
+  items: ConversationUserDto[];
+  totalCount: number;
+}
+
+export interface SendMessageDto {
+  content: string;
+}

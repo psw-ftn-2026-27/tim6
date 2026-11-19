@@ -47,6 +47,7 @@
               <a class="button" [routerLink]="['/exploration/mine', tour.id, 'key-points']">
                 Key points
               </a>
+              <a class="button" [routerLink]="['/exploration/tours', tour.id, 'chat']">Chat</a>
               @if (tour.status !== 'Archived') {
                 <button class="button" type="button" (click)="select(tour.id)">Add time</button>
               }

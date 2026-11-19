@@ -18,6 +18,9 @@ using Social.Infrastructure.Persistence;
 using Social.Infrastructure.Persistence.Blogs;
 using Social.Infrastructure.Persistence.Following;
 using Social.Infrastructure.Persistence.Clubs;
+using Social.Application.Conversations;
+using Social.Application.DirectConversationMessaging;
+using Social.Infrastructure.Persistence.Conversations;
 
 namespace Social.Infrastructure;
 
@@ -37,6 +40,9 @@ public static class SocialModuleExtensions
         services.AddScoped<IFollowReadRepository, FollowReadRepository>();
         services.AddScoped<IClubRepository, ClubRepository>();
         services.AddScoped<IClubReadRepository, ClubReadRepository>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+        services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+        services.AddScoped<IConversationReadRepository, ConversationReadRepository>();
 
         services.AddScoped<BlogAuthoringService>();
         services.AddScoped<BlogAuthoringQueries>();
@@ -54,6 +60,8 @@ public static class SocialModuleExtensions
         services.AddScoped<ClubMembershipQueries>();
         services.AddScoped<ClubModerationService>();
         services.AddScoped<ClubModerationQueries>();
+        services.AddScoped<DirectConversationMessagingService>();
+        services.AddScoped<DirectConversationMessagingQueries>();
 
         return services;
     }
