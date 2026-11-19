@@ -2,13 +2,13 @@
   <p><a routerLink="/social">Back to blogs</a></p>
 
   @if (error()) {
-    <p class="error">{{ error() }}</p>
+    <p class="notice notice--danger" role="alert">{{ error() }}</p>
   }
 
   @if (detail.isLoading()) {
     <p>Loading blog...</p>
   } @else if (detail.error()) {
-    <p class="error">Could not load the blog. Log in and try again.</p>
+    <p class="notice notice--danger" role="alert">Could not load the blog. Log in and try again.</p>
   } @else {
     @if (detail.value(); as blog) {
       <h1>{{ blog.title }}</h1>
@@ -23,11 +23,13 @@
 
       <p class="meta">
         Status:
-        @if (blog.status === 'Closed') {
-          Archived
-        } @else {
-          {{ blog.status }}
-        }
+        <span class="badge" [class.badge--success]="blog.status === 'Published'">
+          @if (blog.status === 'Closed') {
+            Archived
+          } @else {
+            {{ blog.status }}
+          }
+        </span>
       </p>
 
       <p class="meta">
@@ -38,7 +40,7 @@
       <p class="meta">Author: {{ blog.authorId }}</p>
 
       @if (followStatus.error()) {
-        <p class="error">Could not load the follow status.</p>
+        <p class="notice notice--danger" role="alert">Could not load the follow status.</p>
       } @else if (followStatus.value(); as followStatusDto) {
         <app-follow-button
           [status]="followStatusDto.status"
@@ -48,7 +50,7 @@
       }
 
       @if (myVote.error()) {
-        <p class="error">Could not load your vote.</p>
+        <p class="notice notice--danger" role="alert">Could not load your vote.</p>
       }
 
       <app-blog-vote

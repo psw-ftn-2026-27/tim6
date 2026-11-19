@@ -1,4 +1,4 @@
-<div class="card stack">
+<div class="card stack narrow">
   <h1>Create blog</h1>
 
   <form class="stack" (submit)="submit($event)">
@@ -34,14 +34,16 @@
     </div>
 
     @if (error()) {
-      <p class="error">{{ error() }}</p>
+      <p class="notice notice--danger" role="alert">{{ error() }}</p>
     }
 
     <div class="actions">
       <button
         class="button button--primary"
         type="submit"
-        [disabled]="!form().valid() || images().length === 0 || pendingFiles().length > 0 || pending()"
+        [disabled]="
+          !form().valid() || images().length === 0 || pendingFiles().length > 0 || pending()
+        "
       >
         Create
       </button>

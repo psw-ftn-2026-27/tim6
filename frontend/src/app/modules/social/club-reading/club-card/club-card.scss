@@ -1,8 +1,17 @@
+// The whole card is a link: a stronger border on hover, the accent border on keyboard focus.
 .club {
   color: inherit;
   display: flex;
   gap: var(--space-4);
   text-decoration: none;
+}
+
+.club:hover {
+  border-color: var(--color-border-strong);
+}
+
+.club:focus-visible {
+  border-color: var(--color-accent);
 }
 
 .club-image {
