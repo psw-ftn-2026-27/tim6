@@ -26,6 +26,12 @@ export class ClubModeration {
     );
   }
 
+  async transferOwnership(clubId: string, memberId: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${BASE_URL}/${clubId}/members/${memberId}/transfer-ownership`, {}),
+    );
+  }
+
   async removeMember(clubId: string, memberId: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${BASE_URL}/${clubId}/members/${memberId}`));
   }

@@ -25,4 +25,37 @@ public sealed class ClubMember : Entity
 
         Role = ClubRole.Moderator;
     }
+
+    public void TakeOverOwnership()
+    {
+        if (Role == ClubRole.Owner)
+        {
+            throw new DomainException("The owner cannot take over ownership again.");
+        }
+
+        Role = ClubRole.Owner;
+    }
+
+    public void HandOverOwnership()
+    {
+        Role = ClubRole.Moderator;
+    }
+
+    public bool CanResolveJoinRequests()
+    {
+        return Role == ClubRole.Owner || Role == ClubRole.Moderator;
+    }
+
+    public bool CanRemove(ClubMember member)
+    {
+        if (Role == ClubRole.Owner)
+        {
+            return member.Role != ClubRole.Owner;
+        }
+        if (Role == ClubRole.Moderator)
+        {
+            return member.Role == ClubRole.Member;
+        }
+        return false;
+    }
 }

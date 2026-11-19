@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { CreateCommentDto, UpdateCommentDto } from '../api/social-api-types';
+import { CastVoteDto, CreateCommentDto, UpdateCommentDto } from '../api/social-api-types';
 
 const BASE_URL = '/api/social/blogs';
 
@@ -19,6 +19,10 @@ export class BlogReading {
 
   async deleteComment(id: string, commentId: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${BASE_URL}/${id}/comments/${commentId}`));
+  }
+
+  async castVote(id: string, dto: CastVoteDto): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/votes`, dto));
   }
 
   async sendFollowRequest(recipientId: string): Promise<string> {

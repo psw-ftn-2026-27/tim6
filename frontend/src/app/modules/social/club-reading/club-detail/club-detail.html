@@ -24,12 +24,16 @@
       @if (membership.error()) {
         <p class="error">Could not load the membership status.</p>
       } @else if (membership.value(); as membershipDto) {
-        <app-club-membership
-          [status]="membershipDto.status"
-          [pending]="membershipPending()"
-          (requestToJoin)="requestToJoin()"
-          (withdraw)="withdrawJoinRequest()"
-        />
+        @if (club.status === 'Closed') {
+          <p class="closed"><span class="badge badge--danger">Closed</span></p>
+        } @else {
+          <app-club-membership
+            [status]="membershipDto.status"
+            [pending]="membershipPending()"
+            (requestToJoin)="requestToJoin()"
+            (withdraw)="withdrawJoinRequest()"
+          />
+        }
 
         @if (membershipDto.role === 'Owner' || membershipDto.role === 'Moderator') {
           <p class="moderation-links">

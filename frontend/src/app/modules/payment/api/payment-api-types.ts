@@ -42,6 +42,27 @@ export interface CancellationDto {
   reason: string;
 }
 
+export interface CreateGiftCardDto {
+  recipientEmail: string;
+  amount: number;
+  message: string;
+}
+
+export type GiftCardStatus = 'Valid' | 'Redeemed' | 'Expired';
+
+export interface GiftCardDto {
+  id: string;
+  senderId: string;
+  senderEmail: string | null;
+  recipientId: string;
+  recipientEmail: string | null;
+  amount: number;
+  message: string;
+  createdAt: string;
+  expiresAt: string;
+  status: GiftCardStatus;
+}
+
 export interface ProductDto {
   id: string;
   entityId: string;

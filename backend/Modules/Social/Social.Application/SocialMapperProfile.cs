@@ -8,7 +8,8 @@ public sealed class SocialMapperProfile : Profile
 {
     public SocialMapperProfile()
     {
-        CreateMap<Blog, BlogDto>();
+        CreateMap<Blog, BlogDto>()
+            .ForCtorParam(nameof(BlogDto.Score), options => options.MapFrom(_ => 0));
         CreateMap<Comment, CommentDto>();
     }
 }

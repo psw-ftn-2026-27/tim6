@@ -39,6 +39,16 @@ internal sealed class BlogReadRepository : IBlogReadRepository
         return new PageResult<BlogDto>(items, totalCount);
     }
 
+    public Task<VoteSign?> GetVoteSignAsync(Guid blogId, Guid userId)
+    {
+        return _dbContext.Blogs
+            .Where(blog => blog.Id == blogId)
+            .SelectMany(blog => blog.Votes)
+            .Where(vote => vote.UserId == userId)
+            .Select(vote => (VoteSign?)vote.Sign)
+            .FirstOrDefaultAsync();
+    }
+
     private static IQueryable<BlogDto> ProjectToDtos(IQueryable<Blog> blogs)
     {
         return blogs
@@ -62,6 +72,8 @@ internal sealed class BlogReadRepository : IBlogReadRepository
                         // default value; they show their creation time instead.
                         comment.LastModifiedAt == default ? comment.CreatedAt : comment.LastModifiedAt,
                         comment.CreatedAt.AddMinutes(Comment.EditWindowMinutes)))
-                    .ToList()));
+                    .ToList(),
+                blog.Votes.Count(vote => vote.Sign == VoteSign.Up)
+                    - blog.Votes.Count(vote => vote.Sign == VoteSign.Down)));
     }
 }
