@@ -49,6 +49,39 @@ namespace Games.Infrastructure.Persistence.Migrations
                     b.ToTable("ChallengeProgresses", "games");
                 });
 
+            modelBuilder.Entity("Games.Domain.LocationChallengeAttempts.LocationChallengeAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ExplorerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LocationChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("RadiusInMeters")
+                        .HasColumnType("double precision");
+
+                    b.PrimitiveCollection<Guid[]>("RevealedHiddenPointIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationChallengeId", "ExplorerId")
+                        .IsUnique();
+
+                    b.ToTable("LocationChallengeAttempts", "games");
+                });
+
             modelBuilder.Entity("Games.Domain.LocationChallenges.HiddenPoint", b =>
                 {
                     b.Property<Guid>("Id")

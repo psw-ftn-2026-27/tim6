@@ -1,7 +1,9 @@
 using Games.Application;
 using Games.Application.ChallengeProgresses;
 using Games.Application.LocationChallengeAuthoring;
+using Games.Application.LocationChallengeAttempts;
 using Games.Application.LocationChallengePublishing;
+using Games.Application.LocationChallengeSolving;
 using Games.Application.LocationChallenges;
 using Games.Application.QuizAttempts;
 using Games.Application.QuizAuthoring;
@@ -11,8 +13,10 @@ using Games.Application.Quizzes;
 using Games.Application.SocialChallengeAuthoring;
 using Games.Application.SocialChallengePublishing;
 using Games.Application.SocialChallenges;
+using Games.Domain.LocationChallengeAttempts;
 using Games.Infrastructure.Persistence;
 using Games.Infrastructure.Persistence.ChallengeProgresses;
+using Games.Infrastructure.Persistence.LocationChallengeAttempts;
 using Games.Infrastructure.Persistence.LocationChallenges;
 using Games.Infrastructure.Persistence.QuizAttempts;
 using Games.Infrastructure.Persistence.Quizzes;
@@ -41,6 +45,8 @@ public static class GamesModuleExtensions
         services.AddScoped<IChallengeProgressRepository, ChallengeProgressRepository>();
         services.AddScoped<ILocationChallengeRepository, LocationChallengeRepository>();
         services.AddScoped<ILocationChallengeReadRepository, LocationChallengeReadRepository>();
+        services.AddScoped<ILocationChallengeAttemptRepository, LocationChallengeAttemptRepository>();
+        services.AddScoped<ILocationChallengeAttemptReadRepository, LocationChallengeAttemptReadRepository>();
 
         services.AddScoped<SocialChallengeAuthoringService>();
         services.AddScoped<SocialChallengeAuthoringQueries>();
@@ -53,6 +59,9 @@ public static class GamesModuleExtensions
         services.AddScoped<LocationChallengeAuthoringService>();
         services.AddScoped<LocationChallengeAuthoringQueries>();
         services.AddScoped<LocationChallengePublishingService>();
+        services.AddScoped<LocationChallengeSolver>();
+        services.AddScoped<LocationChallengeSolvingService>();
+        services.AddScoped<LocationChallengeSolvingQueries>();
 
         return services;
     }

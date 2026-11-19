@@ -145,3 +145,28 @@ export interface UpdateLocationChallengeDto {
   hiddenPoints: HiddenPointDto[];
   location: LocationDto | null;
 }
+
+export interface AvailableLocationChallengeDto {
+  id: string;
+  name: string;
+  location: LocationDto;
+  xp: number;
+  hasAttemptInProgress: boolean;
+  isSolved: boolean;
+}
+
+export interface AttemptHiddenPointDto {
+  id: string;
+  image: string;
+  isRevealed: boolean;
+  location: LocationDto | null;
+}
+
+export interface LocationChallengeAttemptDto {
+  id: string;
+  center: LocationDto;
+  radiusInMeters: number;
+  hiddenPoints: AttemptHiddenPointDto[];
+  completedAt: string | null;
+  earnedXp: number | null;
+}

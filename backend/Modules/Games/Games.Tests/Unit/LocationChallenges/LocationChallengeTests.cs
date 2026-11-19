@@ -103,16 +103,17 @@ public class LocationChallengeTests
     }
 
     [Theory]
-    [InlineData("", 200, 2)]
-    [InlineData("Nove fasade", 0, 2)]
-    [InlineData("Nove fasade", 200, 0)]
-    public void Draft_edited_with_invalid_data_keeps_its_previous_data_and_hidden_points(string name, int xp,
+    [InlineData(0, 200, 2)]
+    [InlineData(201, 200, 2)]
+    [InlineData(11, 0, 2)]
+    [InlineData(11, 200, 0)]
+    public void Draft_edited_with_invalid_data_keeps_its_previous_data_and_hidden_points(int nameLength, int xp,
         int hiddenPointCount)
     {
         var challenge = CreateChallenge();
         var hiddenPointsBefore = challenge.HiddenPoints.ToList();
 
-        var edit = () => challenge.Edit(name, xp, CreateHiddenPoints(hiddenPointCount));
+        var edit = () => challenge.Edit(new string('a', nameLength), xp, CreateHiddenPoints(hiddenPointCount));
 
         edit.Should().Throw<DomainException>();
         challenge.Name.Should().Be("Skrivene fasade");
