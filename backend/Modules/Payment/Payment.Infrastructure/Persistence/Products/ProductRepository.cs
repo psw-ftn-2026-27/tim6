@@ -25,6 +25,13 @@ internal sealed class ProductRepository : IProductRepository
         return _dbContext.Products.FirstOrDefaultAsync(product => product.EntityId == entityId);
     }
 
+    public Task<List<Product>> GetByEntityIdsAsync(List<Guid> entityIds)
+    {
+        return _dbContext.Products
+            .Where(product => entityIds.Contains(product.EntityId))
+            .ToListAsync();
+    }
+
     public void Add(Product product)
     {
         _dbContext.Products.Add(product);

@@ -6,4 +6,5 @@ public interface IPaymentApi
     Task WithdrawProductFromOfferAsync(Guid entityId);
     Task ReturnProductToOfferAsync(Guid entityId);
     Task<int> GetProductPriceAsync(Guid entityId);
+    Task<bool> HasPurchasedAsync(Guid userId, Guid entityId);
 }

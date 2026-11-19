@@ -7,9 +7,18 @@ export interface TransactionDto {
   cancellationReason: string | null;
 }
 
+export interface PaymentDto {
+  id: string;
+  entityId: string;
+  name: string;
+  price: number;
+  paidAt: string;
+}
+
 export interface WalletDto {
   balance: number;
   transactions: TransactionDto[];
+  payments: PaymentDto[];
 }
 
 export interface WalletSummaryDto {
@@ -35,6 +44,7 @@ export interface CancellationDto {
 
 export interface ProductDto {
   id: string;
+  entityId: string;
   name: string;
   price: number;
 }
@@ -52,4 +62,24 @@ export interface CouponDto {
   discountPercentage: number;
   validUntil: string;
   code: string;
+}
+
+export interface CartItemDto {
+  entityId: string;
+  name: string;
+  price: number;
+  isAvailable: boolean;
+}
+
+export interface CartDto {
+  items: CartItemDto[];
+  totalPrice: number;
+  walletBalance: number;
+}
+
+export interface PurchaseDto {
+  id: string;
+  entityId: string;
+  name: string;
+  purchasedAt: string;
 }

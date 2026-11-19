@@ -89,4 +89,48 @@ public sealed class PaymentApiTests : BaseIntegrationTest
 
         await priceLookup.Should().ThrowAsync<NotFoundException>();
     }
+
+    [Fact]
+    public async Task Tourist_has_purchased_a_tour_they_bought()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var paymentApi = scope.ServiceProvider.GetRequiredService<IPaymentApi>();
+
+        var hasPurchased = await paymentApi.HasPurchasedAsync(WalletSeed.ReturningBuyer, PurchaseTokenSeed.ReturningBuyersFreeTour.EntityId);
+
+        hasPurchased.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Tourist_has_purchased_a_tour_they_bought_even_after_it_was_withdrawn_from_the_offer()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var paymentApi = scope.ServiceProvider.GetRequiredService<IPaymentApi>();
+
+        var hasPurchased = await paymentApi.HasPurchasedAsync(WalletSeed.ReturningBuyer, ProductSeed.WithdrawnTour.EntityId);
+
+        hasPurchased.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Tourist_has_not_purchased_a_tour_they_never_bought()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var paymentApi = scope.ServiceProvider.GetRequiredService<IPaymentApi>();
+
+        var hasPurchased = await paymentApi.HasPurchasedAsync(WalletSeed.ReturningBuyer, Guid.NewGuid());
+
+        hasPurchased.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Tourist_has_not_purchased_a_tour_that_another_tourist_bought()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var paymentApi = scope.ServiceProvider.GetRequiredService<IPaymentApi>();
+
+        var hasPurchased = await paymentApi.HasPurchasedAsync(WalletSeed.ReturningBuyer, PurchaseTokenSeed.DemoExplorersPaidTour.EntityId);
+
+        hasPurchased.Should().BeFalse();
+    }
 }

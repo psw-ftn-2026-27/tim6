@@ -1,18 +1,25 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Payment.Application;
+using Payment.Application.Cart;
+using Payment.Application.Carts;
 using Payment.Application.Catalog;
 using Payment.Application.CouponAuthoring;
 using Payment.Application.Coupons;
 using Payment.Application.MyWallet;
 using Payment.Application.Products;
+using Payment.Application.Purchase;
+using Payment.Application.PurchaseTokens;
 using Payment.Application.WalletManagement;
 using Payment.Application.Wallets;
 using Payment.Contracts;
+using Payment.Domain.Carts;
 using Payment.Domain.Coupons;
 using Payment.Infrastructure.Persistence;
+using Payment.Infrastructure.Persistence.Carts;
 using Payment.Infrastructure.Persistence.Coupons;
 using Payment.Infrastructure.Persistence.Products;
+using Payment.Infrastructure.Persistence.PurchaseTokens;
 using Payment.Infrastructure.Persistence.Wallets;
 using Shared.Infrastructure;
 
@@ -33,6 +40,13 @@ public static class PaymentModuleExtensions
         services.AddScoped<IProductReadRepository, ProductReadRepository>();
         services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<ICouponReadRepository, CouponReadRepository>();
+        services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<ICartReadRepository, CartReadRepository>();
+        services.AddScoped<IPurchaseTokenRepository, PurchaseTokenRepository>();
+        services.AddScoped<IPurchaseTokenReadRepository, PurchaseTokenReadRepository>();
+
+        services.AddScoped<CartFiller>();
+        services.AddScoped<CartCheckout>();
 
         services.AddScoped<MyWalletService>();
         services.AddScoped<MyWalletQueries>();
@@ -43,6 +57,10 @@ public static class PaymentModuleExtensions
         services.AddScoped<CouponIssuer>();
         services.AddScoped<CouponAuthoringService>();
         services.AddScoped<CouponAuthoringQueries>();
+        services.AddScoped<CartService>();
+        services.AddScoped<CartQueries>();
+        services.AddScoped<PurchaseService>();
+        services.AddScoped<PurchaseQueries>();
 
         services.AddScoped<IPaymentApi, PaymentApi>();
 
