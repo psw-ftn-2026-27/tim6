@@ -18,4 +18,15 @@ public class LocationTests
 
         creation.Should().Throw<DomainException>();
     }
+
+    [Fact]
+    public void Distance_between_two_known_locations_is_calculated_in_meters()
+    {
+        var equatorAtPrimeMeridian = new Location(0, 0);
+        var oneDegreeEast = new Location(0, 1);
+
+        var distance = equatorAtPrimeMeridian.DistanceTo(oneDegreeEast);
+
+        distance.Should().BeApproximately(111_195, 1);
+    }
 }

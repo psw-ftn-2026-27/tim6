@@ -29,13 +29,15 @@
   @if (tours.isLoading()) {
     <p>Loading tours...</p>
   } @else if (tours.error()) {
-    <p class="error">Could not load tours. Log in and try again.</p>
+    <p class="notice notice--danger" role="alert">Could not load tours. Log in and try again.</p>
   } @else if (visibleTours().length === 0) {
-    <p>No tours match the filter.</p>
+    <div class="empty">
+      <p>No tours match the filter.</p>
+    </div>
   } @else {
     <div class="grid">
       @for (tour of visibleTours(); track tour.id) {
-        <app-tour-card [tour]="tour" />
+        <app-tour-card [tour]="tour" [canStart]="isExplorer()" />
       }
     </div>
   }

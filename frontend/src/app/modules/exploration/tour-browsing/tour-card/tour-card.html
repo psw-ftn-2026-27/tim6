@@ -30,5 +30,8 @@
 
   <p>
     <a class="button" [routerLink]="['/exploration/tours', tour().id]">Details</a>
+    @if (canStart()) {
+      <a class="button" [routerLink]="['/exploration/execution', tour().id]">Start tour</a>
+    }
   </p>
 </article>

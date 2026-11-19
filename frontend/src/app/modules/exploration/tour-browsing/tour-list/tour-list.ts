@@ -16,6 +16,10 @@ import { TourCard } from '../tour-card/tour-card';
 export class TourList {
   protected readonly auth = inject(Auth);
 
+  protected readonly isExplorer = computed(
+    () => this.auth.user()?.roles.includes('explorer') ?? false,
+  );
+
   protected readonly tours = httpResource<PageResult<TourDto>>(
     () => '/api/exploration/tours/published?page=1&pageSize=20',
   );
