@@ -1,0 +1,38 @@
+<div class="stack">
+  <p><a routerLink="/payment">Back</a></p>
+
+  <h1>My coupons</h1>
+
+  <p><a class="button button--primary" routerLink="/payment/coupons/new">Create coupon</a></p>
+
+  @if (coupons.isLoading()) {
+    <p>Loading coupons...</p>
+  } @else if (coupons.error()) {
+    <p class="notice notice--danger" role="alert">Could not load your coupons.</p>
+  } @else {
+    <div class="grid">
+      @for (coupon of coupons.value()?.items ?? []; track coupon.id) {
+        <app-coupon-card [coupon]="coupon" />
+      } @empty {
+        <div class="empty">
+          <p>You do not have any coupons yet.</p>
+        </div>
+      }
+    </div>
+  }
+
+  <p class="pages">
+    <button class="button" type="button" [disabled]="page() <= 1" (click)="previousPage()">
+      Previous
+    </button>
+    <span class="meta">Page {{ page() }} of {{ pageCount() }}</span>
+    <button
+      class="button"
+      type="button"
+      [disabled]="page() >= pageCount()"
+      (click)="nextPage()"
+    >
+      Next
+    </button>
+  </p>
+</div>
