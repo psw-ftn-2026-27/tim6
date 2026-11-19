@@ -20,6 +20,7 @@ export interface BlogDto {
   images: string[];
   status: BlogStatus;
   comments: CommentDto[];
+  score: number;
 }
 
 export interface CreateBlogDto {
@@ -40,6 +41,16 @@ export interface CreateCommentDto {
 
 export interface UpdateCommentDto {
   text: string;
+}
+
+export type VoteSign = 'Up' | 'Down';
+
+export interface CastVoteDto {
+  sign: VoteSign;
+}
+
+export interface MyVoteDto {
+  sign: VoteSign | null;
 }
 
 export type FollowStatus = 'Follow' | 'Pending' | 'Following';
