@@ -26,6 +26,18 @@ public sealed class Transaction : Entity
         CreatedAt = createdAt;
     }
 
+    internal Transaction(int amount, DateTime createdAt) : base(Guid.NewGuid())
+    {
+        if (amount < 1)
+        {
+            throw new DomainException("Spending requires an amount of at least 1.");
+        }
+
+        AdministratorId = Guid.Empty;
+        Amount = -amount;
+        CreatedAt = createdAt;
+    }
+
     internal void Cancel(string reason, DateTime cancelledAt)
     {
         if (IsCancelled)
