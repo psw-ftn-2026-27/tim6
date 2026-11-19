@@ -39,15 +39,12 @@ internal sealed class LocationChallengeReadRepository : ILocationChallengeReadRe
             .ToListAsync();
     }
 
-    // Published challenges the explorer has not solved, without hidden point locations (P10).
+    // Published challenges with the explorer's state on each, without hidden point locations (P10).
+    // A solved challenge stays in the list; its state comes from the explorer's progress, as for quizzes.
     public async Task<PageResult<AvailableLocationChallengeDto>> GetAvailableAsync(Guid explorerId, int page, int pageSize)
     {
         var available = _dbContext.LocationChallenges
-            .Where(challenge => challenge.Status == ChallengeStatus.Published
-                && !_dbContext.LocationChallengeAttempts.Any(attempt =>
-                    attempt.LocationChallengeId == challenge.Id
-                    && attempt.ExplorerId == explorerId
-                    && attempt.CompletedAt != null))
+            .Where(challenge => challenge.Status == ChallengeStatus.Published)
             .OrderByDescending(challenge => challenge.CreatedAt)
             .ThenBy(challenge => challenge.Id);
 
@@ -63,7 +60,9 @@ internal sealed class LocationChallengeReadRepository : ILocationChallengeReadRe
                 _dbContext.LocationChallengeAttempts.Any(attempt =>
                     attempt.LocationChallengeId == challenge.Id
                     && attempt.ExplorerId == explorerId
-                    && attempt.CompletedAt == null)))
+                    && attempt.CompletedAt == null),
+                _dbContext.ChallengeProgresses.Any(progress =>
+                    progress.ChallengeId == challenge.Id && progress.TouristId == explorerId && progress.SolvedAt != null)))
             .ToListAsync();
 
         return new PageResult<AvailableLocationChallengeDto>(items, totalCount);

@@ -15,7 +15,7 @@ public class LocationChallengeSolvingQueryTests : BaseIntegrationTest
     public LocationChallengeSolvingQueryTests(GamesApiFactory factory) : base(factory) { }
 
     [Fact]
-    public async Task Explorer_sees_published_challenges_they_have_not_solved_with_attempts_in_progress_marked()
+    public async Task Explorer_sees_every_published_challenge_marked_as_not_started_in_progress_or_solved()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
 
@@ -25,16 +25,21 @@ public class LocationChallengeSolvingQueryTests : BaseIntegrationTest
         var explorersAttempts = LocationChallengeAttemptSeed.All.Where(attempt => attempt.ExplorerId == WellKnownUsers.Explorer).ToList();
         var expected = LocationChallengeSeed.All
             .Where(challenge => challenge.Status == ChallengeStatus.Published)
-            .Where(challenge => !explorersAttempts.Any(attempt => attempt.LocationChallengeId == challenge.Id && attempt.CompletedAt is not null))
             .Select(challenge => new AvailableLocationChallengeDto(
                 challenge.Id,
                 challenge.Name,
                 new LocationDto(challenge.Location!.Latitude, challenge.Location.Longitude),
                 challenge.Xp,
-                explorersAttempts.Any(attempt => attempt.LocationChallengeId == challenge.Id && attempt.CompletedAt is null)));
+                explorersAttempts.Any(attempt => attempt.LocationChallengeId == challenge.Id && attempt.CompletedAt is null),
+                ChallengeProgressSeed.All.Any(progress =>
+                    progress.ChallengeId == challenge.Id && progress.TouristId == WellKnownUsers.Explorer && progress.IsSolved())));
         challenges!.Items.Should().BeEquivalentTo(expected, options => options.ComparingRecordsByMembers());
-        challenges.Items.Should().Contain(challenge => challenge.Id == LocationChallengeSeed.PublishedBridgeViews.Id && challenge.HasAttemptInProgress);
-        challenges.Items.Should().NotContain(challenge => challenge.Id == LocationChallengeSeed.PublishedSquareStatues.Id);
+        challenges.Items.Should().Contain(challenge => challenge.Id == LocationChallengeSeed.PublishedRiversideDetails.Id
+            && !challenge.HasAttemptInProgress && !challenge.IsSolved);
+        challenges.Items.Should().Contain(challenge => challenge.Id == LocationChallengeSeed.PublishedBridgeViews.Id
+            && challenge.HasAttemptInProgress && !challenge.IsSolved);
+        challenges.Items.Should().Contain(challenge => challenge.Id == LocationChallengeSeed.PublishedSquareStatues.Id
+            && !challenge.HasAttemptInProgress && challenge.IsSolved);
         challenges.Items.Should().NotContain(challenge => challenge.Id == LocationChallengeSeed.RetiredParkSculptures.Id);
     }
 

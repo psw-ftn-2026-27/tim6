@@ -53,8 +53,7 @@ export class AvailableChallenges {
   protected readonly moving = signal(false);
   protected readonly moveError = signal<string | null>(null);
 
-  // The challenge shown in the active section, kept from its card, so the section keeps its
-  // name after a solved challenge leaves the list.
+  // The challenge shown in the active section, kept from its card.
   protected readonly activeChallenge = signal<AvailableLocationChallengeDto | null>(null);
   // The attempt is read only once a challenge is active. The server answers 204 with no body
   // when there is no attempt; the value is then null.
@@ -151,7 +150,7 @@ export class AvailableChallenges {
     try {
       await this.locationChallengeSolving.checkLocation(challenge.id, position);
       this.attempt.reload();
-      // The server decides whether this check solved the challenge; a solved one leaves the list.
+      // The server decides whether this check solved the challenge; its card then shows it as solved.
       this.challenges.reload();
     } catch (failure) {
       this.checkError.set(serverMessage(failure, 'Your location could not be checked.'));

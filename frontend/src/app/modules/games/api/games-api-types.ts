@@ -152,6 +152,7 @@ export interface AvailableLocationChallengeDto {
   location: LocationDto;
   xp: number;
   hasAttemptInProgress: boolean;
+  isSolved: boolean;
 }
 
 export interface AttemptHiddenPointDto {

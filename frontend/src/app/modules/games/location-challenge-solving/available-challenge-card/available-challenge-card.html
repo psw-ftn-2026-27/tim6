@@ -24,14 +24,18 @@
     <p class="error">{{ error() }}</p>
   }
 
-  <div class="actions">
-    <button
-      class="button button--primary"
-      type="button"
-      [disabled]="!canActivate() || pending()"
-      (click)="activate.emit()"
-    >
-      {{ challenge().hasAttemptInProgress ? 'Continue' : 'Activate' }}
-    </button>
-  </div>
+  @if (challenge().isSolved) {
+    <p>You have solved this challenge.</p>
+  } @else {
+    <div class="actions">
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="!canActivate() || pending()"
+        (click)="activate.emit()"
+      >
+        {{ challenge().hasAttemptInProgress ? 'Continue' : 'Activate' }}
+      </button>
+    </div>
+  }
 </article>
