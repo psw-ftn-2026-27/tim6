@@ -60,14 +60,29 @@ public sealed class Wallet : AggregateRoot
 
     public void Pay(IReadOnlyList<CartItem> items, IReadOnlyDictionary<Guid, Guid> ownerIds, DateTime paidAt)
     {
-        if (Balance() < items.Sum(item => item.Price))
+        Pay(
+            items.Select(item => new CartItemCalculation(
+                item.EntityId,
+                item.Name,
+                item.Price,
+                0,
+                item.Price,
+                item.Price,
+                null)).ToList(),
+            ownerIds,
+            paidAt);
+    }
+
+    public void Pay(IReadOnlyList<CartItemCalculation> items, IReadOnlyDictionary<Guid, Guid> ownerIds, DateTime paidAt)
+    {
+        if (Balance() < items.Sum(item => item.WalletCharge))
         {
             throw new DomainException("The wallet balance is not enough to pay for the items.");
         }
 
         foreach (var item in items)
         {
-            _payments.Add(new Payment(item.EntityId, item.Name, ownerIds[item.EntityId], item.Price, paidAt));
+            _payments.Add(new Payment(item.EntityId, item.Name, ownerIds[item.EntityId], item.WalletCharge, paidAt));
         }
     }
 }

@@ -1,4 +1,6 @@
 using Payment.Application.Carts;
+using Payment.Application.Coupons;
+using Payment.Application.GiftCards;
 using Payment.Application.Products;
 using Payment.Application.PurchaseTokens;
 using Payment.Application.Wallets;
@@ -14,6 +16,8 @@ public sealed class PurchaseService
     private readonly IWalletRepository _walletRepository;
     private readonly IProductRepository _productRepository;
     private readonly IPurchaseTokenRepository _purchaseTokenRepository;
+    private readonly ICouponRepository _couponRepository;
+    private readonly IGiftCardRepository _giftCardRepository;
     private readonly CartCheckout _cartCheckout;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -22,6 +26,8 @@ public sealed class PurchaseService
         IWalletRepository walletRepository,
         IProductRepository productRepository,
         IPurchaseTokenRepository purchaseTokenRepository,
+        ICouponRepository couponRepository,
+        IGiftCardRepository giftCardRepository,
         CartCheckout cartCheckout,
         IUnitOfWork unitOfWork)
     {
@@ -29,11 +35,13 @@ public sealed class PurchaseService
         _walletRepository = walletRepository;
         _productRepository = productRepository;
         _purchaseTokenRepository = purchaseTokenRepository;
+        _couponRepository = couponRepository;
+        _giftCardRepository = giftCardRepository;
         _cartCheckout = cartCheckout;
         _unitOfWork = unitOfWork;
     }
 
-    public async Task PurchaseCartAsync(Guid userId)
+    public async Task PurchaseCartAsync(Guid userId, string? couponCode = null, Guid? giftCardId = null)
     {
         var cart = await _cartRepository.GetByUserIdAsync(userId);
         if (cart is null)
@@ -49,13 +57,37 @@ public sealed class PurchaseService
         }
 
         var products = await _productRepository.GetByEntityIdsAsync(cart.Items.Select(item => item.EntityId).ToList());
+        var coupon = await GetCouponAsync(couponCode);
+        var giftCard = await GetGiftCardAsync(giftCardId);
 
-        var tokens = _cartCheckout.Purchase(cart, wallet, products, DateTime.UtcNow);
+        var tokens = _cartCheckout.Purchase(cart, wallet, products, coupon, giftCard, DateTime.UtcNow);
         foreach (var token in tokens)
         {
             _purchaseTokenRepository.Add(token);
         }
 
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    private async Task<Payment.Domain.Coupons.Coupon?> GetCouponAsync(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return null;
+        }
+
+        return await _couponRepository.GetByCodeAsync(code)
+            ?? throw new NotFoundException($"Coupon does not exist.");
+    }
+
+    private async Task<Payment.Domain.GiftCards.GiftCard?> GetGiftCardAsync(Guid? id)
+    {
+        if (id is null)
+        {
+            return null;
+        }
+
+        return await _giftCardRepository.GetByIdAsync(id.Value)
+            ?? throw new NotFoundException($"Gift card does not exist.");
     }
 }

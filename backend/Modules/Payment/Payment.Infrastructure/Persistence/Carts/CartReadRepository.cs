@@ -22,7 +22,9 @@ internal sealed class CartReadRepository : ICartReadRepository
                 item.EntityId,
                 item.Name,
                 item.Price,
-                _dbContext.Products.Any(product => product.EntityId == item.EntityId && product.IsInOffer)))
+                _dbContext.Products.Any(product => product.EntityId == item.EntityId && product.IsInOffer),
+                0,
+                item.Price))
             .ToListAsync();
     }
 }

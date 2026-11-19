@@ -1,17 +1,33 @@
-.total__amount {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  margin: 0;
-}
-
-// The wallet balance stands next to the total price, so the explorer sees whether the EC suffice.
-.totals {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-6);
-}
-
 .links {
   display: flex;
   gap: var(--space-4);
+}
+
+.benefits {
+  max-width: 42rem;
+}
+
+.benefits + app-cart-receipt {
+  display: block;
+  margin-top: var(--space-4);
+}
+
+.benefit-row {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.benefit-field {
+  flex: 1 1 16rem;
+}
+
+.purchase-success {
+  color: var(--color-success);
+  font-weight: 400;
+}
+
+.receipt-error {
+  margin-top: var(--space-4);
 }

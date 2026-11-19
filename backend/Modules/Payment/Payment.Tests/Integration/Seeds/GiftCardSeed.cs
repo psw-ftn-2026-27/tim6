@@ -7,6 +7,7 @@ internal static class GiftCardSeed
     public static readonly GiftCard ValidCardSentByDemoExplorer;
     public static readonly GiftCard ExpiredCardReceivedByDemoExplorer;
     public static readonly GiftCard RedeemedCardReceivedByDemoExplorer;
+    public static readonly GiftCard ValidCardReceivedByReturningBuyer;
 
     static GiftCardSeed()
     {
@@ -29,12 +30,19 @@ internal static class GiftCardSeed
             "Uživaj!",
             DateTime.UtcNow.AddYears(-4));
         RedeemedCardReceivedByDemoExplorer.Redeem(DateTime.UtcNow.AddYears(-3));
+        ValidCardReceivedByReturningBuyer = new GiftCard(
+            WalletSeed.IdentityDemoSecondExplorer,
+            WalletSeed.ReturningBuyer,
+            250,
+            "Srećan put!",
+            DateTime.UtcNow.AddDays(-1));
     }
 
     public static GiftCard[] All =>
     [
         ValidCardSentByDemoExplorer,
         ExpiredCardReceivedByDemoExplorer,
-        RedeemedCardReceivedByDemoExplorer
+        RedeemedCardReceivedByDemoExplorer,
+        ValidCardReceivedByReturningBuyer
     ];
 }

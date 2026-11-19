@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using FluentAssertions;
 using Payment.Application.Cart;
+using Payment.Infrastructure.Persistence;
 using Payment.Tests.Integration.Seeds;
 using Shared.Tests;
 using Xunit;
@@ -20,8 +21,8 @@ public class CartQueryTests : BaseIntegrationTest
 
         var cart = await client.GetFromJsonAsync<CartDto>("/api/payment/carts/mine", JsonOptions);
 
-        cart!.Items.Should().ContainEquivalentOf(new CartItemDto(paidTour.EntityId, paidTour.Name, paidTour.Price, true));
-        cart.Items.Should().ContainEquivalentOf(new CartItemDto(withdrawnTour.EntityId, withdrawnTour.Name, withdrawnTour.Price, false));
+        cart!.Items.Should().ContainEquivalentOf(new CartItemDto(paidTour.EntityId, paidTour.Name, paidTour.Price, true, 0, paidTour.Price));
+        cart.Items.Should().ContainEquivalentOf(new CartItemDto(withdrawnTour.EntityId, withdrawnTour.Name, withdrawnTour.Price, false, 0, withdrawnTour.Price));
         cart.Items.Should().NotContain(item => item.EntityId == ProductSeed.FreeTourInOffer.EntityId);
         cart.TotalPrice.Should().Be(CartSeed.ExplorersCartWithPaidAndWithdrawnTour.TotalPrice());
     }
@@ -55,5 +56,28 @@ public class CartQueryTests : BaseIntegrationTest
         var cart = await client.GetFromJsonAsync<CartDto>("/api/payment/carts/mine", JsonOptions);
 
         cart!.WalletBalance.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Buyer_previews_item_prices_after_coupon_gift_card_coverage_wallet_charge_and_gift_card_waste()
+    {
+        var client = Factory.CreateClientFor(WalletSeed.ReturningBuyer, "explorer");
+        var product = ProductSeed.PaidTourInOffer;
+        var coupon = CouponSeed.ExplorersAllProductsCoupon;
+        var giftCard = GiftCardSeed.ValidCardReceivedByReturningBuyer;
+
+        var cart = await client.GetFromJsonAsync<CartDto>(
+            $"/api/payment/carts/mine?couponCode={coupon.Code}&giftCardId={giftCard.Id}",
+            JsonOptions);
+
+        cart!.Items.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new CartItemDto(product.EntityId, product.Name, product.Price, true, 30, 270));
+        cart.TotalAfterCoupon.Should().Be(270);
+        cart.GiftCardCoverage.Should().Be(250);
+        cart.WalletCharge.Should().Be(20);
+        cart.GiftCardWaste.Should().Be(0);
+        using var assertContext = Factory.CreateContext<PaymentDbContext>();
+        assertContext.Coupons.Single(stored => stored.Id == coupon.Id).RedeemedByUserIds.Should().BeEmpty();
+        assertContext.GiftCards.Single(stored => stored.Id == giftCard.Id).IsRedeemed.Should().BeFalse();
     }
 }

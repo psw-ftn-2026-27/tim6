@@ -20,9 +20,11 @@ public sealed class PurchaseController : ControllerBase
     }
 
     [HttpPost("mine")]
-    public async Task<ActionResult> PurchaseCart()
+    public async Task<ActionResult> PurchaseCart(
+        [FromQuery] string? couponCode = null,
+        [FromQuery] Guid? giftCardId = null)
     {
-        await _purchaseService.PurchaseCartAsync(User.GetUserId());
+        await _purchaseService.PurchaseCartAsync(User.GetUserId(), couponCode, giftCardId);
         return NoContent();
     }
 

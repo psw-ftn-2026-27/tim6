@@ -1,25 +1,39 @@
 using Payment.Application.Carts;
+using Payment.Application.Coupons;
+using Payment.Application.GiftCards;
+using Payment.Application.Products;
 using Payment.Application.Wallets;
+using Payment.Domain.Carts;
+using Shared.Domain.Exceptions;
 
 namespace Payment.Application.Cart;
 
 public sealed class CartQueries
 {
-    private readonly ICartReadRepository _cartReadRepository;
     private readonly ICartRepository _cartRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly IProductRepository _productRepository;
+    private readonly ICouponRepository _couponRepository;
+    private readonly IGiftCardRepository _giftCardRepository;
+    private readonly CartCheckout _cartCheckout;
 
     public CartQueries(
-        ICartReadRepository cartReadRepository,
         ICartRepository cartRepository,
-        IWalletRepository walletRepository)
+        IWalletRepository walletRepository,
+        IProductRepository productRepository,
+        ICouponRepository couponRepository,
+        IGiftCardRepository giftCardRepository,
+        CartCheckout cartCheckout)
     {
-        _cartReadRepository = cartReadRepository;
         _cartRepository = cartRepository;
         _walletRepository = walletRepository;
+        _productRepository = productRepository;
+        _couponRepository = couponRepository;
+        _giftCardRepository = giftCardRepository;
+        _cartCheckout = cartCheckout;
     }
 
-    public async Task<CartDto> GetAsync(Guid userId)
+    public async Task<CartDto> GetAsync(Guid userId, string? couponCode = null, Guid? giftCardId = null)
     {
         var wallet = await _walletRepository.GetByUserIdAsync(userId);
         var walletBalance = wallet is null ? 0 : wallet.Balance();
@@ -27,10 +41,50 @@ public sealed class CartQueries
         var cart = await _cartRepository.GetByUserIdAsync(userId);
         if (cart is null)
         {
-            return new CartDto([], 0, walletBalance);
+            return new CartDto([], 0, walletBalance, 0, 0, 0, 0);
         }
 
-        var items = await _cartReadRepository.GetItemsAsync(cart.Id);
-        return new CartDto(items, cart.TotalPrice(), walletBalance);
+        var products = await _productRepository.GetByEntityIdsAsync(cart.Items.Select(item => item.EntityId).ToList());
+        var coupon = await GetCouponAsync(couponCode);
+        var giftCard = await GetGiftCardAsync(giftCardId);
+        var calculation = _cartCheckout.CalculateTotal(cart, products, coupon, giftCard, DateTime.UtcNow);
+        var items = calculation.Items.Select(item => new CartItemDto(
+            item.EntityId,
+            item.Name,
+            item.OriginalPrice,
+            products.Any(product => product.EntityId == item.EntityId && product.IsInOffer),
+            item.CouponDiscount,
+            item.PriceAfterCoupon)).ToList();
+
+        return new CartDto(
+            items,
+            cart.TotalPrice(),
+            walletBalance,
+            calculation.TotalAfterCoupon,
+            calculation.GiftCardCoverage,
+            calculation.WalletCharge,
+            calculation.GiftCardWaste);
+    }
+
+    private async Task<Payment.Domain.Coupons.Coupon?> GetCouponAsync(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return null;
+        }
+
+        return await _couponRepository.GetByCodeAsync(code)
+            ?? throw new NotFoundException($"Coupon does not exist.");
+    }
+
+    private async Task<Payment.Domain.GiftCards.GiftCard?> GetGiftCardAsync(Guid? id)
+    {
+        if (id is null)
+        {
+            return null;
+        }
+
+        return await _giftCardRepository.GetByIdAsync(id.Value)
+            ?? throw new NotFoundException($"Gift card does not exist.");
     }
 }

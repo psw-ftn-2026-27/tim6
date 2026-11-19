@@ -39,6 +39,31 @@ public class CouponTests
         creation.Should().Throw<DomainException>();
     }
 
+    [Fact]
+    public void Expired_coupon_cannot_be_redeemed()
+    {
+        var coupon = CreateCoupon(20, CreatedAt.AddDays(1));
+
+        var redemption = () => coupon.Redeem(WellKnownUsers.Explorer, CreatedAt.AddDays(2));
+
+        redemption.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Coupon_cannot_be_redeemed_twice_by_the_same_buyer_but_another_buyer_can_redeem_it()
+    {
+        var coupon = CreateCoupon(20, CreatedAt.AddDays(2));
+        coupon.Redeem(WellKnownUsers.Explorer, CreatedAt.AddHours(1));
+
+        var repeatedRedemption = () => coupon.Redeem(WellKnownUsers.Explorer, CreatedAt.AddHours(2));
+        var otherBuyerRedemption = () => coupon.Redeem(WellKnownUsers.SecondExplorer, CreatedAt.AddHours(2));
+
+        repeatedRedemption.Should().Throw<DomainException>();
+        otherBuyerRedemption.Should().NotThrow();
+        coupon.RedeemedByUserIds.Should().BeEquivalentTo(
+            new[] { WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer });
+    }
+
     private static Coupon CreateCoupon(int discountPercentage, DateTime validUntil)
     {
         return new Coupon(

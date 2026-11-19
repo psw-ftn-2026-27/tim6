@@ -91,12 +91,18 @@ export interface CartItemDto {
   name: string;
   price: number;
   isAvailable: boolean;
+  couponDiscount: number;
+  priceAfterCoupon: number;
 }
 
 export interface CartDto {
   items: CartItemDto[];
   totalPrice: number;
   walletBalance: number;
+  totalAfterCoupon: number;
+  giftCardCoverage: number;
+  walletCharge: number;
+  giftCardWaste: number;
 }
 
 export interface PurchaseDto {
