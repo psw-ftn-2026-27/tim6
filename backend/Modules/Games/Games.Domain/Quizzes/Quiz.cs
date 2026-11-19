@@ -8,7 +8,6 @@ public sealed class Quiz : Challenge
     private const int MaxNameLength = 200;
     private const int MinQuestions = 1;
     private const int MaxQuestions = 20;
-    private const int ActivationRadius = 50;
 
     private readonly List<Question> _questions = [];
 
@@ -16,6 +15,9 @@ public sealed class Quiz : Challenge
     public string Instructions { get; private set; }
     public int Xp { get; private set; }
     public IReadOnlyList<Question> Questions => _questions;
+
+    // Every quiz is activated within the same radius, so a read use case can show it without loading a quiz.
+    public const int ActivationRadius = 50;
 
     protected override string KindName => "quiz";
     public override int ActivationRadiusInMeters => ActivationRadius;

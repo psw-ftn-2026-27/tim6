@@ -15,6 +15,7 @@ public class QuizSolvingCommandTests : BaseIntegrationTest
     private static readonly LocationDto AtFortressGates = new(45.2520, 19.8610);
     private static readonly LocationDto FarFromFortressGates = new(45.2620, 19.8610);
     private static readonly LocationDto AtMuseumStreet = new(45.2560, 19.8470);
+    private static readonly LocationDto AtOldTown = new(45.2551, 19.8451);
 
     private static readonly List<SelectedAnswerDto> AllCorrectFortressGatesAnswers = [new(0, 0), new(1, 0)];
 
@@ -46,6 +47,38 @@ public class QuizSolvingCommandTests : BaseIntegrationTest
             stored.Id == ChallengeProgressSeed.ExplorerHalfwayThroughFortressGates.Id);
         progress.EarnedXp.Should().Be(QuizSeed.PublishedFortressGates.Xp);
         progress.SolvedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task First_attempt_on_a_quiz_starts_the_explorers_progress_on_it()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var quiz = QuizSeed.PublishedOldTown;
+
+        var response = await client.PostAsJsonAsync($"/api/games/quizzes/{quiz.Id}/attempts",
+            new SubmitAttemptDto(AtOldTown, [new SelectedAnswerDto(0, 0)]), JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var assertContext = Factory.CreateContext<GamesDbContext>();
+        var progress = assertContext.ChallengeProgresses.Single(stored =>
+            stored.ChallengeId == quiz.Id && stored.TouristId == WellKnownUsers.Explorer);
+        progress.EarnedXp.Should().Be(quiz.Xp);
+        progress.SolvedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Answers_for_a_quiz_that_does_not_exist_are_rejected()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        using var arrangeContext = Factory.CreateContext<GamesDbContext>();
+        var attemptCountBefore = arrangeContext.QuizAttempts.Count();
+
+        var response = await client.PostAsJsonAsync($"/api/games/quizzes/{Guid.NewGuid()}/attempts",
+            new SubmitAttemptDto(AtFortressGates, AllCorrectFortressGatesAnswers), JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        using var assertContext = Factory.CreateContext<GamesDbContext>();
+        assertContext.QuizAttempts.Count().Should().Be(attemptCountBefore);
     }
 
     [Fact]

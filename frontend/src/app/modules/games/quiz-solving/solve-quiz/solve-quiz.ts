@@ -77,18 +77,22 @@ export class SolveQuiz {
       return;
     }
 
-    const answers = [...this.answers(), { questionIndex: this.questionIndex(), optionIndex }];
-
-    if (answers.length < quiz.questions.length) {
-      this.answers.set(answers);
-      return;
+    this.answers.set([...this.answers(), { questionIndex: this.questionIndex(), optionIndex }]);
+    if (this.answers().length === quiz.questions.length) {
+      await this.submit(quiz.id);
     }
+  }
 
-    await this.submit(quiz.id, answers);
+  // After a refused submit the same answers are sent again, with the current position.
+  protected async resend(): Promise<void> {
+    const quiz = this.quiz.hasValue() ? this.quiz.value() : null;
+    if (quiz !== null && !this.submitting()) {
+      await this.submit(quiz.id);
+    }
   }
 
   // The last answer sends one command with all answers and the current position.
-  private async submit(quizId: string, answers: SelectedAnswerDto[]): Promise<void> {
+  private async submit(quizId: string): Promise<void> {
     const position = this.explorerPosition();
     if (position === null) {
       return;
@@ -99,9 +103,8 @@ export class SolveQuiz {
     try {
       const attemptId = await this.quizSolving.submitAttempt(quizId, {
         position: { latitude: position.latitude, longitude: position.longitude },
-        answers,
+        answers: this.answers(),
       });
-      this.answers.set(answers);
       this.attemptId.set(attemptId);
     } catch (failure) {
       this.submitError.set(serverMessage(failure, 'The answers could not be sent.'));

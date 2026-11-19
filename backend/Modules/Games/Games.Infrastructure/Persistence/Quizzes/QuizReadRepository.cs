@@ -49,8 +49,6 @@ internal sealed class QuizReadRepository : IQuizReadRepository
     {
         return _dbContext.Quizzes
             .Where(quiz => quiz.Status == ChallengeStatus.Published)
-            .OrderByDescending(quiz => quiz.CreatedAt)
-            .ThenBy(quiz => quiz.Id)
             .Select(quiz => new PublishedQuizLocationDto(
                 quiz.Id,
                 quiz.Name,

@@ -3,6 +3,7 @@ using Games.Application.Challenges;
 using Games.Application.QuizAttempts;
 using Games.Application.Quizzes;
 using Games.Domain.Challenges;
+using Games.Domain.Quizzes;
 using Shared.Domain.Exceptions;
 
 namespace Games.Application.QuizSolving;
@@ -37,6 +38,7 @@ public sealed class QuizSolvingQueries
                 quiz.Name,
                 quiz.Xp,
                 new Location(quiz.Location.Latitude, quiz.Location.Longitude).DistanceTo(touristLocation),
+                Quiz.ActivationRadius,
                 quiz.IsSolved))
             .OrderBy(quiz => quiz.DistanceInMeters)
             .ToList();
@@ -49,11 +51,7 @@ public sealed class QuizSolvingQueries
         {
             throw new NotFoundException($"Quiz {quizId} does not exist.");
         }
-        if (!quiz.CanBeActivatedFrom(new Location(position.Latitude, position.Longitude)))
-        {
-            throw new DomainException(
-                $"Only a published quiz within {quiz.ActivationRadiusInMeters} m of the tourist can be activated.");
-        }
+        quiz.EnsureCanBeActivatedFrom(new Location(position.Latitude, position.Longitude));
         var progress = await _progressRepository.GetAsync(quiz.Id, touristId);
         if (progress is not null && progress.IsSolved())
         {

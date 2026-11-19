@@ -35,11 +35,7 @@ public sealed class QuizSolvingService
         {
             throw new NotFoundException($"Quiz {quizId} does not exist.");
         }
-        if (!quiz.CanBeActivatedFrom(new Location(dto.Position.Latitude, dto.Position.Longitude)))
-        {
-            throw new DomainException(
-                $"Only a published quiz within {quiz.ActivationRadiusInMeters} m of the tourist can be solved.");
-        }
+        quiz.EnsureCanBeActivatedFrom(new Location(dto.Position.Latitude, dto.Position.Longitude));
 
         var answers = dto.Answers
             .Select(answer => new SelectedAnswer(answer.QuestionIndex, answer.OptionIndex))

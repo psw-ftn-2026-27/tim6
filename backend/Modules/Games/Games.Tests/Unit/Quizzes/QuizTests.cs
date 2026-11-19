@@ -307,9 +307,9 @@ public class QuizTests
     {
         var quiz = CreatePublishedQuiz();
 
-        var canBeActivated = quiz.CanBeActivatedFrom(new Location(45.2517 + latitudeOffset, 19.8619));
+        var activation = () => quiz.EnsureCanBeActivatedFrom(new Location(45.2517 + latitudeOffset, 19.8619));
 
-        canBeActivated.Should().BeTrue();
+        activation.Should().NotThrow();
     }
 
     [Fact]
@@ -317,9 +317,9 @@ public class QuizTests
     {
         var quiz = CreatePublishedQuiz();
 
-        var canBeActivated = quiz.CanBeActivatedFrom(new Location(45.2517 + 0.0005, 19.8619));
+        var activation = () => quiz.EnsureCanBeActivatedFrom(new Location(45.2517 + 0.0005, 19.8619));
 
-        canBeActivated.Should().BeFalse();
+        activation.Should().Throw<DomainException>();
     }
 
     [Fact]
@@ -327,8 +327,8 @@ public class QuizTests
     {
         var quiz = CreateRetiredQuiz();
 
-        var canBeActivated = quiz.CanBeActivatedFrom(new Location(45.2517, 19.8619));
+        var activation = () => quiz.EnsureCanBeActivatedFrom(new Location(45.2517, 19.8619));
 
-        canBeActivated.Should().BeFalse();
+        activation.Should().Throw<DomainException>();
     }
 }

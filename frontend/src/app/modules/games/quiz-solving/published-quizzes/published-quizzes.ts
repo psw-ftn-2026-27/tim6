@@ -11,9 +11,6 @@ import {
 import { serverMessage } from '../../../../shared/util/server-message';
 import { PublishedQuizDto } from '../../api/games-api-types';
 
-// Mirrors the quiz activation radius the server enforces; used only to draw the circle.
-const QUIZ_ACTIVATION_RADIUS_METERS = 50;
-
 // A temporary list of published quizzes; the challenge map replaces it later.
 @Component({
   imports: [GeographicMap, RouterLink],
@@ -37,12 +34,6 @@ export class PublishedQuizzes {
       : null,
   );
   // A circle of the quiz activation radius around the explorer, so the map centres on them.
-  protected readonly activationCircle = computed<MapCircle | null>(() => {
-    const position = this.explorerPosition();
-    return position === null
-      ? null
-      : { center: position, radiusMeters: QUIZ_ACTIVATION_RADIUS_METERS };
-  });
   protected readonly moving = signal(false);
   protected readonly moveError = signal<string | null>(null);
 
@@ -52,6 +43,14 @@ export class PublishedQuizzes {
     return position === null
       ? undefined
       : `/api/games/quizzes/published?latitude=${position.latitude}&longitude=${position.longitude}`;
+  });
+  // The radius comes from the nearest quiz, the first in the list; with no quizzes there is no circle.
+  protected readonly activationCircle = computed<MapCircle | null>(() => {
+    const position = this.explorerPosition();
+    const nearest = this.quizzes.hasValue() ? (this.quizzes.value()[0] ?? null) : null;
+    return position === null || nearest === null
+      ? null
+      : { center: position, radiusMeters: nearest.activationRadiusInMeters };
   });
   protected readonly listError = computed(() =>
     this.quizzes.error()

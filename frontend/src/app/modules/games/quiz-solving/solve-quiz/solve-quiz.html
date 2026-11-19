@@ -13,6 +13,9 @@
     <p>Loading the quiz...</p>
   } @else if (submitError()) {
     <p class="error">{{ submitError() }}</p>
+    <div>
+      <button class="button button--primary" type="button" (click)="resend()">Try again</button>
+    </div>
   } @else if (attemptId() !== null) {
     @if (resultError()) {
       <p class="error">{{ resultError() }}</p>
@@ -33,6 +36,8 @@
         [pending]="submitting()"
         (answered)="next($event)"
       />
+    } @else if (submitting()) {
+      <p>Sending your answers...</p>
     }
   }
 </div>

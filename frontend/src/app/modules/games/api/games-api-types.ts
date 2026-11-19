@@ -83,6 +83,7 @@ export interface PublishedQuizDto {
   name: string;
   xp: number;
   distanceInMeters: number;
+  activationRadiusInMeters: number;
   isSolved: boolean;
 }
 

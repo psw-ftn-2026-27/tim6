@@ -43,7 +43,18 @@
               </p>
             </div>
             @if (!quiz.isSolved) {
-              <a class="button" [routerLink]="['/games/quizzes', quiz.id, 'solve']">Activate</a>
+              @if (quiz.distanceInMeters <= quiz.activationRadiusInMeters) {
+                <a class="button" [routerLink]="['/games/quizzes', quiz.id, 'solve']">Activate</a>
+              } @else {
+                <button
+                  class="button"
+                  type="button"
+                  disabled
+                  title="Come within {{ quiz.activationRadiusInMeters }} m to activate"
+                >
+                  Activate
+                </button>
+              }
             }
           </li>
         }

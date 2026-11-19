@@ -81,11 +81,17 @@ public abstract class Challenge : AggregateRoot
         Status = ChallengeStatus.Archived;
     }
 
-    public bool CanBeActivatedFrom(Location position)
+    // A tourist activates only a published challenge, and only from within its activation radius.
+    public void EnsureCanBeActivatedFrom(Location position)
     {
-        return Status == ChallengeStatus.Published
-            && Location is not null
-            && Location.DistanceTo(position) <= ActivationRadiusInMeters;
+        if (Status != ChallengeStatus.Published || Location is null)
+        {
+            throw new DomainException($"Only a published {KindName} can be activated.");
+        }
+        if (Location.DistanceTo(position) > ActivationRadiusInMeters)
+        {
+            throw new DomainException($"A {KindName} can be activated only within {ActivationRadiusInMeters} m of it.");
+        }
     }
 
     public void Delete()
