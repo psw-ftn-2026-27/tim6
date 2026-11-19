@@ -45,4 +45,15 @@ public class ClubMembershipQueryTests : BaseIntegrationTest
         membership!.Status.Should().Be(ClubMembershipStatus.Member);
         membership.Role.Should().Be(ClubRole.Owner);
     }
+
+    [Fact]
+    public async Task Invited_user_sees_the_invitation_of_the_club_that_invited_them()
+    {
+        var client = Factory.CreateClientFor(BlogSeed.IdentityDemoExplorer, "explorer");
+
+        var invitations = await client.GetFromJsonAsync<List<ReceivedClubInvitationDto>>(
+            "/api/social/clubs/invitations", JsonOptions);
+
+        invitations!.Select(invitation => invitation.ClubId).Should().Contain(ClubSeed.ClubWithDemoExplorersInvitation.Id);
+    }
 }

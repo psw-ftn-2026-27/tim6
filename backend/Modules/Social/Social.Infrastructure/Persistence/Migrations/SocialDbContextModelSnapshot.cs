@@ -253,6 +253,29 @@ namespace Social.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Social.Domain.Clubs.Club", b =>
                 {
+                    b.OwnsMany("Social.Domain.Clubs.ClubInvitation", "Invitations", b1 =>
+                        {
+                            b1.Property<Guid>("ClubId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<DateTime>("SentAt");
+
+                            b1.Property<Guid>("UserId");
+
+                            b1.HasKey("ClubId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Clubs", "social");
+
+                            b1
+                                .ToJson("Invitations")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ClubId");
+                        });
+
                     b.OwnsMany("Social.Domain.Clubs.ClubJoinRequest", "JoinRequests", b1 =>
                         {
                             b1.Property<Guid>("ClubId");
@@ -275,6 +298,8 @@ namespace Social.Infrastructure.Persistence.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("ClubId");
                         });
+
+                    b.Navigation("Invitations");
 
                     b.Navigation("JoinRequests");
                 });

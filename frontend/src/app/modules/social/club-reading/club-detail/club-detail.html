@@ -41,6 +41,11 @@
               >Join requests</a
             >
             <a class="button" [routerLink]="['/social/clubs', club.id, 'members']">Members</a>
+            @if (membershipDto.role === 'Owner') {
+              <a class="button" [routerLink]="['/social/clubs', club.id, 'invitations']"
+                >Invitations</a
+              >
+            }
           </p>
         }
       }

@@ -22,4 +22,9 @@ public sealed class ClubMembershipQueries
 
         return membership;
     }
+
+    public Task<List<ReceivedClubInvitationDto>> GetMyInvitationsAsync(Guid userId)
+    {
+        return _clubReadRepository.GetInvitationsForUserAsync(userId);
+    }
 }

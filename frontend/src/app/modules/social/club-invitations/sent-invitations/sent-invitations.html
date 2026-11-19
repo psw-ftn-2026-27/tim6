@@ -1,0 +1,69 @@
+<div class="stack">
+  <p><a [routerLink]="['/social/clubs', id()]">Back to club</a></p>
+
+  <h1>Invitations</h1>
+
+  <form class="stack" (submit)="invite($event)">
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" [formField]="form.email" />
+      @if (form.email().touched()) {
+        @for (message of form.email().errors(); track $index) {
+          <p class="error">{{ message.message }}</p>
+        }
+      }
+    </div>
+
+    <div>
+      <button class="button button--primary" type="submit" [disabled]="pending()">Invite</button>
+    </div>
+
+    @if (inviteError()) {
+      <p class="error">{{ inviteError() }}</p>
+    }
+  </form>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (invitations.isLoading()) {
+    <p>Loading invitations...</p>
+  } @else if (invitations.error()) {
+    <p class="error">{{ loadError() }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">User</th>
+            <th scope="col">Sent</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invitation of invitations.value() ?? []; track invitation.userId) {
+            <tr>
+              <td>{{ invitation.userEmail ?? invitation.userId }}</td>
+              <td class="sent">{{ formatDate(invitation.sentAt) }}</td>
+              <td>
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending()"
+                  (click)="withdraw(invitation.userId)"
+                >
+                  Withdraw
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3">No pending invitations.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

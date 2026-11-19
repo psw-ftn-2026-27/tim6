@@ -15,4 +15,12 @@ export class ClubReading {
   async withdrawJoinRequest(id: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${BASE_URL}/${id}/join-request`));
   }
+
+  async acceptInvitation(id: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/invitation/accept`, {}));
+  }
+
+  async rejectInvitation(id: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/invitation/reject`, {}));
+  }
 }
