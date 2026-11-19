@@ -33,4 +33,16 @@ public class TourExecutionTests
 
         abandonment.Should().Throw<DomainException>();
     }
+
+    [Fact]
+    public void Key_point_that_is_already_completed_cannot_be_completed_again()
+    {
+        var execution = CreateActiveExecution();
+        var keyPointId = Guid.NewGuid();
+        execution.CompleteKeyPoint(keyPointId);
+
+        var completion = () => execution.CompleteKeyPoint(keyPointId);
+
+        completion.Should().Throw<DomainException>();
+    }
 }

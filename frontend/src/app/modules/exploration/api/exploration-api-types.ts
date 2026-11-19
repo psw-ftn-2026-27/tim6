@@ -115,8 +115,18 @@ export interface NextKeyPointDto {
   location: LocationDto;
 }
 
+export type TourExecutionStatus = 'Active' | 'Completed' | 'Abandoned';
+
+export interface UnlockedKeyPointDto {
+  name: string;
+  location: LocationDto;
+  secret: string | null;
+}
+
 export interface TourExecutionDto {
   id: string;
   tourId: string;
-  nextKeyPoint: NextKeyPointDto;
+  status: TourExecutionStatus;
+  nextKeyPoint: NextKeyPointDto | null;
+  lastReachedKeyPoint: UnlockedKeyPointDto | null;
 }

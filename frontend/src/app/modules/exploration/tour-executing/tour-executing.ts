@@ -16,4 +16,8 @@ export class TourExecuting {
   async abandon(tourId: string): Promise<void> {
     await firstValueFrom(this.http.post<void>(`${BASE_URL}/active/${tourId}/abandon`, {}));
   }
+
+  async reportPosition(tourId: string, position: LocationDto): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/active/${tourId}/position`, position));
+  }
 }

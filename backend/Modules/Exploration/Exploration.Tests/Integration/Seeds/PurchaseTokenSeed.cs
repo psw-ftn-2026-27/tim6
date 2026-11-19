@@ -10,6 +10,8 @@ internal static class PurchaseTokenSeed
     public static readonly PurchaseToken ExplorersVineyards = new(WellKnownUsers.Explorer, TourSeed.PublishedVineyards.Id, TourSeed.PublishedVineyards.Name, PurchaseTime);
     public static readonly PurchaseToken SecondExplorersVineyards = new(WellKnownUsers.SecondExplorer, TourSeed.PublishedVineyards.Id, TourSeed.PublishedVineyards.Name, PurchaseTime);
     public static readonly PurchaseToken SecondExplorersMonasteries = new(WellKnownUsers.SecondExplorer, TourSeed.PublishedMonasteries.Id, TourSeed.PublishedMonasteries.Name, PurchaseTime);
+    public static readonly PurchaseToken ExplorersFortressUnderground = new(WellKnownUsers.Explorer, TourSeed.PublishedFortressUndergroundWithPreview.Id, TourSeed.PublishedFortressUndergroundWithPreview.Name, PurchaseTime);
+    public static readonly PurchaseToken ThirdExplorersFortressUnderground = new(TourExecutionSeed.ThirdExplorer, TourSeed.PublishedFortressUndergroundWithPreview.Id, TourSeed.PublishedFortressUndergroundWithPreview.Name, PurchaseTime);
 
-    public static PurchaseToken[] All => [ExplorersVineyards, SecondExplorersVineyards, SecondExplorersMonasteries];
+    public static PurchaseToken[] All => [ExplorersVineyards, SecondExplorersVineyards, SecondExplorersMonasteries, ExplorersFortressUnderground, ThirdExplorersFortressUnderground];
 }
