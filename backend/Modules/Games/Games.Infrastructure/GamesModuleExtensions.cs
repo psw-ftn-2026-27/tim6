@@ -11,6 +11,7 @@ using Games.Application.QuizSolving;
 using Games.Application.Quizzes;
 using Games.Application.SocialChallengeAuthoring;
 using Games.Application.SocialChallengePublishing;
+using Games.Application.SocialChallengeSolving;
 using Games.Application.SocialChallenges;
 using Games.Infrastructure.Persistence;
 using Games.Infrastructure.Persistence.ChallengeProgresses;
@@ -46,6 +47,8 @@ public static class GamesModuleExtensions
         services.AddScoped<SocialChallengeAuthoringService>();
         services.AddScoped<SocialChallengeAuthoringQueries>();
         services.AddScoped<SocialChallengePublishingService>();
+        services.AddScoped<SocialChallengeSolvingService>();
+        services.AddScoped<SocialChallengeSolvingQueries>();
         services.AddScoped<QuizAuthoringService>();
         services.AddScoped<QuizAuthoringQueries>();
         services.AddScoped<QuizPublishingService>();

@@ -26,6 +26,14 @@ public sealed class ChallengeProgress : AggregateRoot
         return SolvedAt is not null;
     }
 
+    public void EnsureNotSolved()
+    {
+        if (IsSolved())
+        {
+            throw new DomainException("A solved challenge cannot be activated again.");
+        }
+    }
+
     // Awards only the XP above what the tourist already earned on the challenge and returns it.
     public int RecordResult(int xp, bool solves, DateTime recordedAt)
     {

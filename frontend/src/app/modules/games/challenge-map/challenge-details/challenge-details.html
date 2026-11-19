@@ -35,8 +35,21 @@
       <a class="button button--primary" [routerLink]="['/games/quizzes', challenge().id, 'solve']">
         Activate
       </a>
+    } @else if (challenge().kind === 'SocialChallenge') {
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="!challenge().canActivate || activating()"
+        (click)="activate.emit(challenge().id)"
+      >
+        Activate
+      </button>
     } @else {
       <button class="button" type="button" disabled>Activate</button>
     }
   </div>
+
+  @if (activateError()) {
+    <p class="error">{{ activateError() }}</p>
+  }
 </section>

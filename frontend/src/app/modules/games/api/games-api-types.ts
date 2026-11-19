@@ -150,3 +150,17 @@ export interface ChallengeOnMapDto {
   distanceInMeters: number | null;
   canActivate: boolean;
 }
+
+export type SolvingStatus = 'Active' | 'Left' | 'Solved' | 'Closed';
+
+export interface SocialChallengeRunStateDto {
+  id: string;
+  name: string;
+  location: LocationDto | null;
+  rangeInMeters: number;
+  status: SolvingStatus;
+  activeCount: number;
+  requiredPeople: number;
+  earnedXp: number | null;
+  exitMessage: string | null;
+}

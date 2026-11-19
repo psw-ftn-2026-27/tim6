@@ -29,6 +29,11 @@
   }
 
   @if (selected(); as challenge) {
-    <app-challenge-details [challenge]="challenge" />
+    <app-challenge-details
+      [challenge]="challenge"
+      [activating]="activating()"
+      [activateError]="activateError()"
+      (activate)="onActivate($event)"
+    />
   }
 </div>
