@@ -114,7 +114,13 @@ public class CartCheckoutTests
         var wallet = new Wallet(WellKnownUsers.Explorer);
         wallet.Deposit(WellKnownUsers.Administrator, 1000, PurchasedAt.AddHours(-1));
 
-        var purchase = () => _cartCheckout.Purchase(cart, wallet, [productInOffer, withdrawnProduct], PurchasedAt);
+        var purchase = () => _cartCheckout.Purchase(
+            cart,
+            wallet,
+            [productInOffer, withdrawnProduct],
+            null,
+            null,
+            PurchasedAt);
 
         purchase.Should().Throw<DomainException>();
         wallet.Payments.Should().BeEmpty();

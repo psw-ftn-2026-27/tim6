@@ -49,17 +49,10 @@ public sealed class PurchaseService
             throw new NotFoundException($"User {userId} has no cart.");
         }
 
-        var wallet = await _walletRepository.GetByUserIdAsync(userId);
-        if (wallet is null)
-        {
-            wallet = new Wallet(userId);
-            _walletRepository.Add(wallet);
-        }
-
+        var wallet = await GetOrCreateWalletAsync(userId);
         var products = await _productRepository.GetByEntityIdsAsync(cart.Items.Select(item => item.EntityId).ToList());
         var coupon = await GetCouponAsync(couponCode);
         var giftCard = await GetGiftCardAsync(giftCardId);
-
         var tokens = _cartCheckout.Purchase(cart, wallet, products, coupon, giftCard, DateTime.UtcNow);
         foreach (var token in tokens)
         {
@@ -67,6 +60,19 @@ public sealed class PurchaseService
         }
 
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    private async Task<Wallet> GetOrCreateWalletAsync(Guid userId)
+    {
+        var wallet = await _walletRepository.GetByUserIdAsync(userId);
+        if (wallet is not null)
+        {
+            return wallet;
+        }
+
+        wallet = new Wallet(userId);
+        _walletRepository.Add(wallet);
+        return wallet;
     }
 
     private async Task<Payment.Domain.Coupons.Coupon?> GetCouponAsync(string? code)

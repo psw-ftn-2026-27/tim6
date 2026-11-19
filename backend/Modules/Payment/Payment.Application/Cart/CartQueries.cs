@@ -4,6 +4,7 @@ using Payment.Application.GiftCards;
 using Payment.Application.Products;
 using Payment.Application.Wallets;
 using Payment.Domain.Carts;
+using Payment.Domain.Products;
 using Shared.Domain.Exceptions;
 
 namespace Payment.Application.Cart;
@@ -48,6 +49,15 @@ public sealed class CartQueries
         var coupon = await GetCouponAsync(couponCode);
         var giftCard = await GetGiftCardAsync(giftCardId);
         var calculation = _cartCheckout.CalculateTotal(cart, products, coupon, giftCard, DateTime.UtcNow);
+        return ToDto(cart, products, walletBalance, calculation);
+    }
+
+    private static CartDto ToDto(
+        Payment.Domain.Carts.Cart cart,
+        IReadOnlyList<Product> products,
+        int walletBalance,
+        CartCalculation calculation)
+    {
         var items = calculation.Items.Select(item => new CartItemDto(
             item.EntityId,
             item.Name,

@@ -34,42 +34,59 @@ internal sealed class PaymentModuleInitializer : IHostedService
         var dbContext = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
         await dbContext.Database.MigrateAsync();
 
-        if (_environment.IsDevelopment())
+        if (!_environment.IsDevelopment())
         {
-            var existingUserIds = await dbContext.Wallets
-                .Select(wallet => wallet.UserId)
-                .ToListAsync();
-            var createdAt = DateTime.UtcNow;
-
-            foreach (var explorerId in DemoExplorers.Where(explorerId => !existingUserIds.Contains(explorerId)))
-            {
-                var wallet = new Wallet(explorerId);
-                wallet.Deposit(DemoAdministrator, 100, createdAt);
-                dbContext.Wallets.Add(wallet);
-            }
-
-            await dbContext.SaveChangesAsync();
-
-            var demoGiftCardExists = await dbContext.GiftCards.AnyAsync(giftCard =>
-                giftCard.SenderId == FirstDemoExplorer &&
-                giftCard.RecipientId == SecondDemoExplorer &&
-                giftCard.Amount == 50);
-            if (!demoGiftCardExists)
-            {
-                var senderWallet = await dbContext.Wallets.SingleAsync(wallet => wallet.UserId == FirstDemoExplorer);
-                var recipientWallet = await dbContext.Wallets.SingleAsync(wallet => wallet.UserId == SecondDemoExplorer);
-                var giftCard = new GiftCardIssuer().Issue(
-                    senderWallet,
-                    recipientWallet,
-                    50,
-                    "Srećan put!",
-                    createdAt);
-
-                dbContext.GiftCards.Add(giftCard);
-                await dbContext.SaveChangesAsync();
-            }
+            return;
         }
+
+        var createdAt = DateTime.UtcNow;
+        await CreateDemoWalletsAsync(dbContext, createdAt);
+        await CreateDemoGiftCardAsync(dbContext, createdAt);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    private static async Task CreateDemoWalletsAsync(PaymentDbContext dbContext, DateTime createdAt)
+    {
+        var existingUserIds = await dbContext.Wallets
+            .Select(wallet => wallet.UserId)
+            .ToListAsync();
+
+        foreach (var explorerId in DemoExplorers.Where(explorerId => !existingUserIds.Contains(explorerId)))
+        {
+            var wallet = new Wallet(explorerId);
+            wallet.Deposit(DemoAdministrator, 100, createdAt);
+            dbContext.Wallets.Add(wallet);
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task CreateDemoGiftCardAsync(PaymentDbContext dbContext, DateTime createdAt)
+    {
+        if (await DemoGiftCardExistsAsync(dbContext))
+        {
+            return;
+        }
+
+        var senderWallet = await dbContext.Wallets.SingleAsync(wallet => wallet.UserId == FirstDemoExplorer);
+        var recipientWallet = await dbContext.Wallets.SingleAsync(wallet => wallet.UserId == SecondDemoExplorer);
+        var giftCard = new GiftCardIssuer().Issue(
+            senderWallet,
+            recipientWallet,
+            50,
+            "Srećan put!",
+            createdAt);
+
+        dbContext.GiftCards.Add(giftCard);
+        await dbContext.SaveChangesAsync();
+    }
+
+    private static Task<bool> DemoGiftCardExistsAsync(PaymentDbContext dbContext)
+    {
+        return dbContext.GiftCards.AnyAsync(giftCard =>
+            giftCard.SenderId == FirstDemoExplorer &&
+            giftCard.RecipientId == SecondDemoExplorer &&
+            giftCard.Amount == 50);
+    }
 }

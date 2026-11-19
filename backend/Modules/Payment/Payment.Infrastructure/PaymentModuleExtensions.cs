@@ -48,7 +48,6 @@ public static class PaymentModuleExtensions
         services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<ICouponReadRepository, CouponReadRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
-        services.AddScoped<ICartReadRepository, CartReadRepository>();
         services.AddScoped<IPurchaseTokenRepository, PurchaseTokenRepository>();
         services.AddScoped<IPurchaseTokenReadRepository, PurchaseTokenReadRepository>();
 
