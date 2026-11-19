@@ -31,4 +31,15 @@ public class LocationTests
         location.Latitude.Should().Be(latitude);
         location.Longitude.Should().Be(longitude);
     }
+
+    [Fact]
+    public void Distance_between_two_known_locations_matches_the_expected_distance()
+    {
+        var equatorAtPrimeMeridian = new Location(0, 0);
+        var oneDegreeNorth = new Location(1, 0);
+
+        var distance = equatorAtPrimeMeridian.DistanceTo(oneDegreeNorth);
+
+        distance.Should().BeApproximately(111_195, 1);
+    }
 }

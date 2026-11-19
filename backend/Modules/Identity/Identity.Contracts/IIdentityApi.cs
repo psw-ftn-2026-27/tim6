@@ -6,4 +6,5 @@ public interface IIdentityApi
     Task<Dictionary<Guid, UserSummaryDto>> GetUsersByIdsAsync(IEnumerable<Guid> ids);
     Task<UserSummaryDto?> GetUserByEmailAsync(string email);
     Task<Dictionary<string, UserSummaryDto>> GetUsersByEmailsAsync(IEnumerable<string> emails);
+    Task<UserSearchPageDto> SearchUsersAsync(string searchTerm, int page, int pageSize);
 }

@@ -247,6 +247,16 @@ deliberately accepted trade-off: it keeps inter-module calls on the RPC model st
 already know, and the consistency gap is planned course material mid-semester, alongside
 distributed transactions. Do not introduce compensating machinery for it.
 
+SignalR notifications to connected frontend clients are not domain or integration events.
+When a feature explicitly requires live updates, its hub belongs to that feature's `Api`
+project and its notification port belongs to `Application`. A hub verifies the authenticated
+user's access through the module's application query before adding the connection to a
+conversation group. A command sends the notification only after `SaveChangesAsync` succeeds;
+reconnect recovery still uses an authorized HTTP query, because SignalR delivery is not a
+durable message log. The JavaScript client supplies its JWT with `accessTokenFactory`; the
+host's bearer authentication accepts the resulting `access_token` query parameter only for
+paths below `/hubs`.
+
 ## Controllers
 
 Attribute-routed API controllers in `<Name>.Api`, one per use-case group, marked

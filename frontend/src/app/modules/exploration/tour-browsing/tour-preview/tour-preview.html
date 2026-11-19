@@ -10,6 +10,8 @@
 
     <p>{{ tour.value().description }}</p>
 
+    <p><a class="button" [routerLink]="['/exploration/tours', tour.value().id, 'chat']">Open chat</a></p>
+
     <p class="meta">Difficulty: {{ tour.value().difficulty }}</p>
 
     <p class="meta">

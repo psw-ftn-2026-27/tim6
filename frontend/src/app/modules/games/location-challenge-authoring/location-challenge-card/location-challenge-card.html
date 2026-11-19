@@ -30,6 +30,8 @@
     </div>
   </dl>
 
+  <app-geographic-map [pins]="pins()" />
+
   @if (challenge().status === 'Draft' && !challenge().location) {
     <p class="hint">The challenge has no start location; add it through Edit to publish it.</p>
   }

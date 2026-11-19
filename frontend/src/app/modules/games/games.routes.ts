@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { ChallengeMap } from './challenge-map/challenge-map/challenge-map';
 import { GamesHome } from './games-home/games-home';
 import { LocationChallengeList } from './location-challenge-authoring/location-challenge-list/location-challenge-list';
+import { AvailableChallenges } from './location-challenge-solving/available-challenges/available-challenges';
 import { QuizList } from './quiz-authoring/quiz-list/quiz-list';
 import { SolveQuiz } from './quiz-solving/solve-quiz/solve-quiz';
 import { ChallengeList } from './social-challenge-authoring/challenge-list/challenge-list';
@@ -17,4 +18,5 @@ export const gamesRoutes: Routes = [
   { path: 'quizzes/:id/solve', component: SolveQuiz },
   { path: 'location-challenges', component: LocationChallengeList },
   { path: 'social-challenges/:id/solve', component: SolveSocialChallenge },
+  { path: 'location-challenges/available', component: AvailableChallenges },
 ];

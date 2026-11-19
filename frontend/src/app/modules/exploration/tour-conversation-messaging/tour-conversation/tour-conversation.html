@@ -1,0 +1,23 @@
+<div class="stack">
+  <h1>{{ conversationTitle() }}</h1>
+  @if (opening()) {
+    <p>Opening conversation...</p>
+  } @else {
+    <app-conversation-chat
+      [messages]="chatMessages()"
+      [currentUserId]="currentUserId()"
+      [isMuted]="isMuted()"
+      [muteDescription]="muteDescription()"
+      [hasMore]="hasMore()"
+      [loading]="messagePage.isLoading() || conversation.isLoading()"
+      [pending]="pending()"
+      [error]="displayError()"
+      [composerResetKey]="composerResetKey()"
+      (sendMessage)="send($event)"
+      (deleteMessage)="delete($event)"
+      (muteParticipant)="mute($event)"
+      (unmuteParticipant)="unmute($event)"
+      (loadOlderMessages)="loadOlder()"
+    />
+  }
+</div>
