@@ -87,3 +87,23 @@ export interface SaveKeyPointDto {
 export interface RemoveKeyPointDto {
   lengthInKilometers: number;
 }
+
+export interface KeyPointPreviewDto {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  location: LocationDto;
+}
+
+export interface TourPreviewDto {
+  id: string;
+  name: string;
+  description: string;
+  difficulty: TourDifficulty;
+  tags: string[];
+  recommendedGroupSize: RecommendedGroupSizeDto;
+  lengthInKilometers: number;
+  transportTimes: TransportTimeDto[];
+  keyPoints: KeyPointPreviewDto[];
+}

@@ -1,0 +1,58 @@
+<div class="stack">
+  <p><a routerLink="/exploration">Back to tours</a></p>
+
+  @if (tour.isLoading()) {
+    <p>Loading the tour...</p>
+  } @else if (tour.error()) {
+    <p class="error">The tour was not found.</p>
+  } @else if (tour.hasValue()) {
+    <h1>{{ tour.value().name }}</h1>
+
+    <p>{{ tour.value().description }}</p>
+
+    <p class="meta">Difficulty: {{ tour.value().difficulty }}</p>
+
+    <p class="meta">
+      Recommended group size: {{ tour.value().recommendedGroupSize.min }}–{{
+        tour.value().recommendedGroupSize.max
+      }}
+      people
+    </p>
+
+    @if (tour.value().tags.length > 0) {
+      <ul class="tags">
+        @for (tag of tour.value().tags; track tag) {
+          <li>{{ tag }}</li>
+        }
+      </ul>
+    }
+
+    <p class="meta">Tour length: {{ tour.value().lengthInKilometers.toFixed(1) }} km</p>
+
+    @if (tour.value().transportTimes.length > 0) {
+      <ul class="times">
+        @for (time of tour.value().transportTimes; track time.transport) {
+          <li class="meta">{{ time.transport }}: {{ time.minutes }} min</li>
+        }
+      </ul>
+    } @else {
+      <p class="meta">No transport times yet.</p>
+    }
+
+    @if (tour.value().keyPoints.length > 0) {
+      <app-geographic-map [pins]="pins()" />
+
+      <ol class="key-points">
+        @for (point of tour.value().keyPoints; track point.id) {
+          <li class="card key-point">
+            <img class="image" [src]="point.image" alt="" />
+            <div class="stack">
+              <h2>{{ point.name }}</h2>
+              <p>{{ point.description }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  }
+</div>

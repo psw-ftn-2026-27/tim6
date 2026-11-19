@@ -122,6 +122,18 @@ public class TourTests
     }
 
     [Fact]
+    public void Published_tour_has_a_product_in_the_offer()
+    {
+        var tour = CreateTour(LongDescription);
+        tour.AddTransportTime(TransportMode.Walking, 120);
+        AddTwoKeyPoints(tour);
+
+        tour.Publish(FreePrice);
+
+        tour.HasOfferProduct.Should().BeTrue();
+    }
+
+    [Fact]
     public void Tour_with_a_short_description_cannot_be_published()
     {
         var tour = CreateTour("Kratak opis.");

@@ -2,6 +2,9 @@
   <img class="club-image" [src]="club().images[0]" [alt]="club().name" />
   <div class="stack">
     <h2>{{ club().name }}</h2>
+    @if (club().status === 'Closed') {
+      <p><span class="badge badge--danger">Closed</span></p>
+    }
     <p class="description">{{ club().description }}</p>
   </div>
 </a>

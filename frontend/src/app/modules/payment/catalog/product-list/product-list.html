@@ -1,5 +1,10 @@
 <div class="stack">
-  <p><a routerLink="/payment">Nazad</a></p>
+  <p class="links">
+    <a routerLink="/payment">Nazad</a>
+    @if (isExplorer()) {
+      <a routerLink="/payment/cart">Korpa</a>
+    }
+  </p>
 
   <h1>Ponuda</h1>
 
@@ -16,6 +21,9 @@
           <tr>
             <th scope="col">Naziv</th>
             <th scope="col">Cena</th>
+            @if (isExplorer()) {
+              <th scope="col">Korpa</th>
+            }
           </tr>
         </thead>
         <tbody>
@@ -23,10 +31,33 @@
             <tr>
               <td>{{ product.name }}</td>
               <td>{{ product.price }} EC</td>
+              @if (isExplorer()) {
+                <td>
+                  <button
+                    class="button"
+                    type="button"
+                    [disabled]="pending()"
+                    (click)="addToCart(product)"
+                  >
+                    Dodaj u korpu
+                  </button>
+                  @if (addOutcome(); as outcome) {
+                    @if (outcome.productId === product.id) {
+                      <p [class.meta]="outcome.added" [class.error]="!outcome.added">
+                        {{ outcome.message }}
+                      </p>
+                    }
+                  }
+                </td>
+              }
             </tr>
           } @empty {
             <tr>
-              <td colspan="2">Ponuda je prazna.</td>
+              @if (isExplorer()) {
+                <td colspan="3">Ponuda je prazna.</td>
+              } @else {
+                <td colspan="2">Ponuda je prazna.</td>
+              }
             </tr>
           }
         </tbody>

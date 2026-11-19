@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Payment.Application.Catalog;
 using Payment.Application.Products;
 using Shared.Domain;
 
@@ -14,6 +13,16 @@ internal sealed class ProductReadRepository : IProductReadRepository
         _dbContext = dbContext;
     }
 
+    public Task<List<ProductDto>> GetOwnedAsync(Guid ownerId)
+    {
+        return _dbContext.Products
+            .Where(product => product.OwnerId == ownerId)
+            .OrderBy(product => product.Name)
+            .ThenBy(product => product.Id)
+            .Select(product => new ProductDto(product.Id, product.EntityId, product.Name, product.Price))
+            .ToListAsync();
+    }
+
     public async Task<PageResult<ProductDto>> GetInOfferPageAsync(int page, int pageSize)
     {
         var inOffer = _dbContext.Products
@@ -25,7 +34,7 @@ internal sealed class ProductReadRepository : IProductReadRepository
         var items = await inOffer
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(product => new ProductDto(product.Id, product.Name, product.Price))
+            .Select(product => new ProductDto(product.Id, product.EntityId, product.Name, product.Price))
             .ToListAsync();
 
         return new PageResult<ProductDto>(items, totalCount);

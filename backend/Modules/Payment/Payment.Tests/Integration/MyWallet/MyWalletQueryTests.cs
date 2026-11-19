@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Payment.Application.MyWallet;
+using Payment.Tests.Integration.Seeds;
 using Shared.Tests;
 using Xunit;
 
@@ -30,5 +31,20 @@ public class MyWalletQueryTests : BaseIntegrationTest
         var response = await client.GetAsync("/api/payment/wallets/mine");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Buyer_sees_their_payments_with_name_price_and_time_beside_their_deposits_and_without_others_payments()
+    {
+        var client = Factory.CreateClientFor(WalletSeed.ReturningBuyer, "explorer");
+        var seeded = WalletSeed.ReturningBuyersWalletWithPayments;
+        var expectedPayments = seeded.Payments
+            .Select(payment => new PaymentDto(payment.Id, payment.EntityId, payment.Name, payment.Price, payment.PaidAt));
+
+        var wallet = await client.GetFromJsonAsync<WalletDto>("/api/payment/wallets/mine", JsonOptions);
+
+        wallet!.Payments.Should().BeEquivalentTo(expectedPayments);
+        wallet.Transactions.Select(transaction => transaction.Id)
+            .Should().BeEquivalentTo(seeded.Transactions.Select(transaction => transaction.Id));
     }
 }

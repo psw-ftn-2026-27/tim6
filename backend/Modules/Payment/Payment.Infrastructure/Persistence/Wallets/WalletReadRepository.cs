@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Payment.Application.MyWallet;
 using Payment.Application.WalletManagement;
 using Payment.Application.Wallets;
 using Shared.Domain;
@@ -30,6 +31,21 @@ internal sealed class WalletReadRepository : IWalletReadRepository
             .ToListAsync();
     }
 
+    public Task<List<PaymentDto>> GetPaymentsAsync(Guid walletId)
+    {
+        return _dbContext.Wallets
+            .Where(wallet => wallet.Id == walletId)
+            .SelectMany(wallet => wallet.Payments)
+            .OrderByDescending(payment => payment.PaidAt)
+            .Select(payment => new PaymentDto(
+                payment.Id,
+                payment.EntityId,
+                payment.Name,
+                payment.Price,
+                payment.PaidAt))
+            .ToListAsync();
+    }
+
     public async Task<PageResult<WalletBalanceDto>> GetPageAsync(int page, int pageSize)
     {
         var orderedWallets = _dbContext.Wallets.OrderBy(wallet => wallet.Id);
@@ -43,7 +59,8 @@ internal sealed class WalletReadRepository : IWalletReadRepository
                 wallet.UserId,
                 wallet.Transactions
                     .Where(transaction => !transaction.IsCancelled)
-                    .Sum(transaction => transaction.Amount)))
+                    .Sum(transaction => transaction.Amount)
+                    - wallet.Payments.Sum(payment => payment.Price)))
             .ToListAsync();
 
         return new PageResult<WalletBalanceDto>(items, totalCount);

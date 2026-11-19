@@ -9,6 +9,10 @@
     <p class="notice notice--danger" role="alert">
       Novčanike nije moguće učitati. Prijavite se kao administrator i pokušajte ponovo.
     </p>
+  } @else if ((wallets.value()?.items ?? []).length === 0) {
+    <div class="empty">
+      <p>Još nema novčanika.</p>
+    </div>
   } @else {
     <div class="table-wrap">
       <table class="table">
@@ -28,17 +32,13 @@
               </td>
               <td>{{ wallet.balance }} EC</td>
             </tr>
-          } @empty {
-            <tr>
-              <td colspan="2">Još nema novčanika.</td>
-            </tr>
           }
         </tbody>
       </table>
     </div>
   }
 
-  <p class="pages">
+  <p class="actions">
     <button class="button" type="button" [disabled]="page() <= 1" (click)="previousPage()">
       Prethodna
     </button>

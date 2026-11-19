@@ -10,6 +10,7 @@ import { Auth } from '../../../core/auth/auth';
     @if (isAdministrator()) {
       <a class="button" routerLink="/games/challenges">Upravljanje izazovima</a>
       <a class="button" routerLink="/games/quizzes">Upravljanje kvizovima</a>
+      <a class="button" routerLink="/games/location-challenges">Manage location challenges</a>
     }
   `,
 })
