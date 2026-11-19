@@ -28,6 +28,21 @@ public class SocialChallengeSolvingQueryTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task Explorer_in_the_active_run_sees_themselves_active_and_how_many_are_active_of_how_many_required()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var challenge = SocialChallengeSeed.PublishedOpenNowFountainWithFullRun;
+
+        var state = await client.GetFromJsonAsync<SocialChallengeRunStateDto>(
+            $"/api/games/social-challenges/{challenge.Id}/run-state", JsonOptions);
+
+        state!.Status.Should().Be(SolvingStatus.Active);
+        state.ActiveCount.Should().Be(challenge.ActiveRun!.Participants.Count);
+        state.RequiredPeople.Should().Be(challenge.RequiredPeople);
+        state.EarnedXp.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Anonymous_user_cannot_see_the_run_state_of_a_social_challenge()
     {
         var client = Factory.CreateClient();

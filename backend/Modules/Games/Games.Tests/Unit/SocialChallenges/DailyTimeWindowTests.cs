@@ -76,4 +76,16 @@ public class DailyTimeWindowTests
 
         contains.Should().Be(contained);
     }
+
+    [Theory]
+    [InlineData(7, true)]
+    [InlineData(11, false)]
+    public void Daily_time_window_is_read_in_the_city_time_in_summer_and_in_winter(int month, bool open)
+    {
+        var timeWindow = new DailyTimeWindow(new TimeOnly(18, 0), new TimeOnly(20, 0));
+
+        var isOpen = timeWindow.IsOpenAt(new DateTime(2026, month, 15, 16, 30, 0, DateTimeKind.Utc));
+
+        isOpen.Should().Be(open);
+    }
 }

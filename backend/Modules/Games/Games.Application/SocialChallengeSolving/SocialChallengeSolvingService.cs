@@ -10,9 +10,6 @@ namespace Games.Application.SocialChallengeSolving;
 
 public sealed class SocialChallengeSolvingService
 {
-    // Daily time windows are set in the city's local time.
-    private static readonly TimeZoneInfo CityTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Belgrade");
-
     private readonly ISocialChallengeRepository _challengeRepository;
     private readonly IChallengeProgressRepository _progressRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -33,8 +30,7 @@ public sealed class SocialChallengeSolvingService
         var progress = await _progressRepository.GetAsync(challenge.Id, touristId);
         progress?.EnsureNotSolved();
 
-        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CityTimeZone);
-        challenge.Activate(touristId, new Location(position.Latitude, position.Longitude), now);
+        challenge.Activate(touristId, new Location(position.Latitude, position.Longitude), DateTime.UtcNow);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -42,8 +38,7 @@ public sealed class SocialChallengeSolvingService
     {
         var challenge = await GetChallengeAsync(challengeId);
 
-        var utcNow = DateTime.UtcNow;
-        var now = TimeZoneInfo.ConvertTimeFromUtc(utcNow, CityTimeZone);
+        var now = DateTime.UtcNow;
         var solvers = challenge.CheckPosition(touristId, new Location(position.Latitude, position.Longitude), now);
 
         foreach (var solverId in solvers)
@@ -54,7 +49,7 @@ public sealed class SocialChallengeSolvingService
                 progress = new ChallengeProgress(challenge.Id, solverId);
                 _progressRepository.Add(progress);
             }
-            progress.RecordResult(challenge.Xp, true, utcNow);
+            progress.RecordResult(challenge.Xp, true, now);
         }
         await _unitOfWork.SaveChangesAsync();
     }

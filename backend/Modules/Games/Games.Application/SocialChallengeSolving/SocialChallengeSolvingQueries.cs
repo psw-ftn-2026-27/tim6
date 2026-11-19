@@ -8,9 +8,6 @@ namespace Games.Application.SocialChallengeSolving;
 
 public sealed class SocialChallengeSolvingQueries
 {
-    // Daily time windows are set in the city's local time.
-    private static readonly TimeZoneInfo CityTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Belgrade");
-
     private readonly ISocialChallengeRepository _challengeRepository;
     private readonly IChallengeProgressRepository _progressRepository;
 
@@ -33,8 +30,7 @@ public sealed class SocialChallengeSolvingQueries
         }
         var progress = await _progressRepository.GetAsync(challenge.Id, touristId);
 
-        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CityTimeZone);
-        var runState = challenge.RunStateFor(touristId, now);
+        var runState = challenge.RunStateFor(touristId, DateTime.UtcNow);
         var solved = progress is not null && progress.IsSolved();
 
         return new SocialChallengeRunStateDto(

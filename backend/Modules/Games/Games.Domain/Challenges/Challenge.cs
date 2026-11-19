@@ -84,13 +84,27 @@ public abstract class Challenge : AggregateRoot
     // A tourist activates only a published challenge, and only from within its activation radius.
     public void EnsureCanBeActivatedFrom(Location position)
     {
-        if (Status != ChallengeStatus.Published || Location is null)
-        {
-            throw new DomainException($"Only a published {KindName} can be activated.");
-        }
-        if (Location.DistanceTo(position) > ActivationRadiusInMeters)
+        EnsurePublished();
+        if (!IsWithinRadius(Location!, ActivationRadiusInMeters, position))
         {
             throw new DomainException($"A {KindName} can be activated only within {ActivationRadiusInMeters} m of it.");
+        }
+    }
+
+    // Whether a tourist at the position is close enough to a challenge at the location; a tourist
+    // without a position is not. Static so that a read use case can apply it without loading
+    // the challenge.
+    public static bool IsWithinRadius(Location challengeLocation, int radiusInMeters, Location? position)
+    {
+        return position is not null && challengeLocation.DistanceTo(position) <= radiusInMeters;
+    }
+
+    // A published challenge always has a location, because publishing requires one.
+    protected void EnsurePublished()
+    {
+        if (Status != ChallengeStatus.Published || Location is null)
+        {
+            throw new DomainException($"Only a published {KindName} can be played.");
         }
     }
 

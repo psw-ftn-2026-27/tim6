@@ -9,9 +9,6 @@ namespace Games.Application.ChallengeMap;
 
 public sealed class ChallengeMapQueries
 {
-    // Daily time windows are set in the city's local time.
-    private static readonly TimeZoneInfo CityTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Belgrade");
-
     private readonly IQuizReadRepository _quizReadRepository;
     private readonly ISocialChallengeReadRepository _challengeReadRepository;
 
@@ -27,14 +24,14 @@ public sealed class ChallengeMapQueries
     public async Task<List<ChallengeOnMapDto>> GetChallengeMapAsync(Guid touristId, double? latitude, double? longitude)
     {
         var position = latitude is null || longitude is null ? null : new Location(latitude.Value, longitude.Value);
-        var now = TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CityTimeZone));
+        var now = DateTime.UtcNow;
 
         var quizzes = await _quizReadRepository.GetPublishedForMapAsync(touristId);
         var socialChallenges = await _challengeReadRepository.GetPublishedForMapAsync(touristId);
 
         var quizzesOnMap = quizzes.Select(quiz =>
         {
-            var distance = DistanceFrom(position, quiz.Location);
+            var location = ToLocation(quiz.Location);
             return new ChallengeOnMapDto(
                 quiz.Id,
                 ChallengeKind.Quiz,
@@ -43,12 +40,12 @@ public sealed class ChallengeMapQueries
                 quiz.Location,
                 Quiz.ActivationRadius,
                 quiz.IsSolved,
-                distance,
-                !quiz.IsSolved && distance is not null && distance <= Quiz.ActivationRadius);
+                position?.DistanceTo(location),
+                Quiz.CanBeActivated(location, position, quiz.IsSolved));
         });
         var socialChallengesOnMap = socialChallenges.Select(challenge =>
         {
-            var distance = DistanceFrom(position, challenge.Location);
+            var location = ToLocation(challenge.Location);
             var timeWindow = new DailyTimeWindow(challenge.WindowStart, challenge.WindowEnd);
             return new ChallengeOnMapDto(
                 challenge.Id,
@@ -58,15 +55,15 @@ public sealed class ChallengeMapQueries
                 challenge.Location,
                 challenge.RangeInMeters,
                 challenge.IsSolved,
-                distance,
-                !challenge.IsSolved && distance is not null && distance <= challenge.RangeInMeters && timeWindow.Contains(now));
+                position?.DistanceTo(location),
+                SocialChallenge.CanBeActivated(location, challenge.RangeInMeters, timeWindow, position, challenge.IsSolved, now));
         });
 
         return quizzesOnMap.Concat(socialChallengesOnMap).ToList();
     }
 
-    private static double? DistanceFrom(Location? position, LocationDto challengeLocation)
+    private static Location ToLocation(LocationDto location)
     {
-        return position?.DistanceTo(new Location(challengeLocation.Latitude, challengeLocation.Longitude));
+        return new Location(location.Latitude, location.Longitude);
     }
 }

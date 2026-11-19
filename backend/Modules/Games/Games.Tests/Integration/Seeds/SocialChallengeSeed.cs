@@ -1,5 +1,6 @@
 using Games.Domain.Challenges;
 using Games.Domain.SocialChallenges;
+using Shared.Tests;
 
 namespace Games.Tests.Integration.Seeds;
 
@@ -11,6 +12,8 @@ internal static class SocialChallengeSeed
     public static readonly SocialChallenge PublishedRiversidePicnic;
     public static readonly SocialChallenge RetiredWinterSkating;
     public static readonly SocialChallenge ArchivedHarvestFestival;
+    public static readonly SocialChallenge PublishedOpenNowCityPark;
+    public static readonly SocialChallenge PublishedOpenNowFountainWithFullRun;
 
     static SocialChallengeSeed()
     {
@@ -31,7 +34,24 @@ internal static class SocialChallengeSeed
         ArchivedHarvestFestival.Publish();
         ArchivedHarvestFestival.Retire();
         ArchivedHarvestFestival.Archive();
+
+        // Open from an hour before to an hour after the moment the seeds are built, so the tests
+        // do not depend on the time of day. Whole minutes, because the database keeps no finer time.
+        var cityMoment = CityTime.FromUtc(DateTime.UtcNow);
+        var cityNow = new TimeOnly(cityMoment.Hour, cityMoment.Minute);
+
+        PublishedOpenNowCityPark = new("Okupljanje u parku", new DailyTimeWindow(cityNow.AddHours(-1), cityNow.AddHours(1)), 3, 100, 90, "Okupili ste se u parku!");
+        PublishedOpenNowCityPark.PlaceAt(new Location(45.2470, 19.8390));
+        PublishedOpenNowCityPark.Publish();
+
+        // Both explorers check in half an hour ahead, so they stay active for the whole test run
+        // instead of leaving it thirty seconds after the seeds are built.
+        PublishedOpenNowFountainWithFullRun = new("Susret kod fontane", new DailyTimeWindow(cityNow.AddHours(-1), cityNow.AddHours(1)), 2, 100, 110, "Sreli ste se kod fontane!");
+        PublishedOpenNowFountainWithFullRun.PlaceAt(new Location(45.2600, 19.8300));
+        PublishedOpenNowFountainWithFullRun.Publish();
+        PublishedOpenNowFountainWithFullRun.Activate(WellKnownUsers.Explorer, new Location(45.2600, 19.8300), DateTime.UtcNow.AddMinutes(30));
+        PublishedOpenNowFountainWithFullRun.Activate(WellKnownUsers.SecondExplorer, new Location(45.2600, 19.8300), DateTime.UtcNow.AddMinutes(30));
     }
 
-    public static SocialChallenge[] All => [DraftSquareGathering, DraftMidnightWalk, LocatedDraftFortressSunset, PublishedRiversidePicnic, RetiredWinterSkating, ArchivedHarvestFestival];
+    public static SocialChallenge[] All => [DraftSquareGathering, DraftMidnightWalk, LocatedDraftFortressSunset, PublishedRiversidePicnic, RetiredWinterSkating, ArchivedHarvestFestival, PublishedOpenNowCityPark, PublishedOpenNowFountainWithFullRun];
 }

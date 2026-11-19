@@ -6,9 +6,6 @@ namespace Games.Infrastructure.Persistence.SocialChallenges;
 
 internal static class SocialChallengeConfiguration
 {
-    // The run's moments are in the city's local time, so they are stored without a time zone.
-    private const string LocalTimeColumnType = "timestamp without time zone";
-
     public static void ConfigureSocialChallenges(this ModelBuilder modelBuilder)
     {
         ConfigureSocialChallenge(modelBuilder.Entity<SocialChallenge>());
@@ -38,7 +35,6 @@ internal static class SocialChallengeConfiguration
     {
         builder.ToTable("SocialChallengeRuns");
         builder.Property(run => run.Id).ValueGeneratedNever();
-        builder.Property(run => run.StartedAt).HasColumnType(LocalTimeColumnType);
 
         builder.HasMany(run => run.Participants)
             .WithOne()
@@ -52,6 +48,5 @@ internal static class SocialChallengeConfiguration
     {
         builder.ToTable("RunParticipants");
         builder.Property(participant => participant.Id).ValueGeneratedNever();
-        builder.Property(participant => participant.LastCheckedAt).HasColumnType(LocalTimeColumnType);
     }
 }

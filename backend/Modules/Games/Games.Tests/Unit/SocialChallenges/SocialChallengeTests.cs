@@ -29,8 +29,9 @@ public class SocialChallengeTests
 
     private static readonly Location AtChallenge = new(45.2551, 19.8451);
     private static readonly Location FarFromChallenge = new(45.2561, 19.8451);
-    private static readonly DateTime WindowOpening = new(2026, 11, 19, 18, 0, 0);
-    private static readonly DateTime WindowClosing = new(2026, 11, 19, 20, 0, 0);
+    // The window is 18:00 to 20:00 in Belgrade, which is UTC+1 in November.
+    private static readonly DateTime WindowOpening = new(2026, 11, 19, 17, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime WindowClosing = new(2026, 11, 19, 19, 0, 0, DateTimeKind.Utc);
 
     private static SocialChallenge CreatePublishedChallengeFor(int requiredPeople)
     {
@@ -319,14 +320,15 @@ public class SocialChallengeTests
     }
 
     [Theory]
-    [InlineData(17, 59)]
-    [InlineData(20, 0)]
-    [InlineData(23, 30)]
-    public void Social_challenge_is_not_activated_outside_its_daily_time_window(int hour, int minute)
+    [InlineData(16, 59)]
+    [InlineData(19, 0)]
+    [InlineData(22, 30)]
+    public void Social_challenge_is_not_activated_outside_its_daily_time_window(int utcHour, int utcMinute)
     {
         var challenge = CreatePublishedChallengeFor(2);
 
-        var activation = () => challenge.Activate(Guid.NewGuid(), AtChallenge, new DateTime(2026, 11, 19, hour, minute, 0));
+        var activation = () => challenge.Activate(Guid.NewGuid(), AtChallenge,
+            new DateTime(2026, 11, 19, utcHour, utcMinute, 0, DateTimeKind.Utc));
 
         activation.Should().Throw<DomainException>();
         challenge.ActiveRun.Should().BeNull();
@@ -363,6 +365,38 @@ public class SocialChallengeTests
 
         challenge.ActiveRun!.Participants.Select(participant => participant.TouristId)
             .Should().BeEquivalentTo([recentTourist]);
+    }
+
+    [Fact]
+    public void Check_removes_the_participant_silent_for_thirty_seconds_across_the_switch_to_winter_time()
+    {
+        var challenge = new SocialChallenge("Noćno okupljanje", new DailyTimeWindow(new TimeOnly(1, 0), new TimeOnly(4, 0)),
+            5, 50, 100, "Svi ste se okupili!");
+        challenge.PlaceAt(AtChallenge);
+        challenge.Publish();
+        var silentTourist = Guid.NewGuid();
+        var recentTourist = Guid.NewGuid();
+        var beforeSwitch = new DateTime(2026, 10, 25, 0, 59, 50, DateTimeKind.Utc);
+        challenge.Activate(silentTourist, AtChallenge, beforeSwitch);
+        challenge.Activate(recentTourist, AtChallenge, beforeSwitch.AddSeconds(10));
+
+        challenge.CheckPosition(recentTourist, AtChallenge, beforeSwitch.AddSeconds(40));
+
+        challenge.ActiveRun!.Participants.Select(participant => participant.TouristId)
+            .Should().BeEquivalentTo([recentTourist]);
+    }
+
+    [Fact]
+    public void Check_in_a_social_challenge_that_is_no_longer_published_is_rejected()
+    {
+        var challenge = CreatePublishedChallengeFor(2);
+        var tourist = Guid.NewGuid();
+        challenge.Activate(tourist, AtChallenge, WindowOpening);
+        challenge.Retire();
+
+        var check = () => challenge.CheckPosition(tourist, AtChallenge, WindowOpening.AddSeconds(10));
+
+        check.Should().Throw<DomainException>();
     }
 
     [Fact]
