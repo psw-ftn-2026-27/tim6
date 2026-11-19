@@ -137,68 +137,6 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                     b.ToTable("Tours", "exploration");
                 });
 
-            modelBuilder.Entity("Shared.Domain.Conversations.ChatMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AuthorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ConversationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConversationId", "CreatedAt", "Id");
-
-                    b.ToTable("ChatMessages", "exploration");
-                });
-
-            modelBuilder.Entity("Shared.Domain.Conversations.Conversation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Conversations", "exploration");
-                });
-
-            modelBuilder.Entity("Shared.Domain.Conversations.ConversationParticipant", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ConversationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConversationId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("ConversationParticipants", "exploration");
-                });
-
             modelBuilder.Entity("Exploration.Domain.Tours.KeyPoint", b =>
                 {
                     b.HasOne("Exploration.Domain.Tours.Tour", null)
@@ -232,6 +170,22 @@ namespace Exploration.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Exploration.Domain.Tours.Tour", b =>
                 {
+                    b.OwnsOne("Exploration.Domain.Tours.TourLength", "Length", b1 =>
+                        {
+                            b1.Property<Guid>("TourId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<double>("Kilometers")
+                                .HasColumnType("double precision");
+
+                            b1.HasKey("TourId");
+
+                            b1.ToTable("Tours", "exploration");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TourId");
+                        });
+
                     b.OwnsOne("Exploration.Domain.Tours.RecommendedGroupSize", "RecommendedGroupSize", b1 =>
                         {
                             b1.Property<Guid>("TourId")
@@ -246,22 +200,6 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("integer")
                                 .HasDefaultValue(1);
-
-                            b1.HasKey("TourId");
-
-                            b1.ToTable("Tours", "exploration");
-
-                            b1.WithOwner()
-                                .HasForeignKey("TourId");
-                        });
-
-                    b.OwnsOne("Exploration.Domain.Tours.TourLength", "Length", b1 =>
-                        {
-                            b1.Property<Guid>("TourId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<double>("Kilometers")
-                                .HasColumnType("double precision");
 
                             b1.HasKey("TourId");
 
@@ -304,106 +242,9 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                     b.Navigation("TransportTimes");
                 });
 
-            modelBuilder.Entity("Shared.Domain.Conversations.ChatMessage", b =>
-                {
-                    b.HasOne("Shared.Domain.Conversations.Conversation", null)
-                        .WithMany()
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.OwnsOne("Shared.Domain.Conversations.MessageContent", "Content", b1 =>
-                        {
-                            b1.Property<Guid>("ChatMessageId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("Content");
-
-                            b1.HasKey("ChatMessageId");
-
-                            b1.ToTable("ChatMessages", "exploration");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ChatMessageId");
-                        });
-
-                    b.Navigation("Content");
-                });
-
-            modelBuilder.Entity("Shared.Domain.Conversations.Conversation", b =>
-                {
-                    b.OwnsOne("Shared.Domain.Conversations.ConversationContext", "Context", b1 =>
-                        {
-                            b1.Property<Guid>("ConversationId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<Guid?>("ContextId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("ContextId");
-
-                            b1.Property<string>("Type")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)")
-                                .HasColumnName("ContextType");
-
-                            b1.HasKey("ConversationId");
-
-                            b1.HasIndex("Type", "ContextId")
-                                .IsUnique();
-
-                            b1.ToTable("Conversations", "exploration");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ConversationId");
-                        });
-
-                    b.Navigation("Context")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Shared.Domain.Conversations.ConversationParticipant", b =>
-                {
-                    b.HasOne("Shared.Domain.Conversations.Conversation", null)
-                        .WithMany("Participants")
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.OwnsOne("Shared.Domain.Conversations.ConversationMute", "Mute", b1 =>
-                        {
-                            b1.Property<Guid>("ConversationParticipantId");
-
-                            b1.Property<DateTime?>("EndsAt");
-
-                            b1.Property<bool>("IsPermanent");
-
-                            b1.HasKey("ConversationParticipantId");
-
-                            b1.ToTable("ConversationParticipants", "exploration");
-
-                            b1
-                                .ToJson("Mute")
-                                .HasColumnType("jsonb");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ConversationParticipantId");
-                        });
-
-                    b.Navigation("Mute");
-                });
-
             modelBuilder.Entity("Exploration.Domain.Tours.Tour", b =>
                 {
                     b.Navigation("KeyPoints");
-                });
-
-            modelBuilder.Entity("Shared.Domain.Conversations.Conversation", b =>
-                {
-                    b.Navigation("Participants");
                 });
 #pragma warning restore 612, 618
         }
