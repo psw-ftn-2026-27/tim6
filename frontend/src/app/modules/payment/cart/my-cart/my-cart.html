@@ -1,0 +1,89 @@
+<div class="stack">
+  <p class="links">
+    <a routerLink="/payment">Nazad</a>
+    <a routerLink="/payment/purchases">Kupljene ture</a>
+  </p>
+
+  <h1>Korpa</h1>
+
+  @if (cart.isLoading()) {
+    <p>Učitavanje korpe...</p>
+  } @else if (cart.error()) {
+    <p class="notice notice--danger" role="alert">
+      Korpu nije moguće učitati. Prijavite se i pokušajte ponovo.
+    </p>
+  } @else {
+    @if (cart.value(); as current) {
+      <div class="card totals">
+        <div>
+          <p class="meta">Ukupna cena</p>
+          <p class="total__amount">{{ current.totalPrice }} EC</p>
+        </div>
+        <div>
+          <p class="meta">Stanje novčanika</p>
+          <p class="total__amount">{{ current.walletBalance }} EC</p>
+        </div>
+      </div>
+
+      <p>
+        <button
+          class="button button--primary"
+          type="button"
+          [disabled]="pending()"
+          (click)="purchase()"
+        >
+          Kupi
+        </button>
+      </p>
+
+      @if (purchased()) {
+        <p class="notice notice--success" role="status">Kupovina je uspela.</p>
+      }
+
+      @if (error()) {
+        <p class="notice notice--danger" role="alert">{{ error() }}</p>
+      }
+
+      @if (current.items.length === 0) {
+        <div class="empty">
+          <p>Korpa je prazna.</p>
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Naziv</th>
+                <th scope="col">Cena</th>
+                <th scope="col">Uklanjanje</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of current.items; track item.entityId) {
+                <tr>
+                  <td>
+                    {{ item.name }}
+                    @if (!item.isAvailable) {
+                      <span class="badge badge--warning">nedostupno</span>
+                    }
+                  </td>
+                  <td>{{ item.price }} EC</td>
+                  <td>
+                    <button
+                      class="button"
+                      type="button"
+                      [disabled]="pending()"
+                      (click)="removeItem(item.entityId)"
+                    >
+                      Ukloni
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</div>

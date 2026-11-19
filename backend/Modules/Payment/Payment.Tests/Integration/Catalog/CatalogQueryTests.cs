@@ -20,8 +20,8 @@ public class CatalogQueryTests : BaseIntegrationTest
 
         var offer = await client.GetFromJsonAsync<PageResult<ProductDto>>("/api/payment/products/offer", JsonOptions);
 
-        offer!.Items.Should().ContainEquivalentOf(new ProductDto(ProductSeed.FreeTourInOffer.Id, ProductSeed.FreeTourInOffer.Name, ProductSeed.FreeTourInOffer.Price));
-        offer.Items.Should().ContainEquivalentOf(new ProductDto(ProductSeed.PaidTourInOffer.Id, ProductSeed.PaidTourInOffer.Name, ProductSeed.PaidTourInOffer.Price));
+        offer!.Items.Should().ContainEquivalentOf(new ProductDto(ProductSeed.FreeTourInOffer.Id, ProductSeed.FreeTourInOffer.EntityId, ProductSeed.FreeTourInOffer.Name, ProductSeed.FreeTourInOffer.Price));
+        offer.Items.Should().ContainEquivalentOf(new ProductDto(ProductSeed.PaidTourInOffer.Id, ProductSeed.PaidTourInOffer.EntityId, ProductSeed.PaidTourInOffer.Name, ProductSeed.PaidTourInOffer.Price));
         offer.Items.Should().NotContain(product => product.Id == ProductSeed.WithdrawnTour.Id);
     }
 

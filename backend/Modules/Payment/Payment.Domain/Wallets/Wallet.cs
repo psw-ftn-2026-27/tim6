@@ -1,3 +1,4 @@
+using Payment.Domain.Carts;
 using Shared.Domain;
 using Shared.Domain.Exceptions;
 
@@ -8,6 +9,8 @@ public sealed class Wallet : AggregateRoot
     public Guid UserId { get; private set; }
     private readonly List<Transaction> _transactions = [];
     public IReadOnlyList<Transaction> Transactions => _transactions;
+    private readonly List<Payment> _payments = [];
+    public IReadOnlyList<Payment> Payments => _payments;
 
     private Wallet() { }
 
@@ -20,7 +23,8 @@ public sealed class Wallet : AggregateRoot
     {
         return _transactions
             .Where(transaction => !transaction.IsCancelled)
-            .Sum(transaction => transaction.Amount);
+            .Sum(transaction => transaction.Amount)
+            - _payments.Sum(payment => payment.Price);
     }
 
     public void Deposit(Guid administratorId, int amount, DateTime createdAt)
@@ -52,5 +56,18 @@ public sealed class Wallet : AggregateRoot
         }
 
         transaction.Cancel(reason, cancelledAt);
+    }
+
+    public void Pay(IReadOnlyList<CartItem> items, IReadOnlyDictionary<Guid, Guid> ownerIds, DateTime paidAt)
+    {
+        if (Balance() < items.Sum(item => item.Price))
+        {
+            throw new DomainException("The wallet balance is not enough to pay for the items.");
+        }
+
+        foreach (var item in items)
+        {
+            _payments.Add(new Payment(item.EntityId, item.Name, ownerIds[item.EntityId], item.Price, paidAt));
+        }
     }
 }

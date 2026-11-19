@@ -95,6 +95,21 @@
                     Cancel
                   </button>
                 </div>
+              } @else if (closingClubId() === club.id) {
+                <p>Are you sure?</p>
+                <div class="actions">
+                  <button
+                    class="button button--primary"
+                    type="button"
+                    [disabled]="pending()"
+                    (click)="close(club)"
+                  >
+                    Confirm
+                  </button>
+                  <button class="button" type="button" (click)="closingClubId.set(null)">
+                    Cancel
+                  </button>
+                </div>
               } @else {
                 <div class="actions">
                   <button
@@ -113,6 +128,18 @@
                   >
                     Delete
                   </button>
+                  @if (club.status === 'Active') {
+                    <button
+                      class="button"
+                      type="button"
+                      [disabled]="editPendingFiles().length > 0"
+                      (click)="startClose(club.id)"
+                    >
+                      Close
+                    </button>
+                  } @else {
+                    <span class="badge badge--danger">Closed</span>
+                  }
                 </div>
               }
             </div>

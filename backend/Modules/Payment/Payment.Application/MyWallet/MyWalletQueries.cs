@@ -23,6 +23,7 @@ public sealed class MyWalletQueries
         }
 
         var transactions = await _walletReadRepository.GetTransactionsAsync(wallet.Id);
-        return new WalletDto(wallet.Balance(), transactions);
+        var payments = await _walletReadRepository.GetPaymentsAsync(wallet.Id);
+        return new WalletDto(wallet.Balance(), transactions, payments);
     }
 }

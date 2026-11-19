@@ -30,6 +30,7 @@ export class MyClubs {
 
   protected readonly editingClubId = signal<string | null>(null);
   protected readonly confirmingClubId = signal<string | null>(null);
+  protected readonly closingClubId = signal<string | null>(null);
   protected readonly pending = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly editError = signal<string | null>(null);
@@ -58,6 +59,7 @@ export class MyClubs {
   protected startEdit(club: ClubDto): void {
     this.cancelEdit();
     this.confirmingClubId.set(null);
+    this.closingClubId.set(null);
     this.editingClubId.set(club.id);
     this.editForm().reset({ name: club.name, description: club.description });
     this.editImages.set(club.images.map((reference) => ({ reference, fileKey: null })));
@@ -140,6 +142,7 @@ export class MyClubs {
 
   protected startDelete(clubId: string): void {
     this.cancelEdit();
+    this.closingClubId.set(null);
     this.confirmingClubId.set(clubId);
   }
 
@@ -154,6 +157,26 @@ export class MyClubs {
       this.clubs.reload();
     } catch (failure) {
       this.error.set(serverMessage(failure, 'Could not delete the club.'));
+    } finally {
+      this.pending.set(false);
+    }
+  }
+
+  protected startClose(clubId: string): void {
+    this.cancelEdit();
+    this.confirmingClubId.set(null);
+    this.closingClubId.set(clubId);
+  }
+
+  protected async close(club: ClubDto): Promise<void> {
+    this.pending.set(true);
+    this.error.set(null);
+    try {
+      await this.clubAuthoring.close(club.id);
+      this.closingClubId.set(null);
+      this.clubs.reload();
+    } catch (failure) {
+      this.error.set(serverMessage(failure, 'Could not close the club.'));
     } finally {
       this.pending.set(false);
     }

@@ -42,6 +42,14 @@ public sealed class ClubAuthoringService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task CloseAsync(Guid clubId, Guid userId)
+    {
+        var club = await GetClubAsync(clubId);
+
+        club.Close(userId);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     private async Task<Club> GetClubAsync(Guid clubId)
     {
         var club = await _clubRepository.GetByIdAsync(clubId);

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Exploration.Application.KeyPointAuthoring;
+using Exploration.Application.Tours;
 using Exploration.Domain.Tours;
 using Exploration.Infrastructure.Persistence;
 using Exploration.Tests.Integration.Seeds;
