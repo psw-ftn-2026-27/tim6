@@ -35,4 +35,26 @@ public sealed record DailyTimeWindow
         Start = start;
         End = end;
     }
+
+    // The start belongs to the window and the end does not; a window that crosses midnight
+    // holds the moments before and after it.
+    public bool Contains(TimeOnly moment)
+    {
+        return moment.IsBetween(Start, End);
+    }
+
+    public bool IsOpenAt(DateTime utcMoment)
+    {
+        return Contains(TimeOnly.FromDateTime(CityTime.FromUtc(utcMoment)));
+    }
+
+    // Whether the window that was open at the start has ended by the moment. A run starts inside
+    // the window, so its window ends at the first end time after the start; subtracting two
+    // TimeOnly values wraps around midnight.
+    public bool HasEndedSince(DateTime utcStart, DateTime utcMoment)
+    {
+        var start = CityTime.FromUtc(utcStart);
+        var endsAt = start + (End - TimeOnly.FromDateTime(start));
+        return CityTime.FromUtc(utcMoment) >= endsAt;
+    }
 }

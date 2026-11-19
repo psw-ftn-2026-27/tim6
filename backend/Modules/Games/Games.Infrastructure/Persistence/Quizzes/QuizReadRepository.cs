@@ -1,6 +1,6 @@
+using Games.Application.ChallengeMap;
 using Games.Application.Challenges;
 using Games.Application.QuizAuthoring;
-using Games.Application.QuizSolving;
 using Games.Application.Quizzes;
 using Games.Domain.Challenges;
 using Microsoft.EntityFrameworkCore;
@@ -45,11 +45,11 @@ internal sealed class QuizReadRepository : IQuizReadRepository
             .ToList();
     }
 
-    public Task<List<PublishedQuizLocationDto>> GetPublishedAsync(Guid touristId)
+    public Task<List<QuizOnMapDto>> GetPublishedForMapAsync(Guid touristId)
     {
         return _dbContext.Quizzes
             .Where(quiz => quiz.Status == ChallengeStatus.Published)
-            .Select(quiz => new PublishedQuizLocationDto(
+            .Select(quiz => new QuizOnMapDto(
                 quiz.Id,
                 quiz.Name,
                 quiz.Xp,

@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Games.Application.QuizSolving;
-using Games.Domain.Challenges;
 using Games.Tests.Integration.Seeds;
 using Shared.Tests;
 using Xunit;
@@ -35,25 +34,6 @@ public class QuizSolvingQueryTests : BaseIntegrationTest
                     question.Options.Select(option => option.Text).ToList()))
                 .ToList());
         solving.Should().BeEquivalentTo(expected, options => options.ComparingRecordsByMembers().WithStrictOrdering());
-    }
-
-    [Fact]
-    public async Task List_holds_only_published_quizzes_and_marks_those_the_explorer_solved()
-    {
-        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-
-        var quizzes = await client.GetFromJsonAsync<List<PublishedQuizDto>>(
-            "/api/games/quizzes/published?latitude=45.2551&longitude=19.8451", JsonOptions);
-
-        var expected = QuizSeed.All
-            .Where(quiz => quiz.Status == ChallengeStatus.Published)
-            .Select(quiz => new
-            {
-                quiz.Id,
-                IsSolved = ChallengeProgressSeed.All.Any(progress =>
-                    progress.ChallengeId == quiz.Id && progress.TouristId == WellKnownUsers.Explorer && progress.IsSolved())
-            });
-        quizzes.Should().BeEquivalentTo(expected);
     }
 
     [Fact]
@@ -119,22 +99,5 @@ public class QuizSolvingQueryTests : BaseIntegrationTest
             $"/api/games/quizzes/attempts/{QuizAttemptSeed.ExplorerHalfCorrectOnFortressGates.Id}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-    }
-
-    [Fact]
-    public async Task List_is_ordered_from_the_nearest_quiz_to_the_farthest()
-    {
-        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-        var explorerLocation = new Location(45.2520, 19.8610);
-
-        var quizzes = await client.GetFromJsonAsync<List<PublishedQuizDto>>(FormattableString.Invariant(
-            $"/api/games/quizzes/published?latitude={explorerLocation.Latitude}&longitude={explorerLocation.Longitude}"),
-            JsonOptions);
-
-        var expectedOrder = QuizSeed.All
-            .Where(quiz => quiz.Status == ChallengeStatus.Published)
-            .OrderBy(quiz => quiz.Location!.DistanceTo(explorerLocation))
-            .Select(quiz => quiz.Id);
-        quizzes!.Select(quiz => quiz.Id).Should().Equal(expectedOrder);
     }
 }

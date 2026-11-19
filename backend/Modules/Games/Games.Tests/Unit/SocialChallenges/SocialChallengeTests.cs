@@ -27,6 +27,20 @@ public class SocialChallengeTests
         return challenge;
     }
 
+    private static readonly Location AtChallenge = new(45.2551, 19.8451);
+    private static readonly Location FarFromChallenge = new(45.2561, 19.8451);
+    // The window is 18:00 to 20:00 in Belgrade, which is UTC+1 in November.
+    private static readonly DateTime WindowOpening = new(2026, 11, 19, 17, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime WindowClosing = new(2026, 11, 19, 19, 0, 0, DateTimeKind.Utc);
+
+    private static SocialChallenge CreatePublishedChallengeFor(int requiredPeople)
+    {
+        var challenge = CreateChallenge(requiredPeople);
+        challenge.PlaceAt(AtChallenge);
+        challenge.Publish();
+        return challenge;
+    }
+
     private static SocialChallenge CreateRetiredChallenge()
     {
         var challenge = CreatePublishedChallenge();
@@ -303,5 +317,142 @@ public class SocialChallengeTests
         var deletion = () => challenge.Delete();
 
         deletion.Should().NotThrow();
+    }
+
+    [Theory]
+    [InlineData(16, 59)]
+    [InlineData(19, 0)]
+    [InlineData(22, 30)]
+    public void Social_challenge_is_not_activated_outside_its_daily_time_window(int utcHour, int utcMinute)
+    {
+        var challenge = CreatePublishedChallengeFor(2);
+
+        var activation = () => challenge.Activate(Guid.NewGuid(), AtChallenge,
+            new DateTime(2026, 11, 19, utcHour, utcMinute, 0, DateTimeKind.Utc));
+
+        activation.Should().Throw<DomainException>();
+        challenge.ActiveRun.Should().BeNull();
+    }
+
+    [Fact]
+    public void Tourist_who_activates_while_a_run_is_active_joins_it_instead_of_starting_a_new_one()
+    {
+        var challenge = CreatePublishedChallengeFor(5);
+        var firstTourist = Guid.NewGuid();
+        var secondTourist = Guid.NewGuid();
+        challenge.Activate(firstTourist, AtChallenge, WindowOpening);
+        var activeRun = challenge.ActiveRun;
+
+        challenge.Activate(secondTourist, AtChallenge, WindowOpening.AddSeconds(10));
+
+        challenge.ActiveRun.Should().BeSameAs(activeRun);
+        challenge.ActiveRun!.Participants.Select(participant => participant.TouristId)
+            .Should().BeEquivalentTo([firstTourist, secondTourist]);
+    }
+
+    [Fact]
+    public void Check_removes_the_participant_out_of_range_and_the_one_silent_for_thirty_seconds()
+    {
+        var challenge = CreatePublishedChallengeFor(5);
+        var silentTourist = Guid.NewGuid();
+        var recentTourist = Guid.NewGuid();
+        var leavingTourist = Guid.NewGuid();
+        challenge.Activate(silentTourist, AtChallenge, WindowOpening);
+        challenge.Activate(recentTourist, AtChallenge, WindowOpening.AddSeconds(20));
+        challenge.Activate(leavingTourist, AtChallenge, WindowOpening.AddSeconds(25));
+
+        challenge.CheckPosition(leavingTourist, FarFromChallenge, WindowOpening.AddSeconds(30));
+
+        challenge.ActiveRun!.Participants.Select(participant => participant.TouristId)
+            .Should().BeEquivalentTo([recentTourist]);
+    }
+
+    [Fact]
+    public void Check_removes_the_participant_silent_for_thirty_seconds_across_the_switch_to_winter_time()
+    {
+        var challenge = new SocialChallenge("Noćno okupljanje", new DailyTimeWindow(new TimeOnly(1, 0), new TimeOnly(4, 0)),
+            5, 50, 100, "Svi ste se okupili!");
+        challenge.PlaceAt(AtChallenge);
+        challenge.Publish();
+        var silentTourist = Guid.NewGuid();
+        var recentTourist = Guid.NewGuid();
+        var beforeSwitch = new DateTime(2026, 10, 25, 0, 59, 50, DateTimeKind.Utc);
+        challenge.Activate(silentTourist, AtChallenge, beforeSwitch);
+        challenge.Activate(recentTourist, AtChallenge, beforeSwitch.AddSeconds(10));
+
+        challenge.CheckPosition(recentTourist, AtChallenge, beforeSwitch.AddSeconds(40));
+
+        challenge.ActiveRun!.Participants.Select(participant => participant.TouristId)
+            .Should().BeEquivalentTo([recentTourist]);
+    }
+
+    [Fact]
+    public void Check_in_a_social_challenge_that_is_no_longer_published_is_rejected()
+    {
+        var challenge = CreatePublishedChallengeFor(2);
+        var tourist = Guid.NewGuid();
+        challenge.Activate(tourist, AtChallenge, WindowOpening);
+        challenge.Retire();
+
+        var check = () => challenge.CheckPosition(tourist, AtChallenge, WindowOpening.AddSeconds(10));
+
+        check.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Check_after_the_window_ends_closes_the_run_and_nobody_earns_xp()
+    {
+        var challenge = CreatePublishedChallengeFor(2);
+        var firstTourist = Guid.NewGuid();
+        var secondTourist = Guid.NewGuid();
+        challenge.Activate(firstTourist, AtChallenge, WindowClosing.AddSeconds(-20));
+        challenge.Activate(secondTourist, AtChallenge, WindowClosing.AddSeconds(-10));
+
+        var solvers = challenge.CheckPosition(firstTourist, AtChallenge, WindowClosing);
+
+        solvers.Should().BeEmpty();
+        challenge.ActiveRun.Should().BeNull();
+    }
+
+    [Fact]
+    public void Check_with_enough_active_participants_solves_the_challenge_for_them_only_and_closes_the_run()
+    {
+        var challenge = CreatePublishedChallengeFor(2);
+        var silentTourist = Guid.NewGuid();
+        var firstTourist = Guid.NewGuid();
+        var secondTourist = Guid.NewGuid();
+        challenge.Activate(silentTourist, AtChallenge, WindowOpening);
+        challenge.Activate(firstTourist, AtChallenge, WindowOpening.AddSeconds(20));
+        challenge.Activate(secondTourist, AtChallenge, WindowOpening.AddSeconds(30));
+
+        var solvers = challenge.CheckPosition(secondTourist, AtChallenge, WindowOpening.AddSeconds(40));
+
+        solvers.Should().BeEquivalentTo([firstTourist, secondTourist]);
+        challenge.ActiveRun.Should().BeNull();
+    }
+
+    [Fact]
+    public void Run_state_does_not_count_a_participant_silent_for_thirty_seconds_and_shows_them_as_left()
+    {
+        var challenge = CreatePublishedChallengeFor(5);
+        var silentTourist = Guid.NewGuid();
+        challenge.Activate(silentTourist, AtChallenge, WindowOpening);
+        challenge.Activate(Guid.NewGuid(), AtChallenge, WindowOpening.AddSeconds(20));
+
+        var state = challenge.RunStateFor(silentTourist, WindowOpening.AddSeconds(30));
+
+        state.Should().Be(new RunState(RunStatus.Left, 1));
+    }
+
+    [Fact]
+    public void Run_state_after_the_window_ends_shows_the_run_as_closed_rather_than_left()
+    {
+        var challenge = CreatePublishedChallengeFor(5);
+        var tourist = Guid.NewGuid();
+        challenge.Activate(tourist, AtChallenge, WindowClosing.AddSeconds(-10));
+
+        var state = challenge.RunStateFor(tourist, WindowClosing);
+
+        state.Should().Be(new RunState(RunStatus.Closed, 0));
     }
 }

@@ -22,6 +22,13 @@ public sealed class Quiz : Challenge
     protected override string KindName => "quiz";
     public override int ActivationRadiusInMeters => ActivationRadius;
 
+    // Whether a tourist at the position can activate a published quiz at the location, for a read
+    // use case that shows quizzes without loading them.
+    public static bool CanBeActivated(Location location, Location? position, bool isSolved)
+    {
+        return !isSolved && IsWithinRadius(location, ActivationRadius, position);
+    }
+
     private Quiz()
     {
         Name = null!;

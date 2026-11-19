@@ -17,6 +17,7 @@ public sealed class SocialChallenge : Challenge
     public int RangeInMeters { get; private set; }
     public int Xp { get; private set; }
     public DailyTimeWindow TimeWindow { get; private set; }
+    public SocialChallengeRun? ActiveRun { get; private set; }
 
     protected override string KindName => "social challenge";
     public override int ActivationRadiusInMeters => RangeInMeters;
@@ -57,6 +58,72 @@ public sealed class SocialChallenge : Challenge
         RangeInMeters = rangeInMeters;
         Xp = xp;
         ExitMessage = exitMessage;
+    }
+
+    // Whether a tourist at the position can activate a published social challenge at the moment,
+    // for a read use case that shows social challenges without loading them.
+    public static bool CanBeActivated(ActivationCheck check)
+    {
+        return !check.IsSolved
+            && IsWithinRadius(check.Location, check.RangeInMeters, check.Position)
+            && check.TimeWindow.IsOpenAt(check.Moment);
+    }
+
+    // Every moment is in UTC. A tourist joins the active run, or starts a new one when there is
+    // none or the window of the last one has ended.
+    public void Activate(Guid touristId, Location position, DateTime moment)
+    {
+        EnsureCanBeActivatedFrom(position);
+        if (!TimeWindow.IsOpenAt(moment))
+        {
+            throw new DomainException("A social challenge can be activated only within its daily time window.");
+        }
+
+        if (ActiveRun is not null && ActiveRun.HasWindowEnded(TimeWindow, moment))
+        {
+            ActiveRun = null;
+        }
+        ActiveRun ??= new SocialChallengeRun(moment);
+        ActiveRun.Join(touristId, moment);
+    }
+
+    // Records the tourist's check and returns the tourists who solve the challenge with it, or
+    // an empty list. A solved run and a run whose window has ended are closed.
+    public List<Guid> CheckPosition(Guid touristId, Location position, DateTime moment)
+    {
+        EnsurePublished();
+        if (ActiveRun is null)
+        {
+            return [];
+        }
+        if (ActiveRun.HasWindowEnded(TimeWindow, moment))
+        {
+            ActiveRun = null;
+            return [];
+        }
+
+        var isInRange = IsWithinRadius(Location!, RangeInMeters, position);
+        var solvers = ActiveRun.Check(touristId, isInRange, moment, RequiredPeople);
+        if (solvers.Count > 0)
+        {
+            ActiveRun = null;
+        }
+        return solvers;
+    }
+
+    // Derives what the tourist sees without changing anything; a closed window shows the run as
+    // closed.
+    public RunState RunStateFor(Guid touristId, DateTime moment)
+    {
+        if (!TimeWindow.IsOpenAt(moment))
+        {
+            return new RunState(RunStatus.Closed, 0);
+        }
+        if (ActiveRun is null || ActiveRun.HasWindowEnded(TimeWindow, moment))
+        {
+            return new RunState(RunStatus.Left, 0);
+        }
+        return ActiveRun.StateFor(touristId, moment);
     }
 
     private static void Validate(string name, DailyTimeWindow timeWindow, int requiredPeople, int rangeInMeters,
