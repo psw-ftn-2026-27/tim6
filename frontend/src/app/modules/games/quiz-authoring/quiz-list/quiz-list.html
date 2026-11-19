@@ -1,29 +1,31 @@
 @if (!isAdministrator()) {
-  <p class="error">Nemaš pristup ovoj stranici. Kvizovima upravlja administrator.</p>
+  <p class="notice notice--danger" role="alert">
+    You do not have access to this page. Quizzes are managed by an administrator.
+  </p>
 } @else {
   <div class="stack">
     <div class="page-header">
-      <h1>Kvizovi</h1>
+      <h1>Quizzes</h1>
       <button
         class="button button--primary"
         type="button"
         [disabled]="pending()"
         (click)="startCreate()"
       >
-        Nov kviz
+        New quiz
       </button>
     </div>
 
     @if (formOpen()) {
       <form class="card stack" (submit)="save($event)">
-        <h2>{{ editingQuizId() === null ? 'Nov kviz' : 'Izmena kviza' }}</h2>
+        <h2>{{ editingQuizId() === null ? 'New quiz' : 'Edit quiz' }}</h2>
 
         @if (formError()) {
-          <p class="error">{{ formError() }}</p>
+          <p class="notice notice--danger" role="alert">{{ formError() }}</p>
         }
 
         <div class="field">
-          <label for="name">Naziv</label>
+          <label for="name">Name</label>
           <input id="name" type="text" [formField]="quizForm.name" />
           @if (quizForm.name().touched()) {
             @for (message of quizForm.name().errors(); track $index) {
@@ -33,7 +35,7 @@
         </div>
 
         <div class="field">
-          <label for="instructions">Uputstva</label>
+          <label for="instructions">Instructions</label>
           <textarea id="instructions" rows="3" [formField]="quizForm.instructions"></textarea>
           @if (quizForm.instructions().touched()) {
             @for (message of quizForm.instructions().errors(); track $index) {
@@ -53,27 +55,27 @@
         </div>
 
         <div class="stack">
-          <span class="field-label">Pitanja</span>
+          <span class="meta">Questions</span>
 
           @for (question of quizForm.questions; track $index; let questionIndex = $index) {
             <fieldset class="question stack">
               <div class="field">
-                <label for="question-{{ questionIndex }}">Pitanje {{ questionIndex + 1 }}</label>
+                <label for="question-{{ questionIndex }}">Question {{ questionIndex + 1 }}</label>
                 <input id="question-{{ questionIndex }}" type="text" [formField]="question.text" />
               </div>
 
               @for (option of question.options; track $index; let optionIndex = $index) {
-                <div class="option">
+                <div class="field option">
                   <input
                     type="radio"
                     name="correct-{{ questionIndex }}"
-                    aria-label="Tačan odgovor"
+                    aria-label="Correct answer"
                     [checked]="option.isCorrect().value()"
                     (change)="markCorrect(questionIndex, optionIndex)"
                   />
                   <input
                     type="text"
-                    aria-label="Odgovor {{ optionIndex + 1 }}"
+                    aria-label="Answer {{ optionIndex + 1 }}"
                     [formField]="option.text"
                   />
                   <button
@@ -82,7 +84,7 @@
                     [disabled]="pending() || !canRemoveOption(questionIndex)"
                     (click)="removeOption(questionIndex, optionIndex)"
                   >
-                    Ukloni
+                    Remove
                   </button>
                 </div>
               }
@@ -94,7 +96,7 @@
                   [disabled]="pending() || !canAddOption(questionIndex)"
                   (click)="addOption(questionIndex)"
                 >
-                  Dodaj odgovor
+                  Add answer
                 </button>
                 <button
                   class="button"
@@ -102,12 +104,12 @@
                   [disabled]="pending() || !canRemoveQuestion()"
                   (click)="removeQuestion(questionIndex)"
                 >
-                  Ukloni pitanje
+                  Remove question
                 </button>
               </div>
             </fieldset>
           } @empty {
-            <p class="hint">Kviz još nema pitanja.</p>
+            <p class="meta">The quiz has no questions yet.</p>
           }
 
           <div class="actions">
@@ -117,13 +119,13 @@
               [disabled]="pending() || !canAddQuestion()"
               (click)="addQuestion()"
             >
-              Dodaj pitanje
+              Add question
             </button>
           </div>
         </div>
 
         <div class="field">
-          <span class="field-label">Lokacija</span>
+          <span class="meta">Location</span>
           <app-geographic-map
             [pins]="savedPins()"
             [selectionEnabled]="true"
@@ -137,7 +139,7 @@
                 [disabled]="pending()"
                 (click)="removeLocation()"
               >
-                Ukloni lokaciju
+                Remove location
               </button>
             </div>
           }
@@ -149,23 +151,25 @@
             type="submit"
             [disabled]="!quizForm().valid() || pending()"
           >
-            Sačuvaj
+            Save
           </button>
           <button class="button" type="button" [disabled]="pending()" (click)="cancelForm()">
-            Otkaži
+            Cancel
           </button>
         </div>
       </form>
     }
 
     @if (error()) {
-      <p class="error">{{ error() }}</p>
+      <p class="notice notice--danger" role="alert">{{ error() }}</p>
     }
 
     @if (quizzes.isLoading()) {
-      <p>Učitavanje kvizova...</p>
+      <p>Loading quizzes...</p>
     } @else if (quizzes.error()) {
-      <p class="error">Kvizovi nisu učitani. Prijavite se kao administrator i pokušajte ponovo.</p>
+      <p class="notice notice--danger" role="alert">
+        The quizzes could not be loaded. Sign in as an administrator and try again.
+      </p>
     } @else {
       @for (quiz of quizzes.value() ?? []; track quiz.id) {
         <app-quiz-card
@@ -178,7 +182,9 @@
           (cancelAction)="cancelAction()"
         />
       } @empty {
-        <p>Još nema kvizova.</p>
+        <div class="empty">
+          <p>There are no quizzes yet.</p>
+        </div>
       }
     }
   </div>

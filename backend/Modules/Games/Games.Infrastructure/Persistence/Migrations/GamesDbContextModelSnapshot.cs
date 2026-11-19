@@ -23,6 +23,110 @@ namespace Games.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Games.Domain.ChallengeProgresses.ChallengeProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("EarnedXp")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("SolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TouristId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChallengeId", "TouristId")
+                        .IsUnique();
+
+                    b.ToTable("ChallengeProgresses", "games");
+                });
+
+            modelBuilder.Entity("Games.Domain.LocationChallenges.HiddenPoint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("LocationChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LocationChallengeId");
+
+                    b.ToTable("HiddenPoints", "games");
+                });
+
+            modelBuilder.Entity("Games.Domain.LocationChallenges.LocationChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Xp")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LocationChallenges", "games");
+                });
+
+            modelBuilder.Entity("Games.Domain.QuizAttempts.QuizAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AwardedXp")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CorrectAnswers")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FinishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("QuestionCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("SolvedQuiz")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TouristId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("QuizAttempts", "games");
+                });
+
             modelBuilder.Entity("Games.Domain.Quizzes.Quiz", b =>
                 {
                     b.Property<Guid>("Id")
@@ -89,6 +193,89 @@ namespace Games.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SocialChallenges", "games");
+                });
+
+            modelBuilder.Entity("Games.Domain.LocationChallenges.HiddenPoint", b =>
+                {
+                    b.HasOne("Games.Domain.LocationChallenges.LocationChallenge", null)
+                        .WithMany("HiddenPoints")
+                        .HasForeignKey("LocationChallengeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Games.Domain.Challenges.Location", "Location", b1 =>
+                        {
+                            b1.Property<Guid>("HiddenPointId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("double precision");
+
+                            b1.HasKey("HiddenPointId");
+
+                            b1.ToTable("HiddenPoints", "games");
+
+                            b1.WithOwner()
+                                .HasForeignKey("HiddenPointId");
+                        });
+
+                    b.Navigation("Location")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Games.Domain.LocationChallenges.LocationChallenge", b =>
+                {
+                    b.OwnsOne("Games.Domain.Challenges.Location", "Location", b1 =>
+                        {
+                            b1.Property<Guid>("LocationChallengeId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<double>("Latitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double>("Longitude")
+                                .HasColumnType("double precision");
+
+                            b1.HasKey("LocationChallengeId");
+
+                            b1.ToTable("LocationChallenges", "games");
+
+                            b1.WithOwner()
+                                .HasForeignKey("LocationChallengeId");
+                        });
+
+                    b.Navigation("Location");
+                });
+
+            modelBuilder.Entity("Games.Domain.QuizAttempts.QuizAttempt", b =>
+                {
+                    b.OwnsMany("Games.Domain.Quizzes.SelectedAnswer", "Answers", b1 =>
+                        {
+                            b1.Property<Guid>("QuizAttemptId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("OptionIndex");
+
+                            b1.Property<int>("QuestionIndex");
+
+                            b1.HasKey("QuizAttemptId", "__synthesizedOrdinal");
+
+                            b1.ToTable("QuizAttempts", "games");
+
+                            b1
+                                .ToJson("Answers")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("QuizAttemptId");
+                        });
+
+                    b.Navigation("Answers");
                 });
 
             modelBuilder.Entity("Games.Domain.Quizzes.Quiz", b =>
@@ -207,6 +394,11 @@ namespace Games.Infrastructure.Persistence.Migrations
 
                     b.Navigation("TimeWindow")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Games.Domain.LocationChallenges.LocationChallenge", b =>
+                {
+                    b.Navigation("HiddenPoints");
                 });
 #pragma warning restore 612, 618
         }

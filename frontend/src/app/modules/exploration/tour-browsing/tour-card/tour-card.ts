@@ -10,4 +10,5 @@ import { TourDto } from '../../api/exploration-api-types';
 })
 export class TourCard {
   readonly tour = input.required<TourDto>();
+  readonly canStart = input(false);
 }

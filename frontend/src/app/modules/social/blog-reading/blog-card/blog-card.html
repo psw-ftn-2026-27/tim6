@@ -3,7 +3,12 @@
 
   <p>{{ preview() }}</p>
 
-  <p class="meta">Status: {{ blog().status }}</p>
+  <p class="meta">
+    Status:
+    <span class="badge" [class.badge--success]="blog().status === 'Published'">{{
+      blog().status
+    }}</span>
+  </p>
 
   <p class="meta">Comments: {{ blog().comments.length }}</p>
 

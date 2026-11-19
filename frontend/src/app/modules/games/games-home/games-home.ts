@@ -6,11 +6,21 @@ import { Auth } from '../../../core/auth/auth';
   imports: [RouterLink],
   selector: 'app-games-home',
   template: `
-    <h1>Games</h1>
-    @if (isAdministrator()) {
-      <a class="button" routerLink="/games/challenges">Upravljanje izazovima</a>
-      <a class="button" routerLink="/games/quizzes">Upravljanje kvizovima</a>
-    }
+    <div class="stack">
+      <h1>Games</h1>
+      @if (isAdministrator()) {
+        <div class="actions">
+          <a class="button" routerLink="/games/challenges">Upravljanje izazovima</a>
+          <a class="button" routerLink="/games/quizzes">Manage quizzes</a>
+          <a class="button" routerLink="/games/location-challenges">Manage location challenges</a>
+        </div>
+      }
+      @if (isExplorer()) {
+        <div class="actions">
+          <a class="button" routerLink="/games/quizzes/published">Challenges</a>
+        </div>
+      }
+    </div>
   `,
 })
 export class GamesHome {
@@ -18,5 +28,8 @@ export class GamesHome {
 
   protected readonly isAdministrator = computed(
     () => this.auth.user()?.roles.includes('administrator') ?? false,
+  );
+  protected readonly isExplorer = computed(
+    () => this.auth.user()?.roles.includes('explorer') ?? false,
   );
 }

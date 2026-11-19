@@ -31,6 +31,22 @@ public sealed class ClubMembershipService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task AcceptInvitationAsync(Guid clubId, Guid userId)
+    {
+        var club = await GetClubAsync(clubId);
+
+        club.AcceptInvitation(userId);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task RejectInvitationAsync(Guid clubId, Guid userId)
+    {
+        var club = await GetClubAsync(clubId);
+
+        club.RejectInvitation(userId);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     private async Task<Club> GetClubAsync(Guid clubId)
     {
         var club = await _clubRepository.GetByIdAsync(clubId);

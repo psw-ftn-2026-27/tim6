@@ -1,0 +1,43 @@
+<div class="stack">
+  <p><a routerLink="/games/quizzes/published">Back to challenges</a></p>
+
+  @if (positionError()) {
+    <p class="error">{{ positionError() }}</p>
+  } @else if (position.isLoading()) {
+    <p>Loading your position...</p>
+  } @else if (explorerPosition() === null) {
+    <p class="error">You have not marked your position. Mark it on the challenge map.</p>
+  } @else if (quizError()) {
+    <p class="error">{{ quizError() }}</p>
+  } @else if (quiz.isLoading()) {
+    <p>Loading the quiz...</p>
+  } @else if (submitError()) {
+    <p class="error">{{ submitError() }}</p>
+    <div>
+      <button class="button button--primary" type="button" (click)="resend()">Try again</button>
+    </div>
+  } @else if (attemptId() !== null) {
+    @if (resultError()) {
+      <p class="error">{{ resultError() }}</p>
+    } @else if (result.hasValue()) {
+      <app-attempt-result [result]="result.value()" (tryAgain)="tryAgain()" />
+    } @else {
+      <p>Loading the result...</p>
+    }
+  } @else if (quiz.hasValue()) {
+    <h1>{{ quiz.value().name }}</h1>
+    <p>{{ quiz.value().instructions }}</p>
+
+    @if (question(); as current) {
+      <app-quiz-question
+        [question]="current"
+        [number]="questionIndex() + 1"
+        [total]="quiz.value().questions.length"
+        [pending]="submitting()"
+        (answered)="next($event)"
+      />
+    } @else if (submitting()) {
+      <p>Sending your answers...</p>
+    }
+  }
+</div>

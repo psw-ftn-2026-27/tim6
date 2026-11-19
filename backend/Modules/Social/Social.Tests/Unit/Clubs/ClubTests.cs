@@ -372,6 +372,101 @@ public class ClubTests
         club.Members.Should().ContainSingle(member => member.UserId == FirstPlainMember);
     }
 
+    [Fact]
+    public void Moderator_cannot_invite_a_user_to_the_club()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+        var invitee = Guid.NewGuid();
+
+        var invitation = () => club.Invite(WellKnownUsers.SecondExplorer, invitee);
+
+        invitation.Should().Throw<DomainException>();
+        club.Invitations.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void User_cannot_be_invited_to_a_closed_club()
+    {
+        var club = CreateClosedClubWithTwoModeratorsAndTwoPlainMembers();
+        var invitee = Guid.NewGuid();
+
+        var invitation = () => club.Invite(WellKnownUsers.Explorer, invitee);
+
+        invitation.Should().Throw<DomainException>();
+        club.Invitations.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Club_member_cannot_be_invited()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+
+        var invitation = () => club.Invite(WellKnownUsers.Explorer, FirstPlainMember);
+
+        invitation.Should().Throw<DomainException>();
+        club.Invitations.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void User_with_a_pending_invitation_cannot_be_invited_again_to_the_same_club()
+    {
+        var club = CreateClub();
+        club.Invite(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
+
+        var invitation = () => club.Invite(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
+
+        invitation.Should().Throw<DomainException>();
+        club.Invitations.Should().ContainSingle(invitation => invitation.UserId == WellKnownUsers.SecondExplorer);
+    }
+
+    [Fact]
+    public void Moderator_cannot_withdraw_an_invitation_and_the_invitation_remains()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+        var invitee = Guid.NewGuid();
+        club.Invite(WellKnownUsers.Explorer, invitee);
+
+        var withdrawal = () => club.WithdrawInvitation(WellKnownUsers.SecondExplorer, invitee);
+
+        withdrawal.Should().Throw<DomainException>();
+        club.Invitations.Should().ContainSingle(invitation => invitation.UserId == invitee);
+    }
+
+    [Fact]
+    public void User_without_an_invitation_cannot_accept_one_and_does_not_become_a_member()
+    {
+        var club = CreateClub();
+
+        var acceptance = () => club.AcceptInvitation(WellKnownUsers.SecondExplorer);
+
+        acceptance.Should().Throw<DomainException>();
+        club.Members.Should().NotContain(member => member.UserId == WellKnownUsers.SecondExplorer);
+    }
+
+    [Fact]
+    public void Accepting_an_invitation_also_removes_the_users_join_request()
+    {
+        var club = CreateClub();
+        club.RequestToJoin(WellKnownUsers.SecondExplorer);
+        club.Invite(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
+
+        club.AcceptInvitation(WellKnownUsers.SecondExplorer);
+
+        club.JoinRequests.Should().NotContain(request => request.UserId == WellKnownUsers.SecondExplorer);
+    }
+
+    [Fact]
+    public void Closing_removes_all_pending_invitations()
+    {
+        var club = CreateClub();
+        club.Invite(WellKnownUsers.Explorer, Guid.NewGuid());
+        club.Invite(WellKnownUsers.Explorer, Guid.NewGuid());
+
+        club.Close(WellKnownUsers.Explorer);
+
+        club.Invitations.Should().BeEmpty();
+    }
+
     private static Club CreateClosedClubWithTwoModeratorsAndTwoPlainMembers()
     {
         var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();

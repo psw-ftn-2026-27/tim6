@@ -77,3 +77,71 @@ export interface UpdateQuizDto {
   questions: QuestionDto[];
   location: LocationDto | null;
 }
+
+export interface PublishedQuizDto {
+  id: string;
+  name: string;
+  xp: number;
+  distanceInMeters: number;
+  activationRadiusInMeters: number;
+  isSolved: boolean;
+}
+
+export interface QuestionForSolvingDto {
+  text: string;
+  options: string[];
+}
+
+export interface QuizForSolvingDto {
+  id: string;
+  name: string;
+  instructions: string;
+  questions: QuestionForSolvingDto[];
+}
+
+export interface SelectedAnswerDto {
+  questionIndex: number;
+  optionIndex: number;
+}
+
+export interface SubmitAttemptDto {
+  position: LocationDto;
+  answers: SelectedAnswerDto[];
+}
+
+export interface QuizAttemptResultDto {
+  correctAnswers: number;
+  questionCount: number;
+  awardedXp: number;
+  earnedXp: number;
+  quizXp: number;
+  solvedQuiz: boolean;
+}
+
+export interface HiddenPointDto {
+  image: string;
+  location: LocationDto;
+}
+
+export interface LocationChallengeDto {
+  id: string;
+  name: string;
+  xp: number;
+  status: ChallengeStatus;
+  hiddenPoints: HiddenPointDto[];
+  location: LocationDto | null;
+}
+
+export interface CreateLocationChallengeDto {
+  name: string;
+  xp: number;
+  hiddenPoints: HiddenPointDto[];
+  location: LocationDto | null;
+}
+
+export interface UpdateLocationChallengeDto {
+  name: string;
+  xp: number;
+  hiddenPoints: HiddenPointDto[];
+  location: LocationDto | null;
+}

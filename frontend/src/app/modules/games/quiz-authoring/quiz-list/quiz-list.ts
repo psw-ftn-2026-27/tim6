@@ -50,11 +50,11 @@ export class QuizList {
   protected readonly quizForm = form(
     signal<CreateQuizDto>({ name: '', instructions: '', xp: 1, questions: [], location: null }),
     (path) => {
-      required(path.name, { message: 'Naziv je obavezan.' });
-      maxLength(path.name, 200, { message: 'Naziv može imati najviše 200 znakova.' });
-      required(path.instructions, { message: 'Uputstva su obavezna.' });
-      required(path.xp, { message: 'XP je obavezan.' });
-      min(path.xp, 1, { message: 'XP mora biti veći od 0.' });
+      required(path.name, { message: 'The name is required.' });
+      maxLength(path.name, 200, { message: 'The name has at most 200 characters.' });
+      required(path.instructions, { message: 'The instructions are required.' });
+      required(path.xp, { message: 'The XP is required.' });
+      min(path.xp, 1, { message: 'The XP must be greater than 0.' });
     },
   );
 
@@ -185,7 +185,7 @@ export class QuizList {
       this.cancelForm();
       this.quizzes.reload();
     } catch (failure) {
-      this.formError.set(serverMessage(failure, 'Kviz nije sačuvan.'));
+      this.formError.set(serverMessage(failure, 'The quiz could not be saved.'));
     } finally {
       this.pending.set(false);
     }
@@ -224,7 +224,7 @@ export class QuizList {
       this.cancelAction();
       this.quizzes.reload();
     } catch (failure) {
-      this.error.set(serverMessage(failure, 'Radnja nije izvršena.'));
+      this.error.set(serverMessage(failure, 'The action could not be completed.'));
     } finally {
       this.pending.set(false);
     }

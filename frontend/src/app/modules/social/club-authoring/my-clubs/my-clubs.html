@@ -5,13 +5,15 @@
   </div>
 
   @if (error()) {
-    <p class="error">{{ error() }}</p>
+    <p class="notice notice--danger" role="alert">{{ error() }}</p>
   }
 
   @if (clubs.isLoading()) {
     <p>Loading your clubs...</p>
   } @else if (clubs.error()) {
-    <p class="error">Could not load your clubs. Log in and try again.</p>
+    <p class="notice notice--danger" role="alert">
+      Could not load your clubs. Log in and try again.
+    </p>
   } @else {
     @for (club of clubs.value() ?? []; track club.id) {
       <article class="card">
@@ -52,7 +54,7 @@
             </div>
 
             @if (editError()) {
-              <p class="error">{{ editError() }}</p>
+              <p class="notice notice--danger" role="alert">{{ editError() }}</p>
             }
 
             <div class="actions">
@@ -84,7 +86,7 @@
                 <p>Are you sure?</p>
                 <div class="actions">
                   <button
-                    class="button button--primary"
+                    class="button button--danger"
                     type="button"
                     [disabled]="pending()"
                     (click)="remove(club)"
@@ -147,7 +149,7 @@
         }
       </article>
     } @empty {
-      <p>You have no clubs yet.</p>
+      <div class="empty"><p>You have no clubs yet.</p></div>
     }
   }
 </div>
