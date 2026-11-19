@@ -1,5 +1,7 @@
 @if (!isAdministrator()) {
-  <p class="error">Nemaš pristup ovoj stranici. Kvizovima upravlja administrator.</p>
+  <p class="notice notice--danger" role="alert">
+    Nemaš pristup ovoj stranici. Kvizovima upravlja administrator.
+  </p>
 } @else {
   <div class="stack">
     <div class="page-header">
@@ -19,7 +21,7 @@
         <h2>{{ editingQuizId() === null ? 'Nov kviz' : 'Izmena kviza' }}</h2>
 
         @if (formError()) {
-          <p class="error">{{ formError() }}</p>
+          <p class="notice notice--danger" role="alert">{{ formError() }}</p>
         }
 
         <div class="field">
@@ -53,7 +55,7 @@
         </div>
 
         <div class="stack">
-          <span class="field-label">Pitanja</span>
+          <span class="meta">Pitanja</span>
 
           @for (question of quizForm.questions; track $index; let questionIndex = $index) {
             <fieldset class="question stack">
@@ -63,7 +65,7 @@
               </div>
 
               @for (option of question.options; track $index; let optionIndex = $index) {
-                <div class="option">
+                <div class="field option">
                   <input
                     type="radio"
                     name="correct-{{ questionIndex }}"
@@ -107,7 +109,7 @@
               </div>
             </fieldset>
           } @empty {
-            <p class="hint">Kviz još nema pitanja.</p>
+            <p class="meta">Kviz još nema pitanja.</p>
           }
 
           <div class="actions">
@@ -123,7 +125,7 @@
         </div>
 
         <div class="field">
-          <span class="field-label">Lokacija</span>
+          <span class="meta">Lokacija</span>
           <app-geographic-map
             [pins]="savedPins()"
             [selectionEnabled]="true"
@@ -159,13 +161,15 @@
     }
 
     @if (error()) {
-      <p class="error">{{ error() }}</p>
+      <p class="notice notice--danger" role="alert">{{ error() }}</p>
     }
 
     @if (quizzes.isLoading()) {
       <p>Učitavanje kvizova...</p>
     } @else if (quizzes.error()) {
-      <p class="error">Kvizovi nisu učitani. Prijavite se kao administrator i pokušajte ponovo.</p>
+      <p class="notice notice--danger" role="alert">
+        Kvizovi nisu učitani. Prijavite se kao administrator i pokušajte ponovo.
+      </p>
     } @else {
       @for (quiz of quizzes.value() ?? []; track quiz.id) {
         <app-quiz-card
@@ -178,7 +182,9 @@
           (cancelAction)="cancelAction()"
         />
       } @empty {
-        <p>Još nema kvizova.</p>
+        <div class="empty">
+          <p>Još nema kvizova.</p>
+        </div>
       }
     }
   </div>
