@@ -1,3 +1,9 @@
+// The description is the paragraph right under the club name. Long lines are hard to read,
+// so it stops at about 65 characters per line.
+h1 + p {
+  max-width: 65ch;
+}
+
 .images {
   display: flex;
   flex-wrap: wrap;

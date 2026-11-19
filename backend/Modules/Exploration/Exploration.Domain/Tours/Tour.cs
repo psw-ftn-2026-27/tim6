@@ -21,6 +21,7 @@ public sealed class Tour : AggregateRoot
     public TourStatus Status { get; private set; }
     public DateTime? PublishedAt { get; private set; }
     public DateTime? ArchivedAt { get; private set; }
+    public bool HasOfferProduct { get; private set; }
     public IReadOnlyList<TransportTime> TransportTimes => _transportTimes;
     public RecommendedGroupSize RecommendedGroupSize { get; private set; }
     public IReadOnlyList<KeyPoint> KeyPoints => _keyPoints;
@@ -71,6 +72,7 @@ public sealed class Tour : AggregateRoot
 
         Status = TourStatus.Published;
         PublishedAt = DateTime.UtcNow;
+        HasOfferProduct = true;
     }
 
     public void Archive()

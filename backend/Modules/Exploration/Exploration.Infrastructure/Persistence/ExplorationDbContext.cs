@@ -1,6 +1,8 @@
 ﻿using Exploration.Application;
+using Exploration.Domain.TourExecutions;
 using Exploration.Domain.TourPreferences;
 using Exploration.Domain.Tours;
+using Exploration.Infrastructure.Persistence.TourExecutions;
 using Exploration.Infrastructure.Persistence.TourPreferences;
 using Exploration.Infrastructure.Persistence.Tours;
 using Exploration.Infrastructure.Persistence.Conversations;
@@ -17,6 +19,7 @@ internal sealed class ExplorationDbContext : DbContext, IUnitOfWork
     public DbSet<TourPreference> TourPreferences => Set<TourPreference>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<TourExecution> TourExecutions => Set<TourExecution>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -24,5 +27,6 @@ internal sealed class ExplorationDbContext : DbContext, IUnitOfWork
         builder.ConfigureTours();
         builder.ConfigureTourPreferences();
         builder.ConfigureConversations();
+        builder.ConfigureTourExecutions();
     }
 }

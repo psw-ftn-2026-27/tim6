@@ -4,6 +4,7 @@ import { MyTours } from './tour-authoring/my-tours/my-tours';
 import { TourKeyPoints } from './tour-authoring/tour-key-points/tour-key-points';
 import { TourList } from './tour-browsing/tour-list/tour-list';
 import { TourPreview } from './tour-browsing/tour-preview/tour-preview';
+import { TourExecution } from './tour-executing/tour-execution/tour-execution';
 import { MyPreferences } from './tour-preference-editing/my-preferences/my-preferences';
 import { TourConversation } from './tour-conversation-messaging/tour-conversation/tour-conversation';
 
@@ -15,4 +16,5 @@ export const explorationRoutes: Routes = [
   { path: 'preferences', component: MyPreferences },
   { path: 'tours/:id/chat', component: TourConversation },
   { path: 'tours/:id', component: TourPreview },
+  { path: 'execution/:tourId', component: TourExecution },
 ];

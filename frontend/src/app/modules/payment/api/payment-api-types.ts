@@ -70,6 +70,22 @@ export interface ProductDto {
   price: number;
 }
 
+export interface CreateCouponDto {
+  productId: string | null;
+  discountPercentage: number;
+  validUntil: string;
+}
+
+export interface CouponDto {
+  id: string;
+  ownerId: string;
+  productId: string | null;
+  productName: string | null;
+  discountPercentage: number;
+  validUntil: string;
+  code: string;
+}
+
 export interface CartItemDto {
   entityId: string;
   name: string;

@@ -2,10 +2,14 @@ using Exploration.Application;
 using Exploration.Application.KeyPointAuthoring;
 using Exploration.Application.TourAuthoring;
 using Exploration.Application.TourBrowsing;
+using Exploration.Application.TourExecuting;
+using Exploration.Application.TourExecutions;
 using Exploration.Application.TourPreferenceEditing;
 using Exploration.Application.TourPreferences;
 using Exploration.Application.Tours;
+using Exploration.Domain.TourExecutions;
 using Exploration.Infrastructure.Persistence;
+using Exploration.Infrastructure.Persistence.TourExecutions;
 using Exploration.Infrastructure.Persistence.TourPreferences;
 using Exploration.Infrastructure.Persistence.Tours;
 using Microsoft.Extensions.Configuration;
@@ -33,6 +37,8 @@ public static class ExplorationModuleExtensions
         services.AddScoped<IConversationRepository, ConversationRepository>();
         services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
         services.AddScoped<IConversationReadRepository, ConversationReadRepository>();
+        services.AddScoped<ITourExecutionRepository, TourExecutionRepository>();
+        services.AddScoped<ITourExecutionReadRepository, TourExecutionReadRepository>();
 
         services.AddScoped<TourAuthoringService>();
         services.AddScoped<TourAuthoringQueries>();
@@ -43,6 +49,9 @@ public static class ExplorationModuleExtensions
         services.AddScoped<TourPreferenceEditingQueries>();
         services.AddScoped<TourConversationMessagingService>();
         services.AddScoped<TourConversationMessagingQueries>();
+        services.AddScoped<TourStarter>();
+        services.AddScoped<TourExecutingService>();
+        services.AddScoped<TourExecutingQueries>();
 
         return services;
     }

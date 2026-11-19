@@ -4,13 +4,15 @@
   <h1>Join requests</h1>
 
   @if (error()) {
-    <p class="error">{{ error() }}</p>
+    <p class="notice notice--danger" role="alert">{{ error() }}</p>
   }
 
   @if (requests.isLoading()) {
     <p>Loading join requests...</p>
   } @else if (requests.error()) {
-    <p class="error">{{ loadError() }}</p>
+    <p class="notice notice--danger" role="alert">{{ loadError() }}</p>
+  } @else if ((requests.value() ?? []).length === 0) {
+    <div class="empty"><p>No pending requests.</p></div>
   } @else {
     <div class="table-wrap">
       <table class="table">
@@ -46,10 +48,6 @@
                   </button>
                 </div>
               </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="3">No pending requests.</td>
             </tr>
           }
         </tbody>

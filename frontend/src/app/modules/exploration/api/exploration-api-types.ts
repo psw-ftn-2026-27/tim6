@@ -162,3 +162,16 @@ export interface MuteParticipantDto {
   participantId: string;
   duration: MuteDuration;
 }
+
+export interface NextKeyPointDto {
+  name: string;
+  description: string;
+  image: string;
+  location: LocationDto;
+}
+
+export interface TourExecutionDto {
+  id: string;
+  tourId: string;
+  nextKeyPoint: NextKeyPointDto;
+}

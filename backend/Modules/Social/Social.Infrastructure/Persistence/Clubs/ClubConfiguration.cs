@@ -28,6 +28,11 @@ internal static class ClubConfiguration
         {
             joinRequests.ToJson();
         });
+
+        builder.OwnsMany(club => club.Invitations, invitations =>
+        {
+            invitations.ToJson();
+        });
     }
 
     private static void ConfigureClubMember(EntityTypeBuilder<ClubMember> builder)

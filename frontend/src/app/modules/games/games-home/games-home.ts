@@ -6,11 +6,16 @@ import { Auth } from '../../../core/auth/auth';
   imports: [RouterLink],
   selector: 'app-games-home',
   template: `
-    <h1>Games</h1>
-    @if (isAdministrator()) {
-      <a class="button" routerLink="/games/challenges">Upravljanje izazovima</a>
-      <a class="button" routerLink="/games/quizzes">Upravljanje kvizovima</a>
-    }
+    <div class="stack">
+      <h1>Games</h1>
+      @if (isAdministrator()) {
+        <div class="actions">
+          <a class="button" routerLink="/games/challenges">Upravljanje izazovima</a>
+          <a class="button" routerLink="/games/quizzes">Upravljanje kvizovima</a>
+          <a class="button" routerLink="/games/location-challenges">Manage location challenges</a>
+        </div>
+      }
+    </div>
   `,
 })
 export class GamesHome {

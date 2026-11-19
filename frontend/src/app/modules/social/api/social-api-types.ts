@@ -182,3 +182,19 @@ export interface UserSearchPageDto {
 export interface SendMessageDto {
   content: string;
 }
+
+export interface ClubInvitationDto {
+  userId: string;
+  userEmail: string | null;
+  sentAt: string;
+}
+
+export interface InviteDto {
+  email: string;
+}
+
+export interface ReceivedClubInvitationDto {
+  clubId: string;
+  clubName: string;
+  sentAt: string;
+}

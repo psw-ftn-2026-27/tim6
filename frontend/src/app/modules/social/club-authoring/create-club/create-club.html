@@ -1,4 +1,4 @@
-<div class="card stack">
+<div class="card stack narrow">
   <h1>Create club</h1>
 
   <form class="stack" (submit)="submit($event)">
@@ -37,7 +37,7 @@
     </div>
 
     @if (error()) {
-      <p class="error">{{ error() }}</p>
+      <p class="notice notice--danger" role="alert">{{ error() }}</p>
     }
 
     <div class="actions">

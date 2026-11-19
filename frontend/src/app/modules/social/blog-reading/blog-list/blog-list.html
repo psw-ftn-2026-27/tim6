@@ -15,13 +15,13 @@
   @if (blogs.isLoading()) {
     <p>Loading blogs...</p>
   } @else if (blogs.error()) {
-    <p class="error">Could not load blogs. Log in and try again.</p>
+    <p class="notice notice--danger" role="alert">Could not load blogs. Log in and try again.</p>
+  } @else if ((blogs.value()?.items ?? []).length === 0) {
+    <div class="empty"><p>No blogs published yet.</p></div>
   } @else {
     <div class="grid">
       @for (blog of blogs.value()?.items ?? []; track blog.id) {
         <app-blog-card [blog]="blog" />
-      } @empty {
-        <p>No blogs published yet.</p>
       }
     </div>
   }

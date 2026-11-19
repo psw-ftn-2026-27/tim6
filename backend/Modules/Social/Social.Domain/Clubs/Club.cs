@@ -17,6 +17,8 @@ public sealed class Club : AggregateRoot
     public IReadOnlyList<ClubMember> Members => _members;
     private readonly List<ClubJoinRequest> _joinRequests = [];
     public IReadOnlyList<ClubJoinRequest> JoinRequests => _joinRequests;
+    private readonly List<ClubInvitation> _invitations = [];
+    public IReadOnlyList<ClubInvitation> Invitations => _invitations;
 
     private Club()
     {
@@ -126,6 +128,48 @@ public sealed class Club : AggregateRoot
         OwnerId = newOwnerId;
     }
 
+    public void Invite(Guid userId, Guid inviteeId)
+    {
+        EnsureActive();
+        if (userId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can invite a user.");
+        }
+        if (FindMember(inviteeId) is not null)
+        {
+            throw new DomainException("A member of the club cannot be invited.");
+        }
+        if (_invitations.Any(invitation => invitation.UserId == inviteeId))
+        {
+            throw new DomainException("An invitation to this club is already pending for this user.");
+        }
+
+        _invitations.Add(new ClubInvitation(inviteeId, DateTime.UtcNow));
+    }
+
+    public void WithdrawInvitation(Guid userId, Guid inviteeId)
+    {
+        if (userId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can withdraw an invitation.");
+        }
+
+        RemovePendingInvitation(inviteeId);
+    }
+
+    public void AcceptInvitation(Guid userId)
+    {
+        EnsureActive();
+        RemovePendingInvitation(userId);
+        _joinRequests.RemoveAll(request => request.UserId == userId);
+        _members.Add(new ClubMember(userId, ClubRole.Member));
+    }
+
+    public void RejectInvitation(Guid userId)
+    {
+        RemovePendingInvitation(userId);
+    }
+
     public void Close(Guid userId)
     {
         if (userId != OwnerId)
@@ -136,6 +180,7 @@ public sealed class Club : AggregateRoot
 
         Status = ClubStatus.Closed;
         _joinRequests.Clear();
+        _invitations.Clear();
     }
 
     public bool CanResolveJoinRequests(Guid userId)
@@ -153,6 +198,17 @@ public sealed class Club : AggregateRoot
         }
 
         _joinRequests.Remove(request);
+    }
+
+    private void RemovePendingInvitation(Guid inviteeId)
+    {
+        var invitation = _invitations.FirstOrDefault(invitation => invitation.UserId == inviteeId);
+        if (invitation is null)
+        {
+            throw new DomainException("There is no pending invitation for this user.");
+        }
+
+        _invitations.Remove(invitation);
     }
 
     private void EnsureActive()
