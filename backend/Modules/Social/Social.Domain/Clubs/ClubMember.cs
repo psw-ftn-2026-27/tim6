@@ -40,4 +40,22 @@ public sealed class ClubMember : Entity
     {
         Role = ClubRole.Moderator;
     }
+
+    public bool CanResolveJoinRequests()
+    {
+        return Role == ClubRole.Owner || Role == ClubRole.Moderator;
+    }
+
+    public bool CanRemove(ClubMember member)
+    {
+        if (Role == ClubRole.Owner)
+        {
+            return member.Role != ClubRole.Owner;
+        }
+        if (Role == ClubRole.Moderator)
+        {
+            return member.Role == ClubRole.Member;
+        }
+        return false;
+    }
 }
