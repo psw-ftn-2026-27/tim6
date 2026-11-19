@@ -28,6 +28,12 @@ internal sealed class CouponReadRepository : ICouponReadRepository
                 coupon.Id,
                 coupon.OwnerId,
                 coupon.ProductId,
+                coupon.ProductId == null
+                    ? null
+                    : _dbContext.Products
+                        .Where(product => product.Id == coupon.ProductId)
+                        .Select(product => product.Name)
+                        .FirstOrDefault(),
                 coupon.DiscountPercentage,
                 coupon.ValidUntil,
                 coupon.Code))

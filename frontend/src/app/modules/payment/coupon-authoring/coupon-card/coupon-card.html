@@ -4,6 +4,6 @@
   <p><strong>Valid until:</strong> {{ date(coupon().validUntil) }}</p>
   <p>
     <strong>Applies to:</strong>
-    {{ coupon().productId ? 'One product' : 'All my products' }}
+    {{ coupon().productName ?? 'All my products' }}
   </p>
 </article>

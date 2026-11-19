@@ -80,6 +80,7 @@ export interface CouponDto {
   id: string;
   ownerId: string;
   productId: string | null;
+  productName: string | null;
   discountPercentage: number;
   validUntil: string;
   code: string;
