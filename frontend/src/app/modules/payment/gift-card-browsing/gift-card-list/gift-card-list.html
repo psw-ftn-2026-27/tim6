@@ -1,0 +1,68 @@
+<div class="stack">
+  <p class="actions">
+    <a routerLink="/payment/wallet">Back to wallet</a>
+    <a routerLink="/payment/gift-cards/new">Gift Explorer coins</a>
+  </p>
+
+  <h1>Gift cards</h1>
+
+  <section class="stack">
+    <h2>Received</h2>
+    @if (received.isLoading()) {
+      <p>Loading received gift cards...</p>
+    } @else if (received.error()) {
+      <p class="notice notice--danger" role="alert">Could not load received gift cards.</p>
+    } @else {
+      <div class="gift-card-grid">
+        @for (giftCard of received.value()?.items ?? []; track giftCard.id) {
+          <app-gift-card-card
+            [giftCard]="giftCard"
+            personLabel="From"
+            [personEmail]="giftCard.senderEmail"
+          />
+        } @empty {
+          <p>No received gift cards yet.</p>
+        }
+      </div>
+      <p class="actions">
+        <button class="button" type="button" [disabled]="receivedPage() === 1" (click)="previousReceived()">
+          Previous
+        </button>
+        <span>Page {{ receivedPage() }}</span>
+        <button class="button" type="button" [disabled]="!hasMoreReceived()" (click)="nextReceived()">
+          Next
+        </button>
+      </p>
+    }
+  </section>
+
+  <section class="stack">
+    <h2>Sent</h2>
+    @if (sent.isLoading()) {
+      <p>Loading sent gift cards...</p>
+    } @else if (sent.error()) {
+      <p class="notice notice--danger" role="alert">Could not load sent gift cards.</p>
+    } @else {
+      <div class="gift-card-grid">
+        @for (giftCard of sent.value()?.items ?? []; track giftCard.id) {
+          <app-gift-card-card
+            [giftCard]="giftCard"
+            personLabel="To"
+            [personEmail]="giftCard.recipientEmail"
+          />
+        } @empty {
+          <p>No sent gift cards yet.</p>
+        }
+      </div>
+      <p class="actions">
+        <button class="button" type="button" [disabled]="sentPage() === 1" (click)="previousSent()">
+          Previous
+        </button>
+        <span>Page {{ sentPage() }}</span>
+        <button class="button" type="button" [disabled]="!hasMoreSent()" (click)="nextSent()">
+          Next
+        </button>
+      </p>
+    }
+  </section>
+</div>

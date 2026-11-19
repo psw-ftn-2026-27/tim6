@@ -104,7 +104,8 @@ public sealed class Club : AggregateRoot
     {
         EnsureActive();
         var member = GetMember(memberId);
-        if (!CanRemove(removerId, member))
+        var remover = FindMember(removerId);
+        if (remover is null || !remover.CanRemove(member))
         {
             throw new DomainException("The owner can remove any other member, and a moderator only a plain member.");
         }
@@ -112,10 +113,35 @@ public sealed class Club : AggregateRoot
         _members.Remove(member);
     }
 
+    public void TransferOwnership(Guid userId, Guid newOwnerId)
+    {
+        EnsureActive();
+        if (userId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can transfer ownership.");
+        }
+
+        GetMember(newOwnerId).TakeOverOwnership();
+        GetMember(userId).HandOverOwnership();
+        OwnerId = newOwnerId;
+    }
+
+    public void Close(Guid userId)
+    {
+        if (userId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can close it.");
+        }
+        EnsureActive();
+
+        Status = ClubStatus.Closed;
+        _joinRequests.Clear();
+    }
+
     public bool CanResolveJoinRequests(Guid userId)
     {
         var member = FindMember(userId);
-        return member is not null && (member.Role == ClubRole.Owner || member.Role == ClubRole.Moderator);
+        return member is not null && member.CanResolveJoinRequests();
     }
 
     private void RemovePendingJoinRequest(Guid applicantId)
@@ -150,24 +176,6 @@ public sealed class Club : AggregateRoot
             throw new DomainException("This user is not a member of the club.");
         }
         return member;
-    }
-
-    private bool CanRemove(Guid removerId, ClubMember member)
-    {
-        var remover = FindMember(removerId);
-        if (remover is null)
-        {
-            return false;
-        }
-        if (remover.Role == ClubRole.Owner)
-        {
-            return member.Role != ClubRole.Owner;
-        }
-        if (remover.Role == ClubRole.Moderator)
-        {
-            return member.Role == ClubRole.Member;
-        }
-        return false;
     }
 
     private void EnsureCanResolve(Guid resolverId)

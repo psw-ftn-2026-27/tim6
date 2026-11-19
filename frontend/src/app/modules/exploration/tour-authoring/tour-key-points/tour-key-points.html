@@ -6,7 +6,7 @@
   @if (tour.isLoading() && !tour.hasValue()) {
     <p>Loading the tour...</p>
   } @else if (tour.error()) {
-    <p class="error">The tour was not found.</p>
+    <p class="notice notice--danger" role="alert">The tour was not found.</p>
   } @else if (tour.hasValue()) {
     <app-geographic-map
       [pins]="route()"
@@ -19,7 +19,7 @@
     />
 
     @if (routeFailed()) {
-      <p class="error">The route could not be calculated.</p>
+      <p class="notice notice--danger" role="alert">The route could not be calculated.</p>
     }
 
     <p>Tour length: {{ tour.value().lengthInKilometers.toFixed(1) }} km</p>
@@ -36,9 +36,9 @@
             }
             <p class="meta">
               @if (point.isVisibleWithoutPurchase) {
-                Visible without purchase
+                <span class="badge badge--accent">Visible without purchase</span>
               } @else {
-                Visible after purchase
+                <span class="badge">Visible after purchase</span>
               }
             </p>
             @if (isDraft()) {
@@ -64,16 +64,18 @@
           </div>
         </li>
       } @empty {
-        <li>The tour has no key points yet.</li>
+        <li class="empty">
+          <p>The tour has no key points yet.</p>
+        </li>
       }
     </ol>
 
     @if (isDraft()) {
       @if (error()) {
-        <p class="error">{{ error() }}</p>
+        <p class="notice notice--danger" role="alert">{{ error() }}</p>
       }
 
-      <form class="card stack" (submit)="save($event)">
+      <form class="card stack narrow" (submit)="save($event)">
         <h2>
           @if (editingId()) {
             Edit key point
@@ -107,10 +109,12 @@
           <input id="secret" type="text" [formField]="form.secret" />
         </div>
 
-        <label>
-          <input type="checkbox" [formField]="form.isVisibleWithoutPurchase" />
-          Visible without purchase
-        </label>
+        <div class="choices">
+          <label>
+            <input type="checkbox" [formField]="form.isVisibleWithoutPurchase" />
+            Visible without purchase
+          </label>
+        </div>
 
         <div class="field">
           <span>Image</span>

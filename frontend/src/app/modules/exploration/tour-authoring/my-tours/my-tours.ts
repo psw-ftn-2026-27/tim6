@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, min, required } from '@angular/forms/signals';
+import { FormField, form, min, required, validate } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { Analytics } from '../../../../shared/analytics/analytics';
 import { serverMessage } from '../../../../shared/util/server-message';
@@ -44,9 +44,16 @@ export class MyTours {
       message: 'Amount is required.',
       when: ({ valueOf }) => valueOf(path.pricing) === 'Paid',
     });
-    min(path.amount, 0.01, {
-      message: 'Amount must be greater than 0.',
+    min(path.amount, 1, {
+      message: 'Amount must be at least 1 EC.',
       when: ({ valueOf }) => valueOf(path.pricing) === 'Paid',
+    });
+    validate(path.amount, ({ value, valueOf }) => {
+      const amount = value();
+      if (valueOf(path.pricing) !== 'Paid' || amount === null || Number.isInteger(amount)) {
+        return null;
+      }
+      return { kind: 'wholeNumber', message: 'Amount must be a whole number.' };
     });
   });
 
@@ -82,7 +89,7 @@ export class MyTours {
       this.tours.reload();
       this.publishingTourId.set(null);
       this.confirmation.set(
-        price.isFree ? 'Tour published. Free' : `Tour published. Price: ${price.amount}`,
+        price.isFree ? 'Tour published. Free' : `Tour published. Price: ${price.amount} EC`,
       );
     } catch (failure) {
       this.error.set(serverMessage(failure, 'Could not publish the tour.'));

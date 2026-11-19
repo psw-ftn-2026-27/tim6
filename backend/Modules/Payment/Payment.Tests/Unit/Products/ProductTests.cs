@@ -26,4 +26,27 @@ public class ProductTests
         product.IsInOffer.Should().BeTrue();
         product.Price.Should().Be(0);
     }
+
+    [Fact]
+    public void Product_put_in_offer_again_takes_the_new_name_and_price_and_is_in_offer()
+    {
+        var product = new Product(Guid.NewGuid(), "Šetnja tvrđavom", WellKnownUsers.Explorer, 100);
+        product.WithdrawFromOffer();
+
+        product.PutInOfferAgain("Šetnja Petrovaradinom", 250);
+
+        product.Name.Should().Be("Šetnja Petrovaradinom");
+        product.Price.Should().Be(250);
+        product.IsInOffer.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Product_cannot_be_put_in_offer_again_with_a_price_less_than_zero()
+    {
+        var product = new Product(Guid.NewGuid(), "Šetnja tvrđavom", WellKnownUsers.Explorer, 100);
+
+        var putting = () => product.PutInOfferAgain("Šetnja tvrđavom", -1);
+
+        putting.Should().Throw<DomainException>();
+    }
 }

@@ -1,0 +1,30 @@
+.page-width {
+  margin-inline: auto;
+  max-width: 36rem;
+}
+
+.summary {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.summary div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.summary dt {
+  color: var(--color-text-muted);
+}
+
+.summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

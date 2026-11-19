@@ -219,6 +219,14 @@
   font-weight: 600;
 }
 
+// A button in a table row is compact, so a row with actions stays about one line high.
+.table .button {
+  font-size: var(--font-size-sm);
+  min-height: auto;
+  padding: var(--space-1) var(--space-3);
+  white-space: nowrap;
+}
+
 // Feedback on a whole action. Use role="status" for success, role="alert" for errors.
 .notice {
   background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));

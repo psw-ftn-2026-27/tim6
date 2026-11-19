@@ -40,6 +40,75 @@ namespace Payment.Infrastructure.Persistence.Migrations
                     b.ToTable("Carts", "payment");
                 });
 
+            modelBuilder.Entity("Payment.Domain.Coupons.Coupon", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<int>("DiscountPercentage")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ValidUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Coupons", "payment");
+                });
+
+            modelBuilder.Entity("Payment.Domain.GiftCards.GiftCard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRedeemed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("RecipientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("GiftCards", "payment");
+                });
+
             modelBuilder.Entity("Payment.Domain.Products.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -68,6 +137,63 @@ namespace Payment.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Products", "payment");
+                });
+
+            modelBuilder.Entity("Payment.Domain.PurchaseTokens.PurchaseToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "EntityId");
+
+                    b.ToTable("PurchaseTokens", "payment");
+                });
+
+            modelBuilder.Entity("Payment.Domain.Wallets.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalletId");
+
+                    b.ToTable("Payments", "payment");
                 });
 
             modelBuilder.Entity("Payment.Domain.Wallets.Transaction", b =>
@@ -151,6 +277,15 @@ namespace Payment.Infrastructure.Persistence.Migrations
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("Payment.Domain.Wallets.Payment", b =>
+                {
+                    b.HasOne("Payment.Domain.Wallets.Wallet", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Payment.Domain.Wallets.Transaction", b =>
                 {
                     b.HasOne("Payment.Domain.Wallets.Wallet", null)
@@ -162,6 +297,8 @@ namespace Payment.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Payment.Domain.Wallets.Wallet", b =>
                 {
+                    b.Navigation("Payments");
+
                     b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618

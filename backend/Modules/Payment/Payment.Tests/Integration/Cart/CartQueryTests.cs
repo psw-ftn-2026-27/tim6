@@ -36,4 +36,24 @@ public class CartQueryTests : BaseIntegrationTest
         cart!.Items.Should().BeEmpty();
         cart.TotalPrice.Should().Be(0);
     }
+
+    [Fact]
+    public async Task Buyer_sees_the_current_balance_of_their_wallet_beside_the_cart()
+    {
+        var client = Factory.CreateClientFor(WalletSeed.ReturningBuyer, "explorer");
+
+        var cart = await client.GetFromJsonAsync<CartDto>("/api/payment/carts/mine", JsonOptions);
+
+        cart!.WalletBalance.Should().Be(WalletSeed.ReturningBuyersWalletWithPayments.Balance());
+    }
+
+    [Fact]
+    public async Task Buyer_without_a_wallet_sees_a_balance_of_zero_beside_the_cart()
+    {
+        var client = Factory.CreateClientFor(WalletSeed.WalletlessBuyer, "explorer");
+
+        var cart = await client.GetFromJsonAsync<CartDto>("/api/payment/carts/mine", JsonOptions);
+
+        cart!.WalletBalance.Should().Be(0);
+    }
 }

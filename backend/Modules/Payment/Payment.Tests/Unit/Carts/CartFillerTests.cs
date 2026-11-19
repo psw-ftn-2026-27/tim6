@@ -18,8 +18,20 @@ public class CartFillerTests
         var product = new Product(Guid.NewGuid(), "Bački salaši", WellKnownUsers.SecondExplorer, 150);
         product.WithdrawFromOffer();
 
-        var addition = () => _cartFiller.AddProduct(cart, product);
+        var addition = () => _cartFiller.AddProduct(cart, product, false);
 
         addition.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Product_the_buyer_already_purchased_cannot_be_added_to_the_cart()
+    {
+        var cart = new Cart(WellKnownUsers.Explorer);
+        var product = new Product(Guid.NewGuid(), "Vinogradi Sremskih Karlovaca", WellKnownUsers.SecondExplorer, 300);
+
+        var addition = () => _cartFiller.AddProduct(cart, product, true);
+
+        addition.Should().Throw<DomainException>();
+        cart.Items.Should().BeEmpty();
     }
 }

@@ -1,0 +1,171 @@
+@if (!isAdministrator()) {
+  <p class="error">
+    You do not have access to this page. Location challenges are managed by an administrator.
+  </p>
+} @else {
+  <div class="stack">
+    <div class="page-header">
+      <h1>Location challenges</h1>
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="pending()"
+        (click)="startCreate()"
+      >
+        New challenge
+      </button>
+    </div>
+
+    @if (formOpen()) {
+      <form class="card stack" (submit)="save($event)">
+        <h2>{{ editingChallengeId() === null ? 'New challenge' : 'Edit challenge' }}</h2>
+
+        @if (formError()) {
+          <p class="error">{{ formError() }}</p>
+        }
+
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" type="text" [formField]="challengeForm.name" />
+          @if (challengeForm.name().touched()) {
+            @for (message of challengeForm.name().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <div class="field">
+          <label for="xp">XP</label>
+          <input id="xp" type="number" [formField]="challengeForm.xp" />
+          @if (challengeForm.xp().touched()) {
+            @for (message of challengeForm.xp().errors(); track $index) {
+              <p class="error">{{ message.message }}</p>
+            }
+          }
+        </div>
+
+        <div class="field">
+          <span class="field-label">Start location</span>
+          <app-geographic-map
+            [pins]="startPins()"
+            [selectionEnabled]="true"
+            [showSelectedLocation]="false"
+            (locationSelected)="selectLocation($event)"
+          />
+          @if (challengeForm.location().value()) {
+            <div class="actions">
+              <button
+                class="button"
+                type="button"
+                [disabled]="pending()"
+                (click)="removeLocation()"
+              >
+                Remove location
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="stack">
+          <span class="field-label">Hidden points</span>
+
+          @for (point of hiddenPoints(); track point.key; let pointIndex = $index) {
+            <fieldset class="hidden-point stack">
+              <legend>Point {{ pointIndex + 1 }}</legend>
+
+              <div class="field">
+                <span class="field-label">Photo</span>
+                <app-image-upload
+                  [images]="point.images"
+                  [pending]="point.pendingFiles"
+                  [errors]="point.imageErrors"
+                  [maxImages]="1"
+                  (filesSelected)="uploadFiles(point.key, $event)"
+                  (removeImage)="removeImage(point.key, $event)"
+                />
+                @if (point.images.length === 0 && point.pendingFiles.length === 0) {
+                  <p class="hint">A photo is required.</p>
+                }
+              </div>
+
+              <div class="field">
+                <span class="field-label">Location</span>
+                <app-geographic-map
+                  [pins]="point.savedPins"
+                  [selectionEnabled]="true"
+                  (locationSelected)="selectPointLocation(point.key, $event)"
+                />
+                @if (point.location === null) {
+                  <p class="hint">Choose the point's location by clicking on the map.</p>
+                }
+              </div>
+
+              <div class="actions">
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="pending() || point.pendingFiles.length > 0"
+                  (click)="removePoint(point.key)"
+                >
+                  Remove
+                </button>
+              </div>
+            </fieldset>
+          } @empty {
+            <p class="hint">The challenge has no hidden points yet.</p>
+          }
+
+          <div class="actions">
+            <button class="button" type="button" [disabled]="pending()" (click)="addPoint()">
+              Add point
+            </button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button
+            class="button button--primary"
+            type="submit"
+            [disabled]="
+              !challengeForm().valid() || pointsIncomplete() || uploadPending() || pending()
+            "
+          >
+            Save
+          </button>
+          <button class="button" type="button" [disabled]="pending()" (click)="cancelForm()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- While the form is open the list is hidden, so no card action can change the challenge being edited. -->
+    @if (!formOpen()) {
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      @if (challenges.isLoading()) {
+        <p>Loading location challenges...</p>
+      } @else if (challenges.error()) {
+        <p class="error">
+          Location challenges were not loaded. Log in as an administrator and try again.
+        </p>
+      } @else {
+        @for (challenge of challenges.value() ?? []; track challenge.id) {
+          <app-location-challenge-card
+            [challenge]="challenge"
+            [confirming]="confirmingChallengeId() === challenge.id ? confirmingAction() : null"
+            [pending]="pending()"
+            (edit)="startEdit(challenge)"
+            (startAction)="startAction(challenge.id, $event)"
+            (confirmAction)="runAction(challenge, $event)"
+            (cancelAction)="cancelAction()"
+          />
+        } @empty {
+          <p>There are no location challenges yet.</p>
+        }
+      }
+    }
+  </div>
+}

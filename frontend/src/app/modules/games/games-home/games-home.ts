@@ -12,10 +12,7 @@ import { Auth } from '../../../core/auth/auth';
         <div class="actions">
           <a class="button" routerLink="/games/challenges">Upravljanje izazovima</a>
           <a class="button" routerLink="/games/quizzes">Upravljanje kvizovima</a>
-        </div>
-      } @else {
-        <div class="empty">
-          <p>Ovde još nema igara za tebe. Kvizovima i izazovima za sada upravlja administrator.</p>
+          <a class="button" routerLink="/games/location-challenges">Manage location challenges</a>
         </div>
       }
     </div>

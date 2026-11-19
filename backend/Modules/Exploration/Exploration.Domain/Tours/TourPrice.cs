@@ -4,8 +4,10 @@ namespace Exploration.Domain.Tours;
 
 public sealed record TourPrice
 {
+    private const int MinimumPaidAmount = 1;
+
     public bool IsFree { get; private init; }
-    public decimal? Amount { get; private init; }
+    public int? Amount { get; private init; }
 
     public TourPrice(bool isFree, decimal? amount)
     {
@@ -13,12 +15,17 @@ public sealed record TourPrice
         {
             throw new DomainException("A free tour cannot have an amount.");
         }
-        if (!isFree && (amount is null || amount <= 0))
+        if (!isFree && (amount is null || amount < MinimumPaidAmount || amount != decimal.Truncate(amount.Value)))
         {
-            throw new DomainException("A paid tour requires an amount greater than zero.");
+            throw new DomainException($"A paid tour requires a whole amount of at least {MinimumPaidAmount} EC.");
         }
 
         IsFree = isFree;
-        Amount = amount;
+        Amount = amount is null ? null : (int)amount.Value;
+    }
+
+    public int GetOfferPrice()
+    {
+        return Amount ?? 0;
     }
 }

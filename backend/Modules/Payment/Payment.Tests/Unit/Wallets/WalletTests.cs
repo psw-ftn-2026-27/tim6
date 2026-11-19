@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Payment.Domain.Carts;
 using Payment.Domain.Wallets;
 using Shared.Domain.Exceptions;
 using Shared.Tests;
@@ -21,17 +22,61 @@ public class WalletTests
     }
 
     [Fact]
-    public void Balance_is_the_sum_of_deposits_without_the_cancelled_ones()
+    public void Balance_is_the_sum_of_deposits_without_the_cancelled_ones_less_the_sum_of_payments()
     {
         var wallet = new Wallet(WellKnownUsers.Explorer);
         wallet.Deposit(WellKnownUsers.Administrator, 300, DepositedAt);
         wallet.Deposit(WellKnownUsers.Administrator, 200, DepositedAt);
         wallet.Deposit(WellKnownUsers.Administrator, 50, DepositedAt);
         wallet.CancelTransaction(wallet.Transactions[1].Id, "Pogrešan iznos.", DepositedAt.AddHours(1));
+        var item = new CartItem(Guid.NewGuid(), "Bački salaši", 150);
+        wallet.Pay([item], new Dictionary<Guid, Guid> { [item.EntityId] = WellKnownUsers.SecondExplorer }, DepositedAt.AddHours(2));
 
         var balance = wallet.Balance();
 
-        balance.Should().Be(350);
+        balance.Should().Be(200);
+    }
+
+    [Fact]
+    public void Payment_greater_than_the_balance_is_rejected_and_no_payment_is_added()
+    {
+        var wallet = CreateWalletWithOneDeposit();
+        var cheapItem = new CartItem(Guid.NewGuid(), "Šetnja tvrđavom", 40);
+        var expensiveItem = new CartItem(Guid.NewGuid(), "Vinogradi Sremskih Karlovaca", 61);
+        var ownerIds = new Dictionary<Guid, Guid>
+        {
+            [cheapItem.EntityId] = WellKnownUsers.SecondExplorer,
+            [expensiveItem.EntityId] = WellKnownUsers.SecondExplorer
+        };
+
+        var payment = () => wallet.Pay([cheapItem, expensiveItem], ownerIds, DepositedAt.AddHours(1));
+
+        payment.Should().Throw<DomainException>();
+        wallet.Payments.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Payment_equal_to_the_balance_adds_one_payment_for_each_item()
+    {
+        var wallet = CreateWalletWithOneDeposit();
+        var freeItem = new CartItem(Guid.NewGuid(), "Šetnja tvrđavom", 0);
+        var paidItem = new CartItem(Guid.NewGuid(), "Vinogradi Sremskih Karlovaca", 100);
+        var ownerIds = new Dictionary<Guid, Guid>
+        {
+            [freeItem.EntityId] = WellKnownUsers.Explorer,
+            [paidItem.EntityId] = WellKnownUsers.SecondExplorer
+        };
+        var paidAt = DepositedAt.AddHours(1);
+
+        wallet.Pay([freeItem, paidItem], ownerIds, paidAt);
+
+        wallet.Payments.Should().HaveCount(2);
+        wallet.Payments.Should().ContainSingle(payment =>
+            payment.EntityId == freeItem.EntityId && payment.Name == freeItem.Name
+            && payment.OwnerId == WellKnownUsers.Explorer && payment.Price == 0 && payment.PaidAt == paidAt);
+        wallet.Payments.Should().ContainSingle(payment =>
+            payment.EntityId == paidItem.EntityId && payment.Name == paidItem.Name
+            && payment.OwnerId == WellKnownUsers.SecondExplorer && payment.Price == 100 && payment.PaidAt == paidAt);
     }
 
     [Theory]
@@ -95,6 +140,28 @@ public class WalletTests
         var cancellation = () => wallet.CancelTransaction(deposit.Id, "Ponovo.", DepositedAt.AddHours(2));
 
         cancellation.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Spending_more_than_the_available_balance_is_rejected_without_changing_the_wallet()
+    {
+        var wallet = CreateWalletWithOneDeposit();
+        var balanceBefore = wallet.Balance();
+
+        var spending = () => wallet.Spend(101, DepositedAt.AddHours(1));
+
+        spending.Should().Throw<DomainException>();
+        wallet.Balance().Should().Be(balanceBefore);
+    }
+
+    [Fact]
+    public void Spending_reduces_the_wallet_balance_by_the_exact_amount()
+    {
+        var wallet = CreateWalletWithOneDeposit();
+
+        wallet.Spend(40, DepositedAt.AddHours(1));
+
+        wallet.Balance().Should().Be(60);
     }
 
     private static Wallet CreateWalletWithOneDeposit()
