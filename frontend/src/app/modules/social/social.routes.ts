@@ -12,6 +12,8 @@ import { ClubDetail } from './club-reading/club-detail/club-detail';
 import { ClubList } from './club-reading/club-list/club-list';
 import { ClubJoinRequests } from './club-moderation/club-join-requests/club-join-requests';
 import { ClubMembers } from './club-moderation/club-members/club-members';
+import { ConversationList } from './direct-conversation-messaging/conversation-list/conversation-list';
+import { DirectConversation } from './direct-conversation-messaging/direct-conversation/direct-conversation';
 import { SentInvitations } from './club-invitations/sent-invitations/sent-invitations';
 import { MyInvitations } from './club-reading/my-invitations/my-invitations';
 
@@ -30,5 +32,7 @@ export const socialRoutes: Routes = [
   { path: 'clubs/:id/members', component: ClubMembers },
   { path: 'clubs/:id/invitations', component: SentInvitations },
   { path: 'clubs/:id', component: ClubDetail },
+  { path: 'messages', component: ConversationList },
+  { path: 'messages/:conversationId', component: DirectConversation },
   { path: ':id', component: BlogDetail },
 ];

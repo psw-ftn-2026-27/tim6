@@ -15,6 +15,9 @@ using Exploration.Infrastructure.Persistence.Tours;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Infrastructure;
+using Exploration.Application.Conversations;
+using Exploration.Application.TourConversationMessaging;
+using Exploration.Infrastructure.Persistence.Conversations;
 
 namespace Exploration.Infrastructure;
 
@@ -31,6 +34,9 @@ public static class ExplorationModuleExtensions
         services.AddScoped<ITourReadRepository, TourReadRepository>();
         services.AddScoped<ITourPreferenceRepository, TourPreferenceRepository>();
         services.AddScoped<ITourPreferenceReadRepository, TourPreferenceReadRepository>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+        services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+        services.AddScoped<IConversationReadRepository, ConversationReadRepository>();
         services.AddScoped<ITourExecutionRepository, TourExecutionRepository>();
         services.AddScoped<ITourExecutionReadRepository, TourExecutionReadRepository>();
 
@@ -41,6 +47,8 @@ public static class ExplorationModuleExtensions
         services.AddScoped<TourBrowsingQueries>();
         services.AddScoped<TourPreferenceEditingService>();
         services.AddScoped<TourPreferenceEditingQueries>();
+        services.AddScoped<TourConversationMessagingService>();
+        services.AddScoped<TourConversationMessagingQueries>();
         services.AddScoped<TourStarter>();
         services.AddScoped<TourProgressTracker>();
         services.AddScoped<TourExecutingService>();

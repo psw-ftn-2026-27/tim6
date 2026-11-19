@@ -17,7 +17,8 @@ import { Auth } from '../../../core/auth/auth';
       }
       @if (isExplorer()) {
         <div class="actions">
-          <a class="button" routerLink="/games/quizzes/published">Challenges</a>
+          <a class="button" routerLink="/games/challenge-map">Challenges</a>
+          <a class="button" routerLink="/games/location-challenges/available">Location challenges</a>
         </div>
       }
     </div>
@@ -29,6 +30,7 @@ export class GamesHome {
   protected readonly isAdministrator = computed(
     () => this.auth.user()?.roles.includes('administrator') ?? false,
   );
+
   protected readonly isExplorer = computed(
     () => this.auth.user()?.roles.includes('explorer') ?? false,
   );

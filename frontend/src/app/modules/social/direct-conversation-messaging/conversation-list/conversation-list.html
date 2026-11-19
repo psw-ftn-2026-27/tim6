@@ -1,0 +1,53 @@
+<div class="stack">
+  <h1>Messages</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <section class="card stack">
+    <h2>Start a direct conversation</h2>
+    <form class="search" (submit)="search($event)">
+      <div class="field">
+        <label for="user-search">User email</label>
+        <input id="user-search" type="search" [formField]="searchForm.searchTerm" />
+      </div>
+      <button class="button button--primary" type="submit" [disabled]="!searchForm().valid()">
+        Search
+      </button>
+    </form>
+
+    @if (users.isLoading()) {
+      <p>Searching...</p>
+    } @else if (users.error()) {
+      <p class="error">Could not search users.</p>
+    } @else {
+      @for (user of availableUsers(); track user.userId) {
+        <div class="user-result">
+          <span>{{ user.email ?? user.userId }}</span>
+          <button class="button" type="button" [disabled]="pending()" (click)="open(user.userId)">
+            Message
+          </button>
+        </div>
+      }
+    }
+  </section>
+
+  <section class="stack">
+    <h2>My conversations</h2>
+    @if (conversations.isLoading()) {
+      <p>Loading conversations...</p>
+    } @else if (conversations.error()) {
+      <p class="error">Could not load conversations.</p>
+    } @else {
+      @for (conversation of conversations.value()?.items ?? []; track conversation.id) {
+        <a class="card conversation-link" [routerLink]="['/social/messages', conversation.id]">
+          <strong>{{ conversation.otherParticipantEmail ?? 'Unknown user' }}</strong>
+          <span class="meta">{{ conversation.createdAt | date: 'short' }}</span>
+        </a>
+      } @empty {
+        <p>You have no direct conversations yet.</p>
+      }
+    }
+  </section>
+</div>

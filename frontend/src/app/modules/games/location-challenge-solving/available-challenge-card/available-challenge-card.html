@@ -1,0 +1,41 @@
+<article class="card stack">
+  <div class="header">
+    <h2>{{ challenge().name }}</h2>
+    @if (challenge().hasAttemptInProgress) {
+      <span class="badge badge--accent">In progress</span>
+    }
+  </div>
+
+  <dl class="details">
+    <div>
+      <dt>XP</dt>
+      <dd>{{ challenge().xp }}</dd>
+    </div>
+    <div>
+      <dt>Start location</dt>
+      <dd>
+        {{ challenge().location.latitude.toFixed(5) }},
+        {{ challenge().location.longitude.toFixed(5) }}
+      </dd>
+    </div>
+  </dl>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (challenge().isSolved) {
+    <p>You have solved this challenge.</p>
+  } @else {
+    <div class="actions">
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="!canActivate() || pending()"
+        (click)="activate.emit()"
+      >
+        {{ challenge().hasAttemptInProgress ? 'Continue' : 'Activate' }}
+      </button>
+    </div>
+  }
+</article>

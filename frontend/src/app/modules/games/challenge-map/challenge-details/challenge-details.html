@@ -1,0 +1,55 @@
+<section class="card stack">
+  <div class="header">
+    <h2>{{ challenge().name }}</h2>
+    <span class="meta">
+      @switch (challenge().kind) {
+        @case ('Quiz') {
+          Quiz
+        }
+        @case ('SocialChallenge') {
+          Social challenge
+        }
+      }
+    </span>
+  </div>
+
+  <dl class="details">
+    <div>
+      <dt>XP</dt>
+      <dd>{{ challenge().xp }}</dd>
+    </div>
+    @if (challenge().distanceInMeters !== null) {
+      <div>
+        <dt>Distance</dt>
+        <dd>{{ challenge().distanceInMeters?.toFixed(0) }} m</dd>
+      </div>
+    }
+  </dl>
+
+  @if (challenge().isSolved) {
+    <p>You have solved this challenge.</p>
+  }
+
+  <div>
+    @if (challenge().kind === 'Quiz' && challenge().canActivate) {
+      <a class="button button--primary" [routerLink]="['/games/quizzes', challenge().id, 'solve']">
+        Activate
+      </a>
+    } @else if (challenge().kind === 'SocialChallenge') {
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="!challenge().canActivate || activating()"
+        (click)="activate.emit(challenge().id)"
+      >
+        Activate
+      </button>
+    } @else {
+      <button class="button" type="button" disabled>Activate</button>
+    }
+  </div>
+
+  @if (activateError()) {
+    <p class="error">{{ activateError() }}</p>
+  }
+</section>

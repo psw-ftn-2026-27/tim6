@@ -57,4 +57,26 @@ public sealed class IdentityApi : IIdentityApi
         
         return results;
     }
+
+    public async Task<UserSearchPageDto> SearchUsersAsync(string searchTerm, int page, int pageSize)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var normalizedSearchTerm = _userManager.NormalizeEmail(searchTerm.Trim());
+
+        var matchingUsers = _userManager.Users
+            .AsNoTracking()
+            .Where(user => user.NormalizedEmail != null && user.NormalizedEmail.Contains(normalizedSearchTerm))
+            .OrderBy(user => user.NormalizedEmail)
+            .ThenBy(user => user.Id);
+
+        var totalCount = await matchingUsers.CountAsync();
+        var users = await matchingUsers
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(user => new UserSummaryDto(user.Id, user.Email))
+            .ToListAsync();
+
+        return new UserSearchPageDto(users, totalCount);
+    }
 }

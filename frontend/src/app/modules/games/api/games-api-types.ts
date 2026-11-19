@@ -78,15 +78,6 @@ export interface UpdateQuizDto {
   location: LocationDto | null;
 }
 
-export interface PublishedQuizDto {
-  id: string;
-  name: string;
-  xp: number;
-  distanceInMeters: number;
-  activationRadiusInMeters: number;
-  isSolved: boolean;
-}
-
 export interface QuestionForSolvingDto {
   text: string;
   options: string[];
@@ -144,4 +135,57 @@ export interface UpdateLocationChallengeDto {
   xp: number;
   hiddenPoints: HiddenPointDto[];
   location: LocationDto | null;
+}
+
+export type ChallengeKind = 'Quiz' | 'SocialChallenge';
+
+export interface ChallengeOnMapDto {
+  id: string;
+  kind: ChallengeKind;
+  name: string;
+  xp: number;
+  location: LocationDto;
+  activationRadiusInMeters: number;
+  isSolved: boolean;
+  distanceInMeters: number | null;
+  canActivate: boolean;
+}
+
+export type SolvingStatus = 'Active' | 'Left' | 'Solved' | 'Closed';
+
+export interface SocialChallengeRunStateDto {
+  id: string;
+  name: string;
+  location: LocationDto | null;
+  rangeInMeters: number;
+  status: SolvingStatus;
+  activeCount: number;
+  requiredPeople: number;
+  earnedXp: number | null;
+  exitMessage: string | null;
+}
+
+export interface AvailableLocationChallengeDto {
+  id: string;
+  name: string;
+  location: LocationDto;
+  xp: number;
+  hasAttemptInProgress: boolean;
+  isSolved: boolean;
+}
+
+export interface AttemptHiddenPointDto {
+  id: string;
+  image: string;
+  isRevealed: boolean;
+  location: LocationDto | null;
+}
+
+export interface LocationChallengeAttemptDto {
+  id: string;
+  center: LocationDto;
+  radiusInMeters: number;
+  hiddenPoints: AttemptHiddenPointDto[];
+  completedAt: string | null;
+  earnedXp: number | null;
 }

@@ -3,45 +3,24 @@ using Games.Application.Challenges;
 using Games.Application.QuizAttempts;
 using Games.Application.Quizzes;
 using Games.Domain.Challenges;
-using Games.Domain.Quizzes;
 using Shared.Domain.Exceptions;
 
 namespace Games.Application.QuizSolving;
 
 public sealed class QuizSolvingQueries
 {
-    private readonly IQuizReadRepository _quizReadRepository;
     private readonly IQuizRepository _quizRepository;
     private readonly IChallengeProgressRepository _progressRepository;
     private readonly IQuizAttemptReadRepository _attemptReadRepository;
 
     public QuizSolvingQueries(
-        IQuizReadRepository quizReadRepository,
         IQuizRepository quizRepository,
         IChallengeProgressRepository progressRepository,
         IQuizAttemptReadRepository attemptReadRepository)
     {
-        _quizReadRepository = quizReadRepository;
         _quizRepository = quizRepository;
         _progressRepository = progressRepository;
         _attemptReadRepository = attemptReadRepository;
-    }
-
-    public async Task<List<PublishedQuizDto>> GetPublishedQuizzesAsync(Guid touristId, LocationDto position)
-    {
-        var touristLocation = new Location(position.Latitude, position.Longitude);
-        var quizzes = await _quizReadRepository.GetPublishedAsync(touristId);
-
-        return quizzes
-            .Select(quiz => new PublishedQuizDto(
-                quiz.Id,
-                quiz.Name,
-                quiz.Xp,
-                new Location(quiz.Location.Latitude, quiz.Location.Longitude).DistanceTo(touristLocation),
-                Quiz.ActivationRadius,
-                quiz.IsSolved))
-            .OrderBy(quiz => quiz.DistanceInMeters)
-            .ToList();
     }
 
     public async Task<QuizForSolvingDto> GetQuizForSolvingAsync(Guid quizId, Guid touristId, LocationDto position)
