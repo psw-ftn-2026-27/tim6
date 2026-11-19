@@ -6,6 +6,7 @@ using Exploration.Domain.Tours;
 using Exploration.Infrastructure.Persistence;
 using Exploration.Tests.Integration.Seeds;
 using FluentAssertions;
+using Payment.Infrastructure.Persistence;
 using Shared.Tests;
 using Xunit;
 
@@ -105,7 +106,7 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Author_publishes_a_paid_tour_and_gets_back_the_chosen_price()
+    public async Task Author_publishes_a_paid_tour_gets_back_the_chosen_price_and_the_tour_is_in_the_offer()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
         var request = new PublishTourDto(new TourPriceDto(false, 20));
@@ -119,13 +120,19 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
         var stored = assertContext.Tours.Single(tour => tour.Id == TourSeed.PublishableRiverside.Id);
         stored.Status.Should().Be(TourStatus.Published);
         stored.PublishedAt.Should().NotBeNull();
+        stored.HasOfferProduct.Should().BeTrue();
+        using var paymentContext = Factory.CreateContext<PaymentDbContext>();
+        var product = paymentContext.Products.Single(product => product.EntityId == TourSeed.PublishableRiverside.Id);
+        product.Name.Should().Be(TourSeed.PublishableRiverside.Name);
+        product.Price.Should().Be(20);
+        product.IsInOffer.Should().BeTrue();
     }
 
     [Fact]
-    public async Task Tour_with_a_paid_price_of_zero_stays_a_draft()
+    public async Task Tour_with_a_decimal_paid_amount_stays_a_draft_and_is_not_put_in_the_offer()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
-        var request = new PublishTourDto(new TourPriceDto(false, 0));
+        var request = new PublishTourDto(new TourPriceDto(false, 20.5m));
 
         var response = await client.PostAsJsonAsync($"/api/exploration/tours/{TourSeed.PublishableRiverside.Id}/publish", request);
 
@@ -134,6 +141,8 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
         var stored = assertContext.Tours.Single(tour => tour.Id == TourSeed.PublishableRiverside.Id);
         stored.Status.Should().Be(TourStatus.Draft);
         stored.PublishedAt.Should().BeNull();
+        using var paymentContext = Factory.CreateContext<PaymentDbContext>();
+        paymentContext.Products.Should().NotContain(product => product.EntityId == TourSeed.PublishableRiverside.Id);
     }
 
     [Fact]
@@ -173,7 +182,7 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Author_archives_their_published_tour()
+    public async Task Author_archives_their_published_tour_and_it_is_withdrawn_from_the_offer()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
 
@@ -184,6 +193,23 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
         var stored = assertContext.Tours.Single(tour => tour.Id == TourSeed.PublishedVineyards.Id);
         stored.Status.Should().Be(TourStatus.Archived);
         stored.ArchivedAt.Should().NotBeNull();
+        using var paymentContext = Factory.CreateContext<PaymentDbContext>();
+        var product = paymentContext.Products.Single(product => product.EntityId == TourSeed.PublishedVineyards.Id);
+        product.IsInOffer.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Published_tour_stays_published_when_payment_rejects_withdrawing_it_from_the_offer()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+
+        var response = await client.PostAsync($"/api/exploration/tours/{TourSeed.PublishedKovilMissingFromOffer.Id}/archive", null);
+
+        response.IsSuccessStatusCode.Should().BeFalse();
+        using var assertContext = Factory.CreateContext<ExplorationDbContext>();
+        var stored = assertContext.Tours.Single(tour => tour.Id == TourSeed.PublishedKovilMissingFromOffer.Id);
+        stored.Status.Should().Be(TourStatus.Published);
+        stored.ArchivedAt.Should().BeNull();
     }
 
     [Fact]
@@ -235,7 +261,7 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Author_activates_their_archived_tour()
+    public async Task Author_activates_their_archived_tour_and_it_returns_to_the_offer_with_the_same_price()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
 
@@ -247,6 +273,10 @@ public class TourAuthoringCommandTests : BaseIntegrationTest
         stored.Status.Should().Be(TourStatus.Published);
         stored.ArchivedAt.Should().BeNull();
         stored.PublishedAt.Should().NotBeNull();
+        using var paymentContext = Factory.CreateContext<PaymentDbContext>();
+        var product = paymentContext.Products.Single(product => product.EntityId == TourSeed.ArchivedSalashes.Id);
+        product.IsInOffer.Should().BeTrue();
+        product.Price.Should().Be(ProductSeed.WithdrawnSalashes.Price);
     }
 
     [Fact]

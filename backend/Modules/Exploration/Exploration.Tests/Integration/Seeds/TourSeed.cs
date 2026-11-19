@@ -14,6 +14,7 @@ internal static class TourSeed
     public static readonly Tour ArchivedSalashes;
     public static readonly Tour PublishedFortressUndergroundWithPreview;
     public static readonly Tour PublishedPalicWithoutPreview;
+    public static readonly Tour PublishedKovilMissingFromOffer;
 
     static TourSeed()
     {
@@ -39,7 +40,7 @@ internal static class TourSeed
         ArchivedSalashes.AddTransportTime(TransportMode.Car, 40);
         ArchivedSalashes.AddKeyPoint("Prvi salaš", "Razgledanje starih zanata.", "/api/shared/images/prvi-salas.jpg", null, new Location(45.2950, 19.7800), true, new TourLength(0));
         ArchivedSalashes.AddKeyPoint("Poslednji salaš", "Ručak od domaćih namirnica.", "/api/shared/images/poslednji-salas.jpg", null, new Location(45.3100, 19.7500), false, new TourLength(5.6));
-        ArchivedSalashes.Publish(new TourPrice(true, null));
+        ArchivedSalashes.Publish(new TourPrice(false, 150));
         ArchivedSalashes.Archive();
 
         PublishedFortressUndergroundWithPreview = new(WellKnownUsers.Explorer, "Podzemlje Petrovaradina", "Tura vodi od Sahat kule kroz podzemne vojne galerije Petrovaradinske tvrđave do Leopoldove kapije, uz priču o opsadama i graditeljima tvrđave.", TourDifficulty.Moderate, ["istorija"], new RecommendedGroupSize(2, 8));
@@ -55,7 +56,13 @@ internal static class TourSeed
         PublishedPalicWithoutPreview.AddKeyPoint("Velika terasa", "Polazna tačka ture, na obali jezera.", "/api/shared/images/velika-terasa.jpg", "Na stubu terase je urezana godina gradnje.", new Location(46.0990, 19.7600), false, new TourLength(0));
         PublishedPalicWithoutPreview.AddKeyPoint("Vila Lujza", "Kraj ture, kod Vile Lujze.", "/api/shared/images/vila-lujza.jpg", null, new Location(46.1010, 19.7680), false, new TourLength(1.8));
         PublishedPalicWithoutPreview.Publish(new TourPrice(false, 300));
+
+        PublishedKovilMissingFromOffer = new(WellKnownUsers.Explorer, "Kovilj i Koviljski rit", "Tura vodi od manastira Kovilj kroz Koviljski rit do obale Dunava, uz posmatranje ptica močvarica i predah na drvenom vidikovcu.", TourDifficulty.Easy, ["priroda"], new RecommendedGroupSize(2, 8));
+        PublishedKovilMissingFromOffer.AddTransportTime(TransportMode.Walking, 100);
+        PublishedKovilMissingFromOffer.AddKeyPoint("Manastir Kovilj", "Polazna tačka ture, kod manastira.", "/api/shared/images/manastir-kovilj.jpg", null, new Location(45.2290, 20.0190), true, new TourLength(0));
+        PublishedKovilMissingFromOffer.AddKeyPoint("Vidikovac u ritu", "Drveni vidikovac nad močvarom.", "/api/shared/images/vidikovac-rit.jpg", null, new Location(45.2350, 20.0400), false, new TourLength(2.1));
+        PublishedKovilMissingFromOffer.Publish(new TourPrice(false, 200));
     }
 
-    public static Tour[] All => [FortressWalk, CityStroll, SecondExplorersTrail, PublishableRiverside, PublishedVineyards, PublishedMonasteries, ArchivedSalashes, PublishedFortressUndergroundWithPreview, PublishedPalicWithoutPreview];
+    public static Tour[] All => [FortressWalk, CityStroll, SecondExplorersTrail, PublishableRiverside, PublishedVineyards, PublishedMonasteries, ArchivedSalashes, PublishedFortressUndergroundWithPreview, PublishedPalicWithoutPreview, PublishedKovilMissingFromOffer];
 }

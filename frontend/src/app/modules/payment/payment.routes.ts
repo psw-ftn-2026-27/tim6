@@ -1,6 +1,10 @@
 import { Routes } from '@angular/router';
 import { MyCart } from './cart/my-cart/my-cart';
 import { ProductList } from './catalog/product-list/product-list';
+import { CreateCoupon } from './coupon-authoring/create-coupon/create-coupon';
+import { CouponList } from './coupon-authoring/coupon-list/coupon-list';
+import { GiftCardList } from './gift-card-browsing/gift-card-list/gift-card-list';
+import { CreateGiftCard } from './gift-card-sending/create-gift-card/create-gift-card';
 import { Wallet } from './my-wallet/wallet/wallet';
 import { PaymentHome } from './payment-home/payment-home';
 import { MyPurchases } from './purchase/my-purchases/my-purchases';
@@ -10,9 +14,13 @@ import { WalletList } from './wallet-management/wallet-list/wallet-list';
 export const paymentRoutes: Routes = [
   { path: '', component: PaymentHome },
   { path: 'wallet', component: Wallet },
+  { path: 'gift-cards/new', component: CreateGiftCard },
+  { path: 'gift-cards', component: GiftCardList },
   { path: 'wallets', component: WalletList },
   { path: 'wallets/:id', component: WalletDetails },
   { path: 'catalog', component: ProductList },
+  { path: 'coupons/new', component: CreateCoupon },
+  { path: 'coupons', component: CouponList },
   { path: 'cart', component: MyCart },
   { path: 'purchases', component: MyPurchases },
 ];

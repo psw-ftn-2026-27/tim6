@@ -42,11 +42,48 @@ export interface CancellationDto {
   reason: string;
 }
 
+export interface CreateGiftCardDto {
+  recipientEmail: string;
+  amount: number;
+  message: string;
+}
+
+export type GiftCardStatus = 'Valid' | 'Redeemed' | 'Expired';
+
+export interface GiftCardDto {
+  id: string;
+  senderId: string;
+  senderEmail: string | null;
+  recipientId: string;
+  recipientEmail: string | null;
+  amount: number;
+  message: string;
+  createdAt: string;
+  expiresAt: string;
+  status: GiftCardStatus;
+}
+
 export interface ProductDto {
   id: string;
   entityId: string;
   name: string;
   price: number;
+}
+
+export interface CreateCouponDto {
+  productId: string | null;
+  discountPercentage: number;
+  validUntil: string;
+}
+
+export interface CouponDto {
+  id: string;
+  ownerId: string;
+  productId: string | null;
+  productName: string | null;
+  discountPercentage: number;
+  validUntil: string;
+  code: string;
 }
 
 export interface CartItemDto {

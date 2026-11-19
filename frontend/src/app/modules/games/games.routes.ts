@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { GamesHome } from './games-home/games-home';
+import { LocationChallengeList } from './location-challenge-authoring/location-challenge-list/location-challenge-list';
 import { QuizList } from './quiz-authoring/quiz-list/quiz-list';
 import { PublishedQuizzes } from './quiz-solving/published-quizzes/published-quizzes';
 import { SolveQuiz } from './quiz-solving/solve-quiz/solve-quiz';
@@ -13,4 +14,5 @@ export const gamesRoutes: Routes = [
   { path: 'quizzes', component: QuizList },
   { path: 'quizzes/published', component: PublishedQuizzes },
   { path: 'quizzes/:id/solve', component: SolveQuiz },
+  { path: 'location-challenges', component: LocationChallengeList },
 ];

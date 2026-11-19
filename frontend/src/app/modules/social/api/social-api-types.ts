@@ -20,6 +20,7 @@ export interface BlogDto {
   images: string[];
   status: BlogStatus;
   comments: CommentDto[];
+  score: number;
 }
 
 export interface CreateBlogDto {
@@ -40,6 +41,16 @@ export interface CreateCommentDto {
 
 export interface UpdateCommentDto {
   text: string;
+}
+
+export type VoteSign = 'Up' | 'Down';
+
+export interface CastVoteDto {
+  sign: VoteSign;
+}
+
+export interface MyVoteDto {
+  sign: VoteSign | null;
 }
 
 export type FollowStatus = 'Follow' | 'Pending' | 'Following';
@@ -68,12 +79,15 @@ export interface FollowerDto {
   userId: string;
   isFollowedBack: boolean;
 }
-  export interface ClubDto {
+export type ClubStatus = 'Active' | 'Closed';
+
+export interface ClubDto {
   id: string;
   ownerId: string;
   name: string;
   description: string;
   images: string[];
+  status: ClubStatus;
 }
 
 export interface CreateClubDto {

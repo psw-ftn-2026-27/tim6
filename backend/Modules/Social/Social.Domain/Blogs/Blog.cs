@@ -16,6 +16,8 @@ public sealed class Blog : AggregateRoot
     public BlogStatus Status { get; private set; }
     private readonly List<Comment> _comments = [];
     public IReadOnlyList<Comment> Comments => _comments;
+    private readonly List<Vote> _votes = [];
+    public IReadOnlyList<Vote> Votes => _votes;
 
     private Blog()
     {
@@ -93,6 +95,28 @@ public sealed class Blog : AggregateRoot
         comment.EnsureEditableAt(now);
 
         _comments.Remove(comment);
+    }
+
+    public void CastVote(Guid userId, VoteSign sign, DateTime now)
+    {
+        if (Status != BlogStatus.Published)
+        {
+            throw new DomainException("Votes are allowed only on a published blog.");
+        }
+
+        var vote = _votes.FirstOrDefault(vote => vote.UserId == userId);
+        if (vote is null)
+        {
+            _votes.Add(new Vote(userId, sign, now));
+        }
+        else if (vote.Sign == sign)
+        {
+            _votes.Remove(vote);
+        }
+        else
+        {
+            vote.ChangeSign(sign, now);
+        }
     }
 
     private static void EnsureValidContent(string title, string description, List<string>? images)

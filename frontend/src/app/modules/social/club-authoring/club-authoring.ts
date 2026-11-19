@@ -20,4 +20,8 @@ export class ClubAuthoring {
   async delete(id: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${BASE_URL}/${id}`));
   }
+
+  async close(id: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${BASE_URL}/${id}/close`, {}));
+  }
 }

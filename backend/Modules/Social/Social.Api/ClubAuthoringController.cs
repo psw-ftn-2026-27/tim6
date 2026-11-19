@@ -42,6 +42,13 @@ public sealed class ClubAuthoringController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:guid}/close")]
+    public async Task<ActionResult> Close(Guid id)
+    {
+        await _authoringService.CloseAsync(id, User.GetUserId());
+        return NoContent();
+    }
+
     [HttpGet("mine")]
     public async Task<ActionResult<List<ClubDto>>> GetMine()
     {

@@ -1,0 +1,36 @@
+.vote {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.vote .meta {
+  font-weight: 600;
+  margin: 0;
+}
+
+.vote .button {
+  min-height: calc(var(--control-height) - var(--space-2));
+  padding: var(--space-1) var(--space-3);
+}
+
+.vote .vote-button--up {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--color-accent-text);
+}
+
+.vote .vote-button--up:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-success) 85%, var(--color-text));
+}
+
+.vote .vote-button--down {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-accent-text);
+}
+
+.vote .vote-button--down:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 85%, var(--color-text));
+}
