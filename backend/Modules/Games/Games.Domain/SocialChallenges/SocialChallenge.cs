@@ -19,6 +19,7 @@ public sealed class SocialChallenge : Challenge
     public DailyTimeWindow TimeWindow { get; private set; }
 
     protected override string KindName => "social challenge";
+    public override int ActivationRadiusInMeters => RangeInMeters;
 
     private SocialChallenge()
     {

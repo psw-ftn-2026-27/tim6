@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shared.Domain;
+using Social.Application.ClubInvitations;
 using Social.Application.ClubMembership;
 using Social.Application.ClubModeration;
 using Social.Application.Clubs;
@@ -70,6 +71,24 @@ internal sealed class ClubReadRepository : IClubReadRepository
             .Where(club => club.Id == clubId)
             .SelectMany(club => club.Members)
             .Select(member => new ClubMemberDto(member.UserId, null, member.Role))
+            .ToListAsync();
+    }
+
+    public Task<List<ClubInvitationDto>> GetInvitationsAsync(Guid clubId)
+    {
+        return _dbContext.Clubs
+            .Where(club => club.Id == clubId)
+            .SelectMany(club => club.Invitations)
+            .Select(invitation => new ClubInvitationDto(invitation.UserId, null, invitation.SentAt))
+            .ToListAsync();
+    }
+
+    public Task<List<ReceivedClubInvitationDto>> GetInvitationsForUserAsync(Guid userId)
+    {
+        return _dbContext.Clubs
+            .SelectMany(club => club.Invitations
+                .Where(invitation => invitation.UserId == userId)
+                .Select(invitation => new ReceivedClubInvitationDto(club.Id, club.Name, invitation.SentAt)))
             .ToListAsync();
     }
 

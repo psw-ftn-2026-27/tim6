@@ -72,7 +72,8 @@ public class TourExecutingCommandTests : BaseIntegrationTest
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         using var assertContext = Factory.CreateContext<ExplorationDbContext>();
         assertContext.TourExecutions.Count().Should().Be(executionCountBefore);
-        assertContext.TourExecutions.Should().NotContain(execution => execution.TourId == TourSeed.PublishedFortressUndergroundWithPreview.Id);
+        assertContext.TourExecutions.Should().NotContain(execution =>
+            execution.TouristId == WellKnownUsers.SecondExplorer && execution.TourId == TourSeed.PublishedFortressUndergroundWithPreview.Id);
     }
 
     [Fact]
@@ -141,6 +142,72 @@ public class TourExecutingCommandTests : BaseIntegrationTest
         var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
 
         var response = await client.PostAsync($"/api/exploration/tour-executions/active/{TourSeed.PublishedVineyards.Id}/abandon", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Tourist_near_the_next_key_point_reports_a_position_and_the_key_point_is_completed()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var firstKeyPoint = TourSeed.PublishedVineyards.KeyPoints.OrderBy(keyPoint => keyPoint.Order).First();
+        var position = new LocationDto(firstKeyPoint.Location.Latitude, firstKeyPoint.Location.Longitude);
+        using var arrangeContext = Factory.CreateContext<ExplorationDbContext>();
+        var lastActivityBefore = arrangeContext.TourExecutions
+            .Single(execution => execution.Id == TourExecutionSeed.ExplorersActiveVineyards.Id).LastActivityAt;
+
+        var response = await client.PostAsJsonAsync($"/api/exploration/tour-executions/active/{TourSeed.PublishedVineyards.Id}/position", position);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<ExplorationDbContext>();
+        var stored = assertContext.TourExecutions.Single(execution => execution.Id == TourExecutionSeed.ExplorersActiveVineyards.Id);
+        var completed = stored.CompletedKeyPoints.Should().ContainSingle().Subject;
+        completed.KeyPointId.Should().Be(firstKeyPoint.Id);
+        completed.ReachedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
+        stored.LastActivityAt.Should().BeAfter(lastActivityBefore);
+    }
+
+    [Fact]
+    public async Task Tourist_without_an_active_session_cannot_report_a_position()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+        var firstKeyPoint = TourSeed.PublishedVineyards.KeyPoints.OrderBy(keyPoint => keyPoint.Order).First();
+        var position = new LocationDto(firstKeyPoint.Location.Latitude, firstKeyPoint.Location.Longitude);
+        using var arrangeContext = Factory.CreateContext<ExplorationDbContext>();
+        var lastActivitiesBefore = arrangeContext.TourExecutions
+            .Where(execution => execution.TourId == TourSeed.PublishedVineyards.Id)
+            .ToDictionary(execution => execution.Id, execution => execution.LastActivityAt);
+
+        var response = await client.PostAsJsonAsync($"/api/exploration/tour-executions/active/{TourSeed.PublishedVineyards.Id}/position", position);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        using var assertContext = Factory.CreateContext<ExplorationDbContext>();
+        var storedExecutions = assertContext.TourExecutions
+            .Where(execution => execution.TourId == TourSeed.PublishedVineyards.Id)
+            .ToList();
+        storedExecutions.Should().OnlyContain(execution => execution.CompletedKeyPoints.Count == 0);
+        storedExecutions.ToDictionary(execution => execution.Id, execution => execution.LastActivityAt)
+            .Should().Equal(lastActivitiesBefore);
+    }
+
+    [Fact]
+    public async Task Anonymous_user_cannot_report_a_position()
+    {
+        var client = Factory.CreateClient();
+        var position = new LocationDto(45.2030, 19.9330);
+
+        var response = await client.PostAsJsonAsync($"/api/exploration/tour-executions/active/{TourSeed.PublishedVineyards.Id}/position", position);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Administrator_cannot_report_a_position()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "administrator");
+        var position = new LocationDto(45.2030, 19.9330);
+
+        var response = await client.PostAsJsonAsync($"/api/exploration/tour-executions/active/{TourSeed.PublishedVineyards.Id}/position", position);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }

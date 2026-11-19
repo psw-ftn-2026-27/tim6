@@ -122,3 +122,19 @@ export interface ClubMemberDto {
   userEmail: string | null;
   role: ClubRole;
 }
+
+export interface ClubInvitationDto {
+  userId: string;
+  userEmail: string | null;
+  sentAt: string;
+}
+
+export interface InviteDto {
+  email: string;
+}
+
+export interface ReceivedClubInvitationDto {
+  clubId: string;
+  clubName: string;
+  sentAt: string;
+}

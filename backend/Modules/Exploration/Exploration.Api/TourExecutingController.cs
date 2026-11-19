@@ -1,4 +1,5 @@
 using Exploration.Application.TourExecuting;
+using Exploration.Application.Tours;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Api;
@@ -21,10 +22,16 @@ public sealed class TourExecutingController : ControllerBase
         _executingQueries = executingQueries;
     }
 
-    [HttpGet("active/{tourId:guid}")]
-    public async Task<ActionResult<TourExecutionDto?>> GetActive(Guid tourId)
+    [HttpGet("current/{tourId:guid}")]
+    public async Task<ActionResult<TourExecutionDto?>> GetCurrent(Guid tourId)
     {
-        return await _executingQueries.GetActiveAsync(User.GetUserId(), tourId);
+        return await _executingQueries.GetCurrentAsync(User.GetUserId(), tourId);
+    }
+
+    [HttpGet("unlocked-secrets/{tourId:guid}")]
+    public async Task<ActionResult<List<UnlockedKeyPointDto>>> GetUnlockedSecrets(Guid tourId)
+    {
+        return await _executingQueries.GetUnlockedSecretsAsync(User.GetUserId(), tourId);
     }
 
     [HttpPost]
@@ -38,6 +45,13 @@ public sealed class TourExecutingController : ControllerBase
     public async Task<ActionResult> Abandon(Guid tourId)
     {
         await _executingService.AbandonAsync(User.GetUserId(), tourId);
+        return NoContent();
+    }
+
+    [HttpPost("active/{tourId:guid}/position")]
+    public async Task<ActionResult> ReportPosition(Guid tourId, LocationDto position)
+    {
+        await _executingService.ReportPositionAsync(User.GetUserId(), tourId, position);
         return NoContent();
     }
 }

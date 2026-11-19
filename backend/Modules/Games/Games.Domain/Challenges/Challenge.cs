@@ -15,6 +15,9 @@ public abstract class Challenge : AggregateRoot
     // Names the kind in error messages, for example "quiz" or "social challenge".
     protected abstract string KindName { get; }
 
+    // How close a tourist must be to activate the challenge.
+    public abstract int ActivationRadiusInMeters { get; }
+
     protected Challenge() { }
 
     protected Challenge(Guid id)
@@ -76,6 +79,19 @@ public abstract class Challenge : AggregateRoot
         }
 
         Status = ChallengeStatus.Archived;
+    }
+
+    // A tourist activates only a published challenge, and only from within its activation radius.
+    public void EnsureCanBeActivatedFrom(Location position)
+    {
+        if (Status != ChallengeStatus.Published || Location is null)
+        {
+            throw new DomainException($"Only a published {KindName} can be activated.");
+        }
+        if (Location.DistanceTo(position) > ActivationRadiusInMeters)
+        {
+            throw new DomainException($"A {KindName} can be activated only within {ActivationRadiusInMeters} m of it.");
+        }
     }
 
     public void Delete()

@@ -9,18 +9,13 @@
   padding-top: var(--space-3);
 }
 
-.comment-actions,
+// A comment form is a .field, so its input gets the field styles;
+// this only puts the input and its buttons in one row.
 .comment-form {
-  display: flex;
+  flex-direction: row;
   gap: var(--space-2);
 }
 
-.comment-actions input,
 .comment-form input {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
   flex: 1;
-  font: inherit;
-  padding: var(--space-2);
 }

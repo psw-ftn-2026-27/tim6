@@ -28,18 +28,17 @@ public sealed record Location
         Longitude = longitude;
     }
 
-    // Great-circle distance in meters, by the haversine formula.
+    // The great-circle distance by the haversine formula, treating the Earth as a sphere.
     public double DistanceTo(Location other)
     {
-        var latitude = ToRadians(Latitude);
-        var otherLatitude = ToRadians(other.Latitude);
-        var latitudeDelta = otherLatitude - latitude;
+        var latitudeDelta = ToRadians(other.Latitude - Latitude);
         var longitudeDelta = ToRadians(other.Longitude - Longitude);
 
-        var haversine = Math.Pow(Math.Sin(latitudeDelta / 2), 2)
-            + Math.Cos(latitude) * Math.Cos(otherLatitude) * Math.Pow(Math.Sin(longitudeDelta / 2), 2);
+        var a = Math.Sin(latitudeDelta / 2) * Math.Sin(latitudeDelta / 2)
+            + Math.Cos(ToRadians(Latitude)) * Math.Cos(ToRadians(other.Latitude))
+            * Math.Sin(longitudeDelta / 2) * Math.Sin(longitudeDelta / 2);
 
-        return 2 * EarthRadiusInMeters * Math.Asin(Math.Sqrt(haversine));
+        return EarthRadiusInMeters * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
     }
 
     private static double ToRadians(double degrees) => degrees * Math.PI / 180;

@@ -16,6 +16,9 @@ public sealed class LocationChallenge : Challenge
 
     protected override string KindName => "location challenge";
 
+    // The same fixed activation radius as a quiz (G22 requirements, to be confirmed for G21).
+    public override int ActivationRadiusInMeters => 50;
+
     private LocationChallenge()
     {
         Name = null!;

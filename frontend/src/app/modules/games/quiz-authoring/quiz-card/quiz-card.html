@@ -1,19 +1,23 @@
 <article class="card stack">
   <div class="header">
     <h2>{{ quiz().name }}</h2>
-    <span class="meta">
+    <span
+      class="badge"
+      [class.badge--success]="quiz().status === 'Published'"
+      [class.badge--warning]="quiz().status === 'Retired'"
+    >
       @switch (quiz().status) {
         @case ('Draft') {
-          Nacrt
+          Draft
         }
         @case ('Published') {
-          Objavljen
+          Published
         }
         @case ('Retired') {
-          Povučen
+          Retired
         }
         @case ('Archived') {
-          Arhiviran
+          Archived
         }
       }
     </span>
@@ -25,7 +29,7 @@
       <dd>{{ quiz().xp }}</dd>
     </div>
     <div>
-      <dt>Broj pitanja</dt>
+      <dt>Questions</dt>
       <dd>{{ quiz().questions.length }}</dd>
     </div>
   </dl>
@@ -33,40 +37,42 @@
   @if (quiz().location) {
     <app-geographic-map [pins]="pins()" />
   } @else if (quiz().status === 'Draft') {
-    <p class="hint">Kviz nema lokaciju, dodaj je kroz Izmeni</p>
+    <p class="meta">The quiz has no location; add it through Edit</p>
   }
 
   @if (confirming()) {
     <p>
       @switch (confirming()) {
         @case ('publish') {
-          Da li sigurno želiš da objaviš kviz „{{ quiz().name }}”?
+          Are you sure you want to publish the quiz “{{ quiz().name }}”?
         }
         @case ('republish') {
-          Da li sigurno želiš da ponovo objaviš kviz „{{ quiz().name }}”?
+          Are you sure you want to republish the quiz “{{ quiz().name }}”?
         }
         @case ('retire') {
-          Da li sigurno želiš da povučeš kviz „{{ quiz().name }}”?
+          Are you sure you want to retire the quiz “{{ quiz().name }}”?
         }
         @case ('archive') {
-          Da li sigurno želiš da arhiviraš kviz „{{ quiz().name }}”?
+          Are you sure you want to archive the quiz “{{ quiz().name }}”?
         }
         @case ('delete') {
-          Da li sigurno želiš da obrišeš kviz „{{ quiz().name }}”?
+          Are you sure you want to delete the quiz “{{ quiz().name }}”?
         }
       }
     </p>
     <div class="actions">
       <button class="button" type="button" [disabled]="pending()" (click)="cancelAction.emit()">
-        Otkaži
+        Cancel
       </button>
       <button
-        class="button button--primary"
+        class="button"
         type="button"
+        [class.button--primary]="confirming() !== 'delete'"
+        [class.button--danger]="confirming() === 'delete'"
         [disabled]="pending()"
         (click)="confirm()"
       >
-        Potvrdi
+        Confirm
       </button>
     </div>
   } @else {
@@ -74,7 +80,7 @@
       @switch (quiz().status) {
         @case ('Draft') {
           <button class="button" type="button" [disabled]="pending()" (click)="edit.emit()">
-            Izmeni
+            Edit
           </button>
           <button
             class="button"
@@ -82,7 +88,7 @@
             [disabled]="pending()"
             (click)="startAction.emit('delete')"
           >
-            Obriši
+            Delete
           </button>
           <button
             class="button"
@@ -90,7 +96,7 @@
             [disabled]="pending() || !quiz().location"
             (click)="startAction.emit('publish')"
           >
-            Objavi
+            Publish
           </button>
         }
         @case ('Published') {
@@ -100,7 +106,7 @@
             [disabled]="pending()"
             (click)="startAction.emit('retire')"
           >
-            Povuci
+            Retire
           </button>
         }
         @case ('Retired') {
@@ -110,7 +116,7 @@
             [disabled]="pending()"
             (click)="startAction.emit('republish')"
           >
-            Ponovo objavi
+            Republish
           </button>
           <button
             class="button"
@@ -118,7 +124,7 @@
             [disabled]="pending()"
             (click)="startAction.emit('archive')"
           >
-            Arhiviraj
+            Archive
           </button>
         }
         @case ('Archived') {
@@ -128,7 +134,7 @@
             [disabled]="pending()"
             (click)="startAction.emit('delete')"
           >
-            Obriši
+            Delete
           </button>
         }
       }

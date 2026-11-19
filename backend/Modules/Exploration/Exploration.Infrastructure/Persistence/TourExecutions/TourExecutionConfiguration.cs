@@ -19,5 +19,7 @@ internal static class TourExecutionConfiguration
             .HasFilter("\"Status\" = 'Active'");
 
         builder.OwnsOne(execution => execution.StartPosition);
+
+        builder.OwnsMany(execution => execution.CompletedKeyPoints, completedKeyPoints => completedKeyPoints.ToJson());
     }
 }

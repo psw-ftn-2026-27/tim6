@@ -3,6 +3,10 @@
 
   <h1>All clubs</h1>
 
+  @if (auth.isLoggedIn()) {
+    <p><a class="button" routerLink="/social/clubs/invitations">My invitations</a></p>
+  }
+
   @if (clubs.isLoading()) {
     <p>Loading clubs...</p>
   } @else if (clubs.error()) {

@@ -13,6 +13,7 @@ internal static class ClubSeed
     public static readonly Club ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest;
     public static readonly Club ClubWithTwoModeratorsAndDemoExplorerAsPlainMember;
     public static readonly Club ClosedClubWithSecondExplorerAsMember;
+    public static readonly Club ClubWithDemoExplorersInvitation;
 
     static ClubSeed()
     {
@@ -38,7 +39,10 @@ internal static class ClubSeed
         ClosedClubWithSecondExplorerAsMember.RequestToJoin(WellKnownUsers.SecondExplorer);
         ClosedClubWithSecondExplorerAsMember.AcceptJoinRequest(WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer);
         ClosedClubWithSecondExplorerAsMember.Close(WellKnownUsers.Explorer);
+
+        ClubWithDemoExplorersInvitation = new(WellKnownUsers.Explorer, "Posmatrači ptica Koviljskog rita", "Posmatranje ptica u Koviljsko-petrovaradinskom ritu.", ["https://example.com/koviljski-rit.jpg"], new DateTime(2026, 10, 8, 0, 0, 0, DateTimeKind.Utc));
+        ClubWithDemoExplorersInvitation.Invite(WellKnownUsers.Explorer, BlogSeed.IdentityDemoExplorer);
     }
 
-    public static Club[] All => [HikingClub, PhotographyClub, SecondExplorersClub, ClubWithSecondExplorersJoinRequest, ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest, ClubWithTwoModeratorsAndDemoExplorerAsPlainMember, ClosedClubWithSecondExplorerAsMember];
+    public static Club[] All => [HikingClub, PhotographyClub, SecondExplorersClub, ClubWithSecondExplorersJoinRequest, ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest, ClubWithTwoModeratorsAndDemoExplorerAsPlainMember, ClosedClubWithSecondExplorerAsMember, ClubWithDemoExplorersInvitation];
 }

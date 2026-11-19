@@ -1,5 +1,7 @@
-.meta {
-  margin: 0;
+// Long lines are hard to read, so the description stops at about 65 characters per line.
+markdown {
+  display: block;
+  max-width: 65ch;
 }
 
 .images {

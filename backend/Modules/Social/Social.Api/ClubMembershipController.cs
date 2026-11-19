@@ -27,6 +27,26 @@ public sealed class ClubMembershipController : ControllerBase
         return await _membershipQueries.GetMembershipAsync(id, User.GetUserId());
     }
 
+    [HttpGet("invitations")]
+    public async Task<ActionResult<List<ReceivedClubInvitationDto>>> GetMyInvitations()
+    {
+        return await _membershipQueries.GetMyInvitationsAsync(User.GetUserId());
+    }
+
+    [HttpPost("{id:guid}/invitation/accept")]
+    public async Task<ActionResult> AcceptInvitation(Guid id)
+    {
+        await _membershipService.AcceptInvitationAsync(id, User.GetUserId());
+        return NoContent();
+    }
+
+    [HttpPost("{id:guid}/invitation/reject")]
+    public async Task<ActionResult> RejectInvitation(Guid id)
+    {
+        await _membershipService.RejectInvitationAsync(id, User.GetUserId());
+        return NoContent();
+    }
+
     [HttpPost("{id:guid}/join-request")]
     public async Task<ActionResult> RequestToJoin(Guid id)
     {

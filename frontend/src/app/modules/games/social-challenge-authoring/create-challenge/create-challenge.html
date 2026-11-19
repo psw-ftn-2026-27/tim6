@@ -1,11 +1,13 @@
 @if (!isAdministrator()) {
-  <p class="error">Nemaš pristup ovoj stranici. Društvene izazove pravi administrator.</p>
+  <p class="notice notice--danger" role="alert">
+    Nemaš pristup ovoj stranici. Društvene izazove pravi administrator.
+  </p>
 } @else {
-  <div class="card stack">
+  <div class="card stack narrow">
     <h1>Nov izazov</h1>
 
     @if (error()) {
-      <p class="error">{{ error() }}</p>
+      <p class="notice notice--danger" role="alert">{{ error() }}</p>
     }
 
     <form class="stack" (submit)="submit($event)">
@@ -82,7 +84,7 @@
       </div>
 
       <div class="field">
-        <span class="field-label">Lokacija</span>
+        <span class="meta">Lokacija</span>
         <app-geographic-map
           [selectionEnabled]="true"
           (locationSelected)="onLocationSelected($event)"

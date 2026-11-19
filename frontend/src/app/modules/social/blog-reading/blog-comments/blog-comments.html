@@ -3,22 +3,23 @@
     <li class="stack">
       <p>{{ comment.text }}</p>
       <p class="meta">
-        {{ comment.userEmail ?? 'Unknown user' }} · Created: {{ formatTime(comment.createdAt) }}, last modified:
+        {{ comment.userEmail ?? 'Unknown user' }} · Created: {{ formatTime(comment.createdAt) }},
+        last modified:
         {{ formatTime(comment.lastModifiedAt) }}
       </p>
 
       @if (canChange(comment)) {
         @if (editingCommentId() === comment.id) {
-          <form class="comment-actions" (submit)="saveEdit($event, comment.id)">
+          <form class="field comment-form" (submit)="saveEdit($event, comment.id)">
             <input type="text" aria-label="Edit comment" [formField]="editForm.text" />
             <button class="button" type="submit" [disabled]="!editForm().valid()">Save</button>
             <button class="button" type="button" (click)="cancelEdit.emit()">Cancel</button>
           </form>
           @if (editError()) {
-            <p class="error">{{ editError() }}</p>
+            <p class="notice notice--danger" role="alert">{{ editError() }}</p>
           }
         } @else {
-          <div class="comment-actions">
+          <div class="actions">
             <button class="button" type="button" (click)="openEdit(comment)">Edit</button>
             <button class="button" type="button" (click)="deleteComment.emit(comment.id)">
               Delete
@@ -28,12 +29,12 @@
       }
     </li>
   } @empty {
-    <li class="meta">No comments yet.</li>
+    <li class="empty">No comments yet.</li>
   }
 </ul>
 
 @if (commentsOpen() && currentUserId()) {
-  <form class="comment-form" (submit)="submitComment($event)">
+  <form class="field comment-form" (submit)="submitComment($event)">
     <input type="text" aria-label="New comment" [formField]="form.text" />
     <button class="button button--primary" type="submit" [disabled]="!form().valid()">
       Comment

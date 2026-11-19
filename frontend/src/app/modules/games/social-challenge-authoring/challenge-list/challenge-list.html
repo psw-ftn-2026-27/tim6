@@ -1,5 +1,7 @@
 @if (!isAdministrator()) {
-  <p class="error">Nemaš pristup ovoj stranici. Društvenim izazovima upravlja administrator.</p>
+  <p class="notice notice--danger" role="alert">
+    Nemaš pristup ovoj stranici. Društvenim izazovima upravlja administrator.
+  </p>
 } @else {
   <div class="stack">
     <div class="page-header">
@@ -8,13 +10,15 @@
     </div>
 
     @if (error()) {
-      <p class="error">{{ error() }}</p>
+      <p class="notice notice--danger" role="alert">{{ error() }}</p>
     }
 
     @if (challenges.isLoading()) {
       <p>Učitavanje izazova...</p>
     } @else if (challenges.error()) {
-      <p class="error">Izazovi nisu učitani. Prijavite se kao administrator i pokušajte ponovo.</p>
+      <p class="notice notice--danger" role="alert">
+        Izazovi nisu učitani. Prijavite se kao administrator i pokušajte ponovo.
+      </p>
     } @else {
       @for (challenge of challenges.value() ?? []; track challenge.id) {
         @if (editingChallengeId() === challenge.id) {
@@ -92,7 +96,7 @@
             </div>
 
             <div class="field">
-              <span class="field-label">Lokacija</span>
+              <span class="meta">Lokacija</span>
               <app-geographic-map
                 [pins]="editSavedPins()"
                 [selectionEnabled]="true"
@@ -113,7 +117,7 @@
             </div>
 
             @if (editError()) {
-              <p class="error">{{ editError() }}</p>
+              <p class="notice notice--danger" role="alert">{{ editError() }}</p>
             }
 
             <div class="actions">
@@ -141,7 +145,9 @@
           />
         }
       } @empty {
-        <p>Još nema izazova.</p>
+        <div class="empty">
+          <p>Još nema izazova.</p>
+        </div>
       }
     }
   </div>
