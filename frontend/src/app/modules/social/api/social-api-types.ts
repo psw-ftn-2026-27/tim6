@@ -79,12 +79,15 @@ export interface FollowerDto {
   userId: string;
   isFollowedBack: boolean;
 }
-  export interface ClubDto {
+export type ClubStatus = 'Active' | 'Closed';
+
+export interface ClubDto {
   id: string;
   ownerId: string;
   name: string;
   description: string;
   images: string[];
+  status: ClubStatus;
 }
 
 export interface CreateClubDto {
