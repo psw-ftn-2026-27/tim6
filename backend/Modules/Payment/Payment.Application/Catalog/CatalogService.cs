@@ -15,9 +15,20 @@ public sealed class CatalogService
         _unitOfWork = unitOfWork;
     }
 
+    // Modules share no transaction, so a caller may repeat this call after its own save failed;
+    // a repeated call updates the existing product instead of failing on the unique EntityId.
     public async Task PutInOfferAsync(Guid entityId, string name, Guid ownerId, int price)
     {
-        _productRepository.Add(new Product(entityId, name, ownerId, price));
+        var product = await _productRepository.GetByEntityIdAsync(entityId);
+        if (product is null)
+        {
+            _productRepository.Add(new Product(entityId, name, ownerId, price));
+        }
+        else
+        {
+            product.PutInOfferAgain(name, price);
+        }
+
         await _unitOfWork.SaveChangesAsync();
     }
 

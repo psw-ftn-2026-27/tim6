@@ -15,10 +15,7 @@ public sealed class Product : AggregateRoot
 
     public Product(Guid entityId, string name, Guid ownerId, int price) : base(Guid.NewGuid())
     {
-        if (price < 0)
-        {
-            throw new DomainException("A product price cannot be less than 0.");
-        }
+        EnsureValidPrice(price);
 
         EntityId = entityId;
         Name = name;
@@ -35,5 +32,24 @@ public sealed class Product : AggregateRoot
     public void ReturnToOffer()
     {
         IsInOffer = true;
+    }
+
+    // Putting an entity in the offer again, for example when the calling module's own save failed
+    // after the first call, takes the latest name and price instead of creating a second product.
+    public void PutInOfferAgain(string name, int price)
+    {
+        EnsureValidPrice(price);
+
+        Name = name;
+        Price = price;
+        IsInOffer = true;
+    }
+
+    private static void EnsureValidPrice(int price)
+    {
+        if (price < 0)
+        {
+            throw new DomainException("A product price cannot be less than 0.");
+        }
     }
 }
