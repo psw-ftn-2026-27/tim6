@@ -77,3 +77,31 @@ export interface UpdateQuizDto {
   questions: QuestionDto[];
   location: LocationDto | null;
 }
+
+export interface HiddenPointDto {
+  image: string;
+  location: LocationDto;
+}
+
+export interface LocationChallengeDto {
+  id: string;
+  name: string;
+  xp: number;
+  status: ChallengeStatus;
+  hiddenPoints: HiddenPointDto[];
+  location: LocationDto | null;
+}
+
+export interface CreateLocationChallengeDto {
+  name: string;
+  xp: number;
+  hiddenPoints: HiddenPointDto[];
+  location: LocationDto | null;
+}
+
+export interface UpdateLocationChallengeDto {
+  name: string;
+  xp: number;
+  hiddenPoints: HiddenPointDto[];
+  location: LocationDto | null;
+}
