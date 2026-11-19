@@ -31,6 +31,22 @@ public sealed class PaymentApiTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task Putting_a_product_in_offer_again_updates_the_existing_product()
+    {
+        using var scope = Factory.Services.CreateScope();
+        var paymentApi = scope.ServiceProvider.GetRequiredService<IPaymentApi>();
+
+        await paymentApi.PutProductInOfferAsync(ProductSeed.PaidTourInOffer.EntityId, "Vinogradi i podrumi", WellKnownUsers.Explorer, 350);
+
+        using var assertContext = Factory.CreateContext<PaymentDbContext>();
+        var stored = assertContext.Products.Single(product => product.EntityId == ProductSeed.PaidTourInOffer.EntityId);
+        stored.Id.Should().Be(ProductSeed.PaidTourInOffer.Id);
+        stored.Name.Should().Be("Vinogradi i podrumi");
+        stored.Price.Should().Be(350);
+        stored.IsInOffer.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Withdrawing_an_existing_product_removes_it_from_the_offer()
     {
         using var scope = Factory.Services.CreateScope();
