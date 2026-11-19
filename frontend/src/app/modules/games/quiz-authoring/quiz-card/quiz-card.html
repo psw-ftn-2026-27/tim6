@@ -1,7 +1,11 @@
 <article class="card stack">
   <div class="header">
     <h2>{{ quiz().name }}</h2>
-    <span class="meta">
+    <span
+      class="badge"
+      [class.badge--success]="quiz().status === 'Published'"
+      [class.badge--warning]="quiz().status === 'Retired'"
+    >
       @switch (quiz().status) {
         @case ('Draft') {
           Draft
@@ -33,7 +37,7 @@
   @if (quiz().location) {
     <app-geographic-map [pins]="pins()" />
   } @else if (quiz().status === 'Draft') {
-    <p class="hint">The quiz has no location; add it through Edit</p>
+    <p class="meta">The quiz has no location; add it through Edit</p>
   }
 
   @if (confirming()) {
@@ -61,8 +65,10 @@
         Cancel
       </button>
       <button
-        class="button button--primary"
+        class="button"
         type="button"
+        [class.button--primary]="confirming() !== 'delete'"
+        [class.button--danger]="confirming() === 'delete'"
         [disabled]="pending()"
         (click)="confirm()"
       >

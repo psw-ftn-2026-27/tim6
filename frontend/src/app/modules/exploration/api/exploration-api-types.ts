@@ -107,3 +107,26 @@ export interface TourPreviewDto {
   transportTimes: TransportTimeDto[];
   keyPoints: KeyPointPreviewDto[];
 }
+
+export interface NextKeyPointDto {
+  name: string;
+  description: string;
+  image: string;
+  location: LocationDto;
+}
+
+export type TourExecutionStatus = 'Active' | 'Completed' | 'Abandoned';
+
+export interface UnlockedKeyPointDto {
+  name: string;
+  location: LocationDto;
+  secret: string | null;
+}
+
+export interface TourExecutionDto {
+  id: string;
+  tourId: string;
+  status: TourExecutionStatus;
+  nextKeyPoint: NextKeyPointDto | null;
+  lastReachedKeyPoint: UnlockedKeyPointDto | null;
+}

@@ -1,7 +1,11 @@
 <article class="card stack">
   <div class="header">
     <h2>{{ challenge().name }}</h2>
-    <span class="meta">
+    <span
+      class="badge"
+      [class.badge--success]="challenge().status === 'Published'"
+      [class.badge--warning]="challenge().status === 'Retired'"
+    >
       @switch (challenge().status) {
         @case ('Draft') {
           Nacrt
@@ -39,7 +43,7 @@
   @if (challenge().location) {
     <app-geographic-map [pins]="pins()" />
   } @else if (challenge().status === 'Draft') {
-    <p class="hint">Izazov nema lokaciju, dodaj je kroz Izmeni</p>
+    <p class="meta">Izazov nema lokaciju, dodaj je kroz Izmeni</p>
   }
 
   @if (confirming()) {
@@ -67,8 +71,10 @@
         Otkaži
       </button>
       <button
-        class="button button--primary"
+        class="button"
         type="button"
+        [class.button--primary]="confirming() !== 'delete'"
+        [class.button--danger]="confirming() === 'delete'"
         [disabled]="pending()"
         (click)="confirm()"
       >

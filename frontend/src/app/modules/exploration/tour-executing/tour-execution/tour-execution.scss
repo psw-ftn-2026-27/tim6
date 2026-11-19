@@ -1,0 +1,16 @@
+.key-point {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.image {
+  border-radius: var(--radius);
+  height: 6rem;
+  object-fit: cover;
+  width: 8rem;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}

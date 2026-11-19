@@ -1,6 +1,8 @@
 ﻿using Exploration.Application;
+using Exploration.Domain.TourExecutions;
 using Exploration.Domain.TourPreferences;
 using Exploration.Domain.Tours;
+using Exploration.Infrastructure.Persistence.TourExecutions;
 using Exploration.Infrastructure.Persistence.TourPreferences;
 using Exploration.Infrastructure.Persistence.Tours;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +15,13 @@ internal sealed class ExplorationDbContext : DbContext, IUnitOfWork
 
     public DbSet<Tour> Tours => Set<Tour>();
     public DbSet<TourPreference> TourPreferences => Set<TourPreference>();
+    public DbSet<TourExecution> TourExecutions => Set<TourExecution>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.HasDefaultSchema("exploration");
         builder.ConfigureTours();
         builder.ConfigureTourPreferences();
+        builder.ConfigureTourExecutions();
     }
 }

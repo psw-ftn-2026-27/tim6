@@ -1,5 +1,7 @@
 @if (!isAdministrator()) {
-  <p class="error">You do not have access to this page. Quizzes are managed by an administrator.</p>
+  <p class="notice notice--danger" role="alert">
+    You do not have access to this page. Quizzes are managed by an administrator.
+  </p>
 } @else {
   <div class="stack">
     <div class="page-header">
@@ -19,7 +21,7 @@
         <h2>{{ editingQuizId() === null ? 'New quiz' : 'Edit quiz' }}</h2>
 
         @if (formError()) {
-          <p class="error">{{ formError() }}</p>
+          <p class="notice notice--danger" role="alert">{{ formError() }}</p>
         }
 
         <div class="field">
@@ -53,7 +55,7 @@
         </div>
 
         <div class="stack">
-          <span class="field-label">Questions</span>
+          <span class="meta">Questions</span>
 
           @for (question of quizForm.questions; track $index; let questionIndex = $index) {
             <fieldset class="question stack">
@@ -63,7 +65,7 @@
               </div>
 
               @for (option of question.options; track $index; let optionIndex = $index) {
-                <div class="option">
+                <div class="field option">
                   <input
                     type="radio"
                     name="correct-{{ questionIndex }}"
@@ -107,7 +109,7 @@
               </div>
             </fieldset>
           } @empty {
-            <p class="hint">The quiz has no questions yet.</p>
+            <p class="meta">The quiz has no questions yet.</p>
           }
 
           <div class="actions">
@@ -123,7 +125,7 @@
         </div>
 
         <div class="field">
-          <span class="field-label">Location</span>
+          <span class="meta">Location</span>
           <app-geographic-map
             [pins]="savedPins()"
             [selectionEnabled]="true"
@@ -159,13 +161,15 @@
     }
 
     @if (error()) {
-      <p class="error">{{ error() }}</p>
+      <p class="notice notice--danger" role="alert">{{ error() }}</p>
     }
 
     @if (quizzes.isLoading()) {
       <p>Loading quizzes...</p>
     } @else if (quizzes.error()) {
-      <p class="error">The quizzes could not be loaded. Sign in as an administrator and try again.</p>
+      <p class="notice notice--danger" role="alert">
+        The quizzes could not be loaded. Sign in as an administrator and try again.
+      </p>
     } @else {
       @for (quiz of quizzes.value() ?? []; track quiz.id) {
         <app-quiz-card
@@ -178,7 +182,9 @@
           (cancelAction)="cancelAction()"
         />
       } @empty {
-        <p>There are no quizzes yet.</p>
+        <div class="empty">
+          <p>There are no quizzes yet.</p>
+        </div>
       }
     }
   </div>
