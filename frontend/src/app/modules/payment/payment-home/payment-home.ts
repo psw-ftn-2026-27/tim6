@@ -19,6 +19,9 @@ export class PaymentHome {
   protected readonly isAdministrator = computed(
     () => this.auth.user()?.roles.includes('administrator') ?? false,
   );
+  protected readonly isExplorer = computed(
+    () => this.auth.user()?.roles.includes('explorer') ?? false,
+  );
 
   protected readonly pending = signal(false);
   protected readonly error = signal<string | null>(null);

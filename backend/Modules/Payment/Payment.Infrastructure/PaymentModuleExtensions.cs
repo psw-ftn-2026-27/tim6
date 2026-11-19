@@ -2,12 +2,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Payment.Application;
 using Payment.Application.Catalog;
+using Payment.Application.CouponAuthoring;
+using Payment.Application.Coupons;
 using Payment.Application.MyWallet;
 using Payment.Application.Products;
 using Payment.Application.WalletManagement;
 using Payment.Application.Wallets;
 using Payment.Contracts;
+using Payment.Domain.Coupons;
 using Payment.Infrastructure.Persistence;
+using Payment.Infrastructure.Persistence.Coupons;
 using Payment.Infrastructure.Persistence.Products;
 using Payment.Infrastructure.Persistence.Wallets;
 using Shared.Infrastructure;
@@ -27,6 +31,8 @@ public static class PaymentModuleExtensions
         services.AddScoped<IWalletReadRepository, WalletReadRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductReadRepository, ProductReadRepository>();
+        services.AddScoped<ICouponRepository, CouponRepository>();
+        services.AddScoped<ICouponReadRepository, CouponReadRepository>();
 
         services.AddScoped<MyWalletService>();
         services.AddScoped<MyWalletQueries>();
@@ -34,6 +40,9 @@ public static class PaymentModuleExtensions
         services.AddScoped<WalletManagementQueries>();
         services.AddScoped<CatalogService>();
         services.AddScoped<CatalogQueries>();
+        services.AddScoped<CouponIssuer>();
+        services.AddScoped<CouponAuthoringService>();
+        services.AddScoped<CouponAuthoringQueries>();
 
         services.AddScoped<IPaymentApi, PaymentApi>();
 

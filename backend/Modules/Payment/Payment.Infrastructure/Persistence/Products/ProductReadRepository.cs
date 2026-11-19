@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Payment.Application.Catalog;
 using Payment.Application.Products;
 using Shared.Domain;
 
@@ -12,6 +11,16 @@ internal sealed class ProductReadRepository : IProductReadRepository
     public ProductReadRepository(PaymentDbContext dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    public Task<List<ProductDto>> GetOwnedAsync(Guid ownerId)
+    {
+        return _dbContext.Products
+            .Where(product => product.OwnerId == ownerId)
+            .OrderBy(product => product.Name)
+            .ThenBy(product => product.Id)
+            .Select(product => new ProductDto(product.Id, product.Name, product.Price))
+            .ToListAsync();
     }
 
     public async Task<PageResult<ProductDto>> GetInOfferPageAsync(int page, int pageSize)

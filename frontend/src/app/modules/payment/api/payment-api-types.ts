@@ -38,3 +38,18 @@ export interface ProductDto {
   name: string;
   price: number;
 }
+
+export interface CreateCouponDto {
+  productId: string | null;
+  discountPercentage: number;
+  validUntil: string;
+}
+
+export interface CouponDto {
+  id: string;
+  ownerId: string;
+  productId: string | null;
+  discountPercentage: number;
+  validUntil: string;
+  code: string;
+}

@@ -1,0 +1,58 @@
+<div class="stack">
+  <p><a routerLink="/payment">Back</a></p>
+
+  <h1>Create coupon</h1>
+
+  <form class="card stack" (submit)="submit($event)">
+    <div class="field">
+      <label for="product">Coupon applies to</label>
+      <select id="product" [formField]="form.productId">
+        <option value="">Any of my products</option>
+        @for (product of products.value() ?? []; track product.id) {
+          <option [value]="product.id">{{ product.name }}</option>
+        }
+      </select>
+      @if (products.isLoading()) {
+        <p class="meta">Loading products...</p>
+      } @else if (products.error()) {
+        <p class="error">Could not load your products.</p>
+      } @else if (products.value()?.length === 0) {
+        <p class="error">You need at least one product before you can create a coupon.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="discount">Discount (%)</label>
+      <input id="discount" type="number" step="1" [formField]="form.discountPercentage" />
+      @if (form.discountPercentage().touched()) {
+        @for (message of form.discountPercentage().errors(); track $index) {
+          <p class="error">{{ message.message }}</p>
+        }
+      }
+    </div>
+
+    <div class="field">
+      <label for="valid-until">Valid until</label>
+      <input id="valid-until" type="date" [formField]="form.validUntil" />
+      @if (form.validUntil().touched()) {
+        @for (message of form.validUntil().errors(); track $index) {
+          <p class="error">{{ message.message }}</p>
+        }
+      }
+    </div>
+
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+
+    <p>
+      <button
+        class="button button--primary"
+        type="submit"
+        [disabled]="!form().valid() || pending()"
+      >
+        Create coupon
+      </button>
+    </p>
+  </form>
+</div>

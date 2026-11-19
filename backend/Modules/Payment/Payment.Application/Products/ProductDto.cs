@@ -1,3 +1,3 @@
-namespace Payment.Application.Catalog;
+namespace Payment.Application.Products;
 
 public sealed record ProductDto(Guid Id, string Name, int Price);

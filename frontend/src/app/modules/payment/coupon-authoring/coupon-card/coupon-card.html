@@ -1,0 +1,9 @@
+<article class="card stack">
+  <h2>{{ coupon().code }}</h2>
+  <p><strong>Discount:</strong> {{ coupon().discountPercentage }}%</p>
+  <p><strong>Valid until:</strong> {{ date(coupon().validUntil) }}</p>
+  <p>
+    <strong>Applies to:</strong>
+    {{ coupon().productId ? 'One product' : 'All my products' }}
+  </p>
+</article>
