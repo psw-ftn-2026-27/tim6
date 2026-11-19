@@ -23,12 +23,12 @@ public sealed class Coupon : AggregateRoot
     {
         if (discountPercentage is <= 0 or > 100)
         {
-            throw new DomainException("A coupon discount must be between 1 and 100 percent.");
+            throw new DomainException("Enter a discount between 1% and 100%.");
         }
 
         if (validUntil <= createdAt)
         {
-            throw new DomainException("A coupon validity date must be in the future.");
+            throw new DomainException("Choose a coupon expiry date in the future.");
         }
 
         OwnerId = ownerId;

@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, max, min, required, validate } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { serverMessage } from '../../../../shared/util/server-message';
@@ -19,6 +19,7 @@ export class CreateCoupon {
   protected readonly products = httpResource<ProductDto[]>(
     () => '/api/payment/coupons/products',
   );
+  protected readonly hasProducts = computed(() => (this.products.value()?.length ?? 0) > 0);
 
   protected readonly form = form(
     signal({
@@ -53,7 +54,7 @@ export class CreateCoupon {
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();
-    if (!this.form().valid()) {
+    if (!this.hasProducts() || !this.form().valid()) {
       this.form().markAsTouched();
       return;
     }

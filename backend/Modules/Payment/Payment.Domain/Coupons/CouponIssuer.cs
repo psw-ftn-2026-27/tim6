@@ -15,12 +15,12 @@ public sealed class CouponIssuer
 
         if (productsOfOwner.Count == 0)
         {
-            throw new DomainException("A coupon owner must have at least one product.");
+            throw new DomainException("Create at least one product before creating a coupon.");
         }
 
         if (details.ProductId is not null && productsOfOwner.All(product => product.Id != details.ProductId))
         {
-            throw new DomainException("A coupon can only be created for your own product.");
+            throw new DomainException("Select one of your own products for the coupon.");
         }
 
         var code = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();

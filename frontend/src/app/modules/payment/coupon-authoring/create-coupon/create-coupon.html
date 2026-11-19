@@ -49,7 +49,7 @@
       <button
         class="button button--primary"
         type="submit"
-        [disabled]="!form().valid() || pending()"
+        [disabled]="!hasProducts() || !form().valid() || pending()"
       >
         Create coupon
       </button>
