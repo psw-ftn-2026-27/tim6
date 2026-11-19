@@ -1,0 +1,16 @@
+<section class="card stack">
+  <h1>Result</h1>
+  <p>Correct answers: {{ result().correctAnswers }} of {{ result().questionCount }}</p>
+  <p>XP earned on this quiz: {{ result().earnedXp }} of {{ result().quizXp }}</p>
+  <p>Added by this attempt: {{ result().awardedXp }} XP</p>
+  @if (result().solvedQuiz) {
+    <p>The quiz is solved.</p>
+  } @else {
+    <p>The quiz is not solved yet.</p>
+    <div>
+      <button class="button button--primary" type="button" (click)="tryAgain.emit()">
+        Try again
+      </button>
+    </div>
+  }
+</section>

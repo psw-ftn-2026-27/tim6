@@ -16,7 +16,11 @@ public sealed class Quiz : Challenge
     public int Xp { get; private set; }
     public IReadOnlyList<Question> Questions => _questions;
 
+    // Every quiz is activated within the same radius, so a read use case can show it without loading a quiz.
+    public const int ActivationRadius = 50;
+
     protected override string KindName => "quiz";
+    public override int ActivationRadiusInMeters => ActivationRadius;
 
     private Quiz()
     {
@@ -48,6 +52,32 @@ public sealed class Quiz : Challenge
         Xp = xp;
         _questions.Clear();
         _questions.AddRange(questions);
+    }
+
+    public QuizScore Grade(List<SelectedAnswer> answers)
+    {
+        if (answers is null || answers.Count != _questions.Count)
+        {
+            throw new DomainException("An attempt answers every question of the quiz.");
+        }
+        if (answers.Select(answer => answer.QuestionIndex).Distinct().Count() != answers.Count)
+        {
+            throw new DomainException("An attempt answers each question exactly once.");
+        }
+        foreach (var answer in answers)
+        {
+            if (answer.QuestionIndex < 0 || answer.QuestionIndex >= _questions.Count)
+            {
+                throw new DomainException($"The quiz has no question {answer.QuestionIndex}.");
+            }
+            if (answer.OptionIndex < 0 || answer.OptionIndex >= _questions[answer.QuestionIndex].Options.Count)
+            {
+                throw new DomainException($"Question {answer.QuestionIndex} has no answer option {answer.OptionIndex}.");
+            }
+        }
+
+        var correctAnswers = answers.Count(answer => _questions[answer.QuestionIndex].Options[answer.OptionIndex].IsCorrect);
+        return new QuizScore(correctAnswers, Xp * correctAnswers / _questions.Count, correctAnswers == _questions.Count);
     }
 
     private static void Validate(string name, string instructions, int xp, List<Question> questions)
