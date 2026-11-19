@@ -108,6 +108,61 @@ export interface TourPreviewDto {
   keyPoints: KeyPointPreviewDto[];
 }
 
+export type ConversationRole = 'Participant' | 'Privileged';
+
+export interface ConversationParticipantDto {
+  userId: string;
+  userEmail: string | null;
+  role: ConversationRole;
+  mutedUntil: string | null;
+  isPermanentlyMuted: boolean;
+}
+
+export interface ConversationDto {
+  id: string;
+  tourName: string;
+  contextType: string;
+  contextId: string | null;
+  participants: ConversationParticipantDto[];
+  createdAt: string;
+}
+
+export interface ChatMessageDto {
+  id: string;
+  conversationId: string;
+  authorId: string;
+  content: string | null;
+  createdAt: string;
+  isDeleted: boolean;
+  deletedAt: string | null;
+}
+
+export interface MessageCursorDto {
+  createdAt: string;
+  id: string;
+}
+
+export interface MessagePageDto {
+  items: ChatMessageDto[];
+  nextCursor: MessageCursorDto | null;
+  hasMore: boolean;
+}
+
+export interface SendMessageDto {
+  content: string;
+}
+
+export type MuteDuration =
+  | 'FifteenMinutes'
+  | 'OneHour'
+  | 'TwentyFourHours'
+  | 'Permanent';
+
+export interface MuteParticipantDto {
+  participantId: string;
+  duration: MuteDuration;
+}
+
 export interface NextKeyPointDto {
   name: string;
   description: string;

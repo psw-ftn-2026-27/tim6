@@ -1,0 +1,15 @@
+<div class="stack">
+  <h1>{{ conversationTitle() }}</h1>
+  <app-conversation-chat
+    [messages]="chatMessages()"
+    [currentUserId]="currentUserId()"
+    [hasMore]="hasMore()"
+    [loading]="messagePage.isLoading() || conversation.isLoading()"
+    [pending]="pending()"
+    [error]="displayError()"
+    [composerResetKey]="composerResetKey()"
+    (sendMessage)="send($event)"
+    (deleteMessage)="delete($event)"
+    (loadOlderMessages)="loadOlder()"
+  />
+</div>

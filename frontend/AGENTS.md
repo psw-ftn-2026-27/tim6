@@ -147,6 +147,14 @@ construct means adding a lesson, so treat it as a platform decision.
   writes, immediately awaited. No NgRx, no facades. Platform exception: `Analytics` in
   `shared/analytics/` subscribes to `router.events` to record page views; modules never
   see RxJS.
+- Real-time conversation pages use `@microsoft/signalr` directly in the owning page.
+  The page builds an authenticated `HubConnection` with `accessTokenFactory`, joins a
+  server-authorized conversation group, and uses `withAutomaticReconnect()`. After a
+  reconnect it joins the group again and catches up through its HTTP cursor resource;
+  SignalR events are notifications to re-read state, never the source of message content.
+  Stop the connection through `DestroyRef.onDestroy`. Shared presentational components
+  never create a connection. A page with a temporary mute schedules one timeout for its
+  expiry, replaces that timeout when the server state changes, and clears it on destroy.
 - Environment files in `src/environments/` are a platform construct: they hold the GA4
   measurement ID and nothing else, and only `shared/analytics/` imports them.
 
