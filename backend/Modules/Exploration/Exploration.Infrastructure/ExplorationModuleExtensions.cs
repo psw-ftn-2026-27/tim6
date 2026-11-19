@@ -50,6 +50,7 @@ public static class ExplorationModuleExtensions
         services.AddScoped<TourConversationMessagingService>();
         services.AddScoped<TourConversationMessagingQueries>();
         services.AddScoped<TourStarter>();
+        services.AddScoped<TourProgressTracker>();
         services.AddScoped<TourExecutingService>();
         services.AddScoped<TourExecutingQueries>();
 

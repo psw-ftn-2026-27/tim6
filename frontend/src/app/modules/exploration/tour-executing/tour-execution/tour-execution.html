@@ -1,12 +1,26 @@
 <div class="stack">
   <h1>Tour execution</h1>
 
+  @if (checkError()) {
+    <p class="error">{{ checkError() }}</p>
+  }
+
+  @if (missingPosition()) {
+    <p class="meta">Click on the map to set your position</p>
+  }
+
+  @if (reachedKeyPoint(); as reached) {
+    <p>Key point reached: {{ reached.name }}</p>
+  }
+
   <app-geographic-map
     [pins]="pins()"
     [route]="route()"
+    [circle]="circle()"
     [simulatorEnabled]="true"
     [explorerPosition]="explorerPosition()"
     (explorerMoved)="onExplorerMoved($event)"
+    (pinSelected)="selectedId.set($event)"
     (routeLengthKm)="routeFailed.set(false)"
     (routeFailed)="routeFailed.set(true)"
   />
@@ -17,23 +31,30 @@
     <p class="error">{{ loadError() }}</p>
   }
 
-  @if (session.isLoading()) {
-    <p>Loading the tour...</p>
-  } @else if (sessionError()) {
+  @if (sessionError()) {
     <p class="error">{{ sessionError() }}</p>
   } @else if (session.hasValue()) {
-    @if (session.value(); as active) {
+    @if (isActive()) {
       @if (routeFailed()) {
         <p class="error">The route could not be calculated.</p>
       }
 
-      <section class="card key-point">
-        <img class="image" [src]="active.nextKeyPoint.image" alt="" />
-        <div class="stack">
-          <h2>{{ active.nextKeyPoint.name }}</h2>
-          <p>{{ active.nextKeyPoint.description }}</p>
-        </div>
-      </section>
+      @if (session.value()?.nextKeyPoint; as next) {
+        <section class="card key-point">
+          <img class="image" [src]="next.image" alt="" />
+          <div class="stack">
+            <h2>{{ next.name }}</h2>
+            <p>{{ next.description }}</p>
+          </div>
+        </section>
+      }
+
+      @if (reachedKeyPoint(); as reached) {
+        <section class="card stack">
+          <h2>{{ reached.name }}</h2>
+          <p>{{ reached.secret ?? 'This key point has no secret.' }}</p>
+        </section>
+      }
 
       @if (confirmingAbandon()) {
         <section class="card stack">
@@ -60,6 +81,11 @@
         </p>
       }
     } @else {
+      @if (isCompleted()) {
+        <p>Tour completed!</p>
+        <p><a routerLink="/exploration">Back to tours</a></p>
+      }
+
       @if (startError()) {
         <p class="error">{{ startError() }}</p>
         <p><a routerLink="/exploration">Back to tours</a></p>
@@ -80,5 +106,28 @@
         </button>
       </p>
     }
+  } @else {
+    <p>Loading the tour...</p>
   }
+
+  @if (selectedKeyPoint(); as selected) {
+    <section class="card stack">
+      <h2>{{ selected.name }}</h2>
+      <p>{{ selected.secret ?? 'This key point has no secret.' }}</p>
+    </section>
+  }
+
+  <section class="stack">
+    <h2>Unlocked secrets</h2>
+    @if (unlockedError()) {
+      <p class="error">{{ unlockedError() }}</p>
+    } @else if (unlockedSecrets.hasValue()) {
+      @for (keyPoint of unlockedSecrets.value(); track $index) {
+        <article class="card stack">
+          <h3>{{ keyPoint.name }}</h3>
+          <p>{{ keyPoint.secret ?? 'This key point has no secret.' }}</p>
+        </article>
+      }
+    }
+  </section>
 </div>

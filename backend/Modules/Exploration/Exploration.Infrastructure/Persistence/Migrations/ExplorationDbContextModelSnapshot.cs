@@ -177,6 +177,29 @@ namespace Exploration.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Exploration.Domain.TourExecutions.TourExecution", b =>
                 {
+                    b.OwnsMany("Exploration.Domain.TourExecutions.CompletedKeyPoint", "CompletedKeyPoints", b1 =>
+                        {
+                            b1.Property<Guid>("TourExecutionId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<Guid>("KeyPointId");
+
+                            b1.Property<DateTime>("ReachedAt");
+
+                            b1.HasKey("TourExecutionId", "__synthesizedOrdinal");
+
+                            b1.ToTable("TourExecutions", "exploration");
+
+                            b1
+                                .ToJson("CompletedKeyPoints")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TourExecutionId");
+                        });
+
                     b.OwnsOne("Exploration.Domain.Tours.Location", "StartPosition", b1 =>
                         {
                             b1.Property<Guid>("TourExecutionId")
@@ -195,6 +218,8 @@ namespace Exploration.Infrastructure.Persistence.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("TourExecutionId");
                         });
+
+                    b.Navigation("CompletedKeyPoints");
 
                     b.Navigation("StartPosition")
                         .IsRequired();

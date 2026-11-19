@@ -13,6 +13,7 @@ public sealed class TourExecutingService
     private readonly ITourRepository _tourRepository;
     private readonly IPaymentApi _paymentApi;
     private readonly TourStarter _tourStarter;
+    private readonly TourProgressTracker _progressTracker;
     private readonly IUnitOfWork _unitOfWork;
 
     public TourExecutingService(
@@ -20,12 +21,14 @@ public sealed class TourExecutingService
         ITourRepository tourRepository,
         IPaymentApi paymentApi,
         TourStarter tourStarter,
+        TourProgressTracker progressTracker,
         IUnitOfWork unitOfWork)
     {
         _executionRepository = executionRepository;
         _tourRepository = tourRepository;
         _paymentApi = paymentApi;
         _tourStarter = tourStarter;
+        _progressTracker = progressTracker;
         _unitOfWork = unitOfWork;
     }
 
@@ -57,6 +60,23 @@ public sealed class TourExecutingService
         }
 
         execution.Abandon();
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task ReportPositionAsync(Guid touristId, Guid tourId, LocationDto position)
+    {
+        var execution = await _executionRepository.GetActiveByTouristIdAsync(touristId);
+        if (execution is null || execution.TourId != tourId)
+        {
+            throw new NotFoundException("This tour is no longer active");
+        }
+        var tour = await _tourRepository.GetByIdAsync(tourId);
+        if (tour is null)
+        {
+            throw new NotFoundException($"Tour {tourId} does not exist.");
+        }
+
+        _progressTracker.ReportPosition(execution, tour, new Location(position.Latitude, position.Longitude));
         await _unitOfWork.SaveChangesAsync();
     }
 }
