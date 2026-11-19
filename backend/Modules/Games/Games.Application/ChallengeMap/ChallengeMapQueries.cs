@@ -46,7 +46,13 @@ public sealed class ChallengeMapQueries
         var socialChallengesOnMap = socialChallenges.Select(challenge =>
         {
             var location = ToLocation(challenge.Location);
-            var timeWindow = new DailyTimeWindow(challenge.WindowStart, challenge.WindowEnd);
+            var check = new ActivationCheck(
+                location,
+                challenge.RangeInMeters,
+                new DailyTimeWindow(challenge.WindowStart, challenge.WindowEnd),
+                challenge.IsSolved,
+                position,
+                now);
             return new ChallengeOnMapDto(
                 challenge.Id,
                 ChallengeKind.SocialChallenge,
@@ -56,7 +62,7 @@ public sealed class ChallengeMapQueries
                 challenge.RangeInMeters,
                 challenge.IsSolved,
                 position?.DistanceTo(location),
-                SocialChallenge.CanBeActivated(location, challenge.RangeInMeters, timeWindow, position, challenge.IsSolved, now));
+                SocialChallenge.CanBeActivated(check));
         });
 
         return quizzesOnMap.Concat(socialChallengesOnMap).ToList();

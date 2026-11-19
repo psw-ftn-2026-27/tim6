@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Games.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(GamesDbContext))]
-    [Migration("20261119200628_VremenaIzvedbeUUtc")]
-    partial class VremenaIzvedbeUUtc
+    [Migration("20261119212234_DodatoResavanjeDrustvenogIzazova")]
+    partial class DodatoResavanjeDrustvenogIzazova
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

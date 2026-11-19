@@ -35,6 +35,8 @@ internal static class SocialChallengeSeed
         ArchivedHarvestFestival.Retire();
         ArchivedHarvestFestival.Archive();
 
+        // Temporary: the window around the moment the seeds are built and the checks half an hour
+        // ahead below stand in for a replaceable clock until the platform team adds one.
         // Open from an hour before to an hour after the moment the seeds are built, so the tests
         // do not depend on the time of day. Whole minutes, because the database keeps no finer time.
         var cityMoment = CityTime.FromUtc(DateTime.UtcNow);

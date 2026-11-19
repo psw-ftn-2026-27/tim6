@@ -62,10 +62,11 @@ public sealed class SocialChallenge : Challenge
 
     // Whether a tourist at the position can activate a published social challenge at the moment,
     // for a read use case that shows social challenges without loading them.
-    public static bool CanBeActivated(Location location, int rangeInMeters, DailyTimeWindow timeWindow,
-        Location? position, bool isSolved, DateTime moment)
+    public static bool CanBeActivated(ActivationCheck check)
     {
-        return !isSolved && IsWithinRadius(location, rangeInMeters, position) && timeWindow.IsOpenAt(moment);
+        return !check.IsSolved
+            && IsWithinRadius(check.Location, check.RangeInMeters, check.Position)
+            && check.TimeWindow.IsOpenAt(check.Moment);
     }
 
     // Every moment is in UTC. A tourist joins the active run, or starts a new one when there is

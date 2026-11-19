@@ -17,7 +17,7 @@ namespace Games.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    StartedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     SocialChallengeId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -39,7 +39,7 @@ namespace Games.Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TouristId = table.Column<Guid>(type: "uuid", nullable: false),
-                    LastCheckedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    LastCheckedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     SocialChallengeRunId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
