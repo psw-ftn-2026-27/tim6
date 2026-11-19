@@ -107,3 +107,16 @@ export interface TourPreviewDto {
   transportTimes: TransportTimeDto[];
   keyPoints: KeyPointPreviewDto[];
 }
+
+export interface NextKeyPointDto {
+  name: string;
+  description: string;
+  image: string;
+  location: LocationDto;
+}
+
+export interface TourExecutionDto {
+  id: string;
+  tourId: string;
+  nextKeyPoint: NextKeyPointDto;
+}

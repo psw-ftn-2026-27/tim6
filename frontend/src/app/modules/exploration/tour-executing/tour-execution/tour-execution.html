@@ -1,0 +1,84 @@
+<div class="stack">
+  <h1>Tour execution</h1>
+
+  <app-geographic-map
+    [pins]="pins()"
+    [route]="route()"
+    [simulatorEnabled]="true"
+    [explorerPosition]="explorerPosition()"
+    (explorerMoved)="onExplorerMoved($event)"
+    (routeLengthKm)="routeFailed.set(false)"
+    (routeFailed)="routeFailed.set(true)"
+  />
+
+  @if (moveError()) {
+    <p class="error">{{ moveError() }}</p>
+  } @else if (loadError()) {
+    <p class="error">{{ loadError() }}</p>
+  }
+
+  @if (session.isLoading()) {
+    <p>Loading the tour...</p>
+  } @else if (sessionError()) {
+    <p class="error">{{ sessionError() }}</p>
+  } @else if (session.hasValue()) {
+    @if (session.value(); as active) {
+      @if (routeFailed()) {
+        <p class="error">The route could not be calculated.</p>
+      }
+
+      <section class="card key-point">
+        <img class="image" [src]="active.nextKeyPoint.image" alt="" />
+        <div class="stack">
+          <h2>{{ active.nextKeyPoint.name }}</h2>
+          <p>{{ active.nextKeyPoint.description }}</p>
+        </div>
+      </section>
+
+      @if (confirmingAbandon()) {
+        <section class="card stack">
+          @if (abandonError()) {
+            <p class="error">{{ abandonError() }}</p>
+            <p><a routerLink="/exploration">Back to tours</a></p>
+          }
+
+          <p class="actions">
+            <button
+              class="button button--primary"
+              type="button"
+              [disabled]="abandoning()"
+              (click)="abandon()"
+            >
+              Yes, abandon
+            </button>
+            <button class="button" type="button" (click)="cancelAbandon()">Cancel</button>
+          </p>
+        </section>
+      } @else {
+        <p>
+          <button class="button" type="button" (click)="askToAbandon()">Abandon tour</button>
+        </p>
+      }
+    } @else {
+      @if (startError()) {
+        <p class="error">{{ startError() }}</p>
+        <p><a routerLink="/exploration">Back to tours</a></p>
+      }
+
+      @if (explorerPosition() === null) {
+        <p class="meta">Click on the map to set your position</p>
+      }
+
+      <p>
+        <button
+          class="button button--primary"
+          type="button"
+          [disabled]="explorerPosition() === null || starting()"
+          (click)="start()"
+        >
+          Start
+        </button>
+      </p>
+    }
+  }
+</div>
