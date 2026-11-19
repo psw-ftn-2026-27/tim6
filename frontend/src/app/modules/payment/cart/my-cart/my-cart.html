@@ -1,89 +1,92 @@
 <div class="stack">
   <p class="links">
-    <a routerLink="/payment">Nazad</a>
-    <a routerLink="/payment/purchases">Kupljene ture</a>
+    <a routerLink="/payment">Back</a>
+    <a routerLink="/payment/purchases">Purchased tours</a>
   </p>
 
-  <h1>Korpa</h1>
+  <h1>Cart</h1>
 
-  @if (cart.isLoading()) {
-    <p>Učitavanje korpe...</p>
-  } @else if (cart.error()) {
-    <p class="notice notice--danger" role="alert">
-      Korpu nije moguće učitati. Prijavite se i pokušajte ponovo.
-    </p>
+  @if (cart.isLoading() && !displayedCart()) {
+    <p>Loading cart...</p>
+  } @else if (cart.error() && benefitErrorTarget() === null) {
+    <p class="error" role="alert">Could not load the cart. Sign in and try again.</p>
   } @else {
-    @if (cart.value(); as current) {
-      <div class="card totals">
-        <div>
-          <p class="meta">Ukupna cena</p>
-          <p class="total__amount">{{ current.totalPrice }} EC</p>
-        </div>
-        <div>
-          <p class="meta">Stanje novčanika</p>
-          <p class="total__amount">{{ current.walletBalance }} EC</p>
-        </div>
-      </div>
+    <section class="card stack benefits">
+      <h2>Benefits</h2>
 
-      <p>
-        <button
-          class="button button--primary"
-          type="button"
-          [disabled]="pending()"
-          (click)="purchase()"
-        >
-          Kupi
+      <div class="benefit-row">
+        <div class="field benefit-field">
+          <label for="coupon-code">Coupon code</label>
+          <input id="coupon-code" type="text" [formField]="benefitForm.couponCode" />
+        </div>
+        <button class="button" type="button" [disabled]="pending()" (click)="applyCoupon()">
+          Apply coupon
         </button>
+        <button
+          class="button"
+          type="button"
+          [disabled]="pending() || (!appliedCouponCode() && !benefitForm.couponCode().value())"
+          (click)="removeCoupon()"
+        >
+          Remove coupon
+        </button>
+      </div>
+      @if (benefitErrorTarget() === 'coupon' && benefitError()) {
+        <p class="error" role="alert">{{ benefitError() }}</p>
+      }
+
+      <app-gift-card-picker
+        [cards]="validGiftCards()"
+        [selectedGiftCardId]="selectedGiftCardId()"
+        [page]="giftCardPage()"
+        [hasPrevious]="giftCardPage() > 1"
+        [hasNext]="hasMoreGiftCards()"
+        [pending]="pending()"
+        (giftCardSelected)="selectGiftCard($event)"
+        (selectionRemoved)="removeGiftCard()"
+        (pageChanged)="changeGiftCardPage($event)"
+      />
+      @if (receivedGiftCards.isLoading()) {
+        <p class="meta">Loading gift cards...</p>
+      } @else if (receivedGiftCards.error()) {
+        <p class="error">Could not load received gift cards.</p>
+      }
+      @if (benefitErrorTarget() === 'gift-card' && benefitError()) {
+        <p class="error" role="alert">{{ benefitError() }}</p>
+      }
+    </section>
+
+    @if (!cart.error()) {
+      @if (displayedCart(); as current) {
+        <app-cart-receipt
+          [cart]="current"
+          [pending]="pending()"
+          (removeItem)="removeItem($event)"
+        />
+
+        <p>
+          <button
+            class="button button--primary"
+            type="button"
+            [disabled]="pending() || current.items.length === 0"
+            (click)="purchase()"
+          >
+            Buy
+          </button>
+        </p>
+
+        @if (purchased()) {
+          <p class="purchase-success" role="status">Purchase completed.</p>
+        }
+
+        @if (error()) {
+          <p class="error" role="alert">{{ error() }}</p>
+        }
+      }
+    } @else {
+      <p class="error receipt-error" role="alert">
+        We couldn't generate your receipt. Check the selected card or coupon and try again.
       </p>
-
-      @if (purchased()) {
-        <p class="notice notice--success" role="status">Kupovina je uspela.</p>
-      }
-
-      @if (error()) {
-        <p class="notice notice--danger" role="alert">{{ error() }}</p>
-      }
-
-      @if (current.items.length === 0) {
-        <div class="empty">
-          <p>Korpa je prazna.</p>
-        </div>
-      } @else {
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">Naziv</th>
-                <th scope="col">Cena</th>
-                <th scope="col">Uklanjanje</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of current.items; track item.entityId) {
-                <tr>
-                  <td>
-                    {{ item.name }}
-                    @if (!item.isAvailable) {
-                      <span class="badge badge--warning">nedostupno</span>
-                    }
-                  </td>
-                  <td>{{ item.price }} EC</td>
-                  <td>
-                    <button
-                      class="button"
-                      type="button"
-                      [disabled]="pending()"
-                      (click)="removeItem(item.entityId)"
-                    >
-                      Ukloni
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
     }
   }
 </div>

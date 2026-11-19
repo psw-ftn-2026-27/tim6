@@ -1,0 +1,67 @@
+<section class="gift-card-picker stack">
+  <h3>Selected gift card</h3>
+  @if (selectedGiftCard(); as selected) {
+    <div class="selected-card">
+      <strong class="selected-amount">{{ selected.amount }} EC</strong>
+      <span>{{ selected.senderEmail ?? 'Sender email unavailable' }}</span>
+      <span>Expires at {{ selected.expiresAt | date: 'MMMM d, y HH:mm' }}</span>
+    </div>
+  } @else {
+    <p class="meta">No gift card selected.</p>
+  }
+
+  <button
+    class="button remove-selection"
+    type="button"
+    [disabled]="pending() || !selectedGiftCardId()"
+    (click)="selectionRemoved.emit()"
+  >
+    Remove gift card
+  </button>
+
+  <div class="gift-card-options">
+    @for (giftCard of cards(); track giftCard.id) {
+      <button
+        class="gift-card-option"
+        type="button"
+        [class.gift-card-option--selected]="giftCard.id === selectedGiftCardId()"
+        [attr.aria-pressed]="giftCard.id === selectedGiftCardId()"
+        [disabled]="pending()"
+        (click)="giftCardSelected.emit(giftCard.id)"
+      >
+        @if (giftCard.id === selectedGiftCardId()) {
+          <span class="selected-dot" aria-hidden="true">•</span>
+        }
+        <span class="voucher-line">
+          <strong class="voucher-amount">{{ giftCard.amount }} EC</strong>
+          <span>·</span>
+          <span>{{ giftCard.senderEmail ?? 'Sender email unavailable' }}</span>
+          <span>·</span>
+          <span>Expires at {{ giftCard.expiresAt | date: 'MMMM d, y HH:mm' }}</span>
+        </span>
+      </button>
+    } @empty {
+      <p class="meta">There are no valid received gift cards on this page.</p>
+    }
+  </div>
+
+  <p class="pagination">
+    <button
+      class="button"
+      type="button"
+      [disabled]="pending() || !hasPrevious()"
+      (click)="pageChanged.emit(page() - 1)"
+    >
+      Previous
+    </button>
+    <span>Gift card page {{ page() }}</span>
+    <button
+      class="button"
+      type="button"
+      [disabled]="pending() || !hasNext()"
+      (click)="pageChanged.emit(page() + 1)"
+    >
+      Next
+    </button>
+  </p>
+</section>

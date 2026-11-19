@@ -20,9 +20,11 @@ public sealed class CartController : ControllerBase
     }
 
     [HttpGet("mine")]
-    public async Task<ActionResult<CartDto>> Get()
+    public async Task<ActionResult<CartDto>> Get(
+        [FromQuery] string? couponCode = null,
+        [FromQuery] Guid? giftCardId = null)
     {
-        return await _cartQueries.GetAsync(User.GetUserId());
+        return await _cartQueries.GetAsync(User.GetUserId(), couponCode, giftCardId);
     }
 
     [HttpPost("mine/items/{entityId:guid}")]

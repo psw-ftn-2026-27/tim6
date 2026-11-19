@@ -1,0 +1,58 @@
+<section class="card receipt stack">
+  <h2>Receipt</h2>
+
+  @for (item of cart().items; track item.entityId) {
+    <article class="receipt-item">
+      <div>
+        <strong>{{ item.name }}</strong>
+        @if (!item.isAvailable) {
+          <span class="badge badge--warning">unavailable</span>
+        }
+        <p class="price-line">Original price: <span class="ec-amount">{{ item.price }} EC</span></p>
+        @if (item.couponDiscount > 0) {
+          <p class="price-line discount">
+            Coupon: <span class="ec-amount">−{{ item.couponDiscount }} EC</span>
+          </p>
+          <p class="price-line">
+            Price with coupon: <span class="ec-amount">{{ item.priceAfterCoupon }} EC</span>
+          </p>
+        }
+      </div>
+      <button
+        class="button"
+        type="button"
+        [disabled]="pending()"
+        (click)="removeItem.emit(item.entityId)"
+      >
+        Remove
+      </button>
+    </article>
+  } @empty {
+    <div class="empty">
+      <p>The cart is empty.</p>
+    </div>
+  }
+
+  <dl class="receipt-summary">
+    <div>
+      <dt>Total after coupon</dt>
+      <dd class="ec-amount">{{ cart().totalAfterCoupon }} EC</dd>
+    </div>
+    <div>
+      <dt>Gift card coverage</dt>
+      <dd class="ec-amount">−{{ cart().giftCardCoverage }} EC</dd>
+    </div>
+    <div class="wallet-charge">
+      <dt>Wallet charge</dt>
+      <dd class="ec-amount">{{ cart().walletCharge }} EC</dd>
+    </div>
+  </dl>
+
+  @if (cart().giftCardWaste > 0) {
+    <p class="gift-card-waste" role="status">
+      If you proceed, <span class="ec-amount">{{ cart().giftCardWaste }} EC</span> of the gift card
+      value will be lost.
+    </p>
+  }
+  <p class="meta">Wallet balance: <span class="ec-amount">{{ cart().walletBalance }} EC</span></p>
+</section>

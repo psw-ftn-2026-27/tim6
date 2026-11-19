@@ -10,6 +10,7 @@ public sealed class Coupon : AggregateRoot
     public int DiscountPercentage { get; private set; }
     public DateTime ValidUntil { get; private set; }
     public string Code { get; private set; } = string.Empty;
+    public List<Guid> RedeemedByUserIds { get; private set; } = [];
 
     private Coupon() { }
 
@@ -36,5 +37,24 @@ public sealed class Coupon : AggregateRoot
         DiscountPercentage = discountPercentage;
         ValidUntil = validUntil;
         Code = code;
+    }
+
+    public void Redeem(Guid userId, DateTime redeemedAt)
+    {
+        EnsureCanBeRedeemed(userId, redeemedAt);
+        RedeemedByUserIds.Add(userId);
+    }
+
+    public void EnsureCanBeRedeemed(Guid userId, DateTime redeemedAt)
+    {
+        if (redeemedAt > ValidUntil)
+        {
+            throw new DomainException("The coupon has expired.");
+        }
+
+        if (RedeemedByUserIds.Contains(userId))
+        {
+            throw new DomainException("You have already used this coupon.");
+        }
     }
 }

@@ -81,6 +81,34 @@ public class GiftCardTests
         status.Should().Be(GiftCardStatus.Redeemed);
     }
 
+    [Fact]
+    public void Gift_card_can_only_be_redeemed_by_its_recipient_while_valid_and_not_previously_redeemed()
+    {
+        var giftCard = CreateGiftCard(100, "Srećan put!");
+
+        var foreignRedemption = () => giftCard.Redeem(WellKnownUsers.Explorer, CreatedAt.AddDays(1));
+        var validRedemption = () => giftCard.Redeem(WellKnownUsers.SecondExplorer, CreatedAt.AddDays(1));
+
+        foreignRedemption.Should().Throw<DomainException>();
+        validRedemption.Should().NotThrow();
+        giftCard.IsRedeemed.Should().BeTrue();
+        giftCard.RedeemedAt.Should().Be(CreatedAt.AddDays(1));
+    }
+
+    [Fact]
+    public void Expired_or_previously_redeemed_gift_card_cannot_be_redeemed()
+    {
+        var expiredGiftCard = CreateGiftCard(100, "Srećan put!");
+        var redeemedGiftCard = CreateGiftCard(100, "Uživaj!");
+        redeemedGiftCard.Redeem(WellKnownUsers.SecondExplorer, CreatedAt.AddDays(1));
+
+        var expiredRedemption = () => expiredGiftCard.Redeem(WellKnownUsers.SecondExplorer, expiredGiftCard.ExpiresAt);
+        var repeatedRedemption = () => redeemedGiftCard.Redeem(WellKnownUsers.SecondExplorer, CreatedAt.AddDays(2));
+
+        expiredRedemption.Should().Throw<DomainException>();
+        repeatedRedemption.Should().Throw<DomainException>();
+    }
+
     private static GiftCard CreateGiftCard(int amount, string message)
     {
         return new GiftCard(

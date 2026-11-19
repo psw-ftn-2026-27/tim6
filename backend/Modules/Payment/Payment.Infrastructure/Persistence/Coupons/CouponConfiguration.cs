@@ -14,6 +14,8 @@ internal static class CouponConfiguration
     private static void ConfigureCoupon(EntityTypeBuilder<Coupon> builder)
     {
         builder.Property(coupon => coupon.Code).HasMaxLength(8);
+        builder.PrimitiveCollection(coupon => coupon.RedeemedByUserIds)
+            .HasDefaultValueSql("'{}'::uuid[]");
         builder.HasIndex(coupon => coupon.Code).IsUnique();
     }
 }

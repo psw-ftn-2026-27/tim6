@@ -1,0 +1,56 @@
+.receipt {
+  max-width: 42rem;
+}
+
+.receipt-item {
+  align-items: start;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-4);
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+}
+
+.receipt-item p {
+  margin-bottom: 0;
+}
+
+.discount {
+  color: var(--color-success);
+}
+
+.price-line {
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-1);
+}
+
+.receipt-summary {
+  margin: 0;
+}
+
+.receipt-summary div {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+
+.receipt-summary dd {
+  margin: 0;
+}
+
+.ec-amount {
+  font-family: var(--font-family-mono);
+}
+
+.wallet-charge {
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.gift-card-waste {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  margin: 0;
+}

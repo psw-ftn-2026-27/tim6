@@ -60,10 +60,10 @@ builder.Services.AddSignalR()
 
 builder.Services
     .AddIdentityModule(builder.Configuration)
+    .AddPaymentModule(builder.Configuration)
     .AddExplorationModule(builder.Configuration)
     .AddGamesModule(builder.Configuration)
     .AddSocialModule(builder.Configuration)
-    .AddPaymentModule(builder.Configuration)
     .AddShared(builder.Configuration);
 
 var app = builder.Build();

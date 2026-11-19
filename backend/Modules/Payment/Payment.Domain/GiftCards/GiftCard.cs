@@ -12,6 +12,7 @@ public sealed class GiftCard : AggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public bool IsRedeemed { get; private set; }
+    public DateTime? RedeemedAt { get; private set; }
 
     private GiftCard() { }
 
@@ -43,7 +44,32 @@ public sealed class GiftCard : AggregateRoot
 
     public void Redeem(DateTime redeemedAt)
     {
+        Redeem(RecipientId, redeemedAt);
+    }
+
+    public void Redeem(Guid recipientId, DateTime redeemedAt)
+    {
+        EnsureCanBeRedeemed(recipientId, redeemedAt);
         IsRedeemed = true;
+        RedeemedAt = redeemedAt;
+    }
+
+    public void EnsureCanBeRedeemed(Guid recipientId, DateTime redeemedAt)
+    {
+        if (recipientId != RecipientId)
+        {
+            throw new DomainException("Only the gift card recipient can use it.");
+        }
+
+        if (IsRedeemed)
+        {
+            throw new DomainException("The gift card has already been used.");
+        }
+
+        if (redeemedAt >= ExpiresAt)
+        {
+            throw new DomainException("The gift card has expired.");
+        }
     }
 
     public GiftCardStatus Status(DateTime now)
