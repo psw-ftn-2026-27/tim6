@@ -4,7 +4,7 @@
   <p><a routerLink="/exploration/create">Create tour</a></p>
 
   @if (confirmation()) {
-    <p>{{ confirmation() }}</p>
+    <p>{{ confirmation() }} <a routerLink="/payment/catalog">View in offer</a></p>
   }
 
   @if (error()) {
@@ -143,7 +143,7 @@
       @if (publishForm.pricing().value() === 'Paid') {
         <div class="field">
           <label for="amount">Amount</label>
-          <input id="amount" type="number" step="any" [formField]="publishForm.amount" />
+          <input id="amount" type="number" step="1" [formField]="publishForm.amount" />
           @if (publishForm.amount().touched()) {
             @for (message of publishForm.amount().errors(); track $index) {
               <p class="error">{{ message.message }}</p>
