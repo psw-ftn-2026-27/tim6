@@ -1,6 +1,7 @@
 using System.Net;
 using FluentAssertions;
 using Shared.Tests;
+using Social.Domain.Clubs;
 using Social.Infrastructure.Persistence;
 using Social.Tests.Integration.Seeds;
 using Xunit;
@@ -113,6 +114,84 @@ public class ClubMembershipCommandTests : BaseIntegrationTest
         var client = Factory.CreateClient();
 
         var response = await client.DeleteAsync($"/api/social/clubs/{ClubSeed.ClubWithSecondExplorersJoinRequest.Id}/join-request");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Accepting_user_becomes_a_plain_member_and_the_invitation_is_removed()
+    {
+        var client = Factory.CreateClientFor(BlogSeed.IdentityDemoExplorer, "explorer");
+
+        var response = await client.PostAsync($"/api/social/clubs/{ClubSeed.ClubWithDemoExplorersInvitation.Id}/invitation/accept", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.Clubs.Single(club => club.Id == ClubSeed.ClubWithDemoExplorersInvitation.Id);
+        stored.Members.Should().ContainSingle(member => member.UserId == BlogSeed.IdentityDemoExplorer && member.Role == ClubRole.Member);
+        stored.Invitations.Should().NotContain(invitation => invitation.UserId == BlogSeed.IdentityDemoExplorer);
+    }
+
+    [Fact]
+    public async Task Invitation_to_a_club_that_does_not_exist_cannot_be_accepted()
+    {
+        var client = Factory.CreateClientFor(BlogSeed.IdentityDemoExplorer, "explorer");
+        var unknownClubId = Guid.NewGuid();
+
+        var response = await client.PostAsync($"/api/social/clubs/{unknownClubId}/invitation/accept", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        assertContext.Clubs.Any(club => club.Id == unknownClubId).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Anonymous_user_cannot_accept_an_invitation()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await client.PostAsync($"/api/social/clubs/{ClubSeed.ClubWithDemoExplorersInvitation.Id}/invitation/accept", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Rejected_invitation_is_removed_and_the_user_is_not_a_member()
+    {
+        var client = Factory.CreateClientFor(BlogSeed.IdentityDemoExplorer, "explorer");
+
+        var response = await client.PostAsync($"/api/social/clubs/{ClubSeed.ClubWithDemoExplorersInvitation.Id}/invitation/reject", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.Clubs.Single(club => club.Id == ClubSeed.ClubWithDemoExplorersInvitation.Id);
+        stored.Invitations.Should().NotContain(invitation => invitation.UserId == BlogSeed.IdentityDemoExplorer);
+        stored.Members.Should().NotContain(member => member.UserId == BlogSeed.IdentityDemoExplorer);
+    }
+
+    [Fact]
+    public async Task User_without_an_invitation_cannot_reject_one()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+        using var arrangeContext = Factory.CreateContext<SocialDbContext>();
+        var invitationCountBefore = arrangeContext.Clubs
+            .Single(club => club.Id == ClubSeed.ClubWithDemoExplorersInvitation.Id)
+            .Invitations.Count;
+
+        var response = await client.PostAsync($"/api/social/clubs/{ClubSeed.ClubWithDemoExplorersInvitation.Id}/invitation/reject", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.Clubs.Single(club => club.Id == ClubSeed.ClubWithDemoExplorersInvitation.Id);
+        stored.Invitations.Should().HaveCount(invitationCountBefore);
+    }
+
+    [Fact]
+    public async Task Anonymous_user_cannot_reject_an_invitation()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await client.PostAsync($"/api/social/clubs/{ClubSeed.ClubWithDemoExplorersInvitation.Id}/invitation/reject", null);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
