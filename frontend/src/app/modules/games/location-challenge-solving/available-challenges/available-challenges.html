@@ -1,0 +1,104 @@
+@if (!isExplorer()) {
+  <p class="error">
+    You do not have access to this page. Location challenges are solved by explorers.
+  </p>
+} @else {
+  <div class="stack">
+    <h1>Location challenges</h1>
+
+    <app-geographic-map
+      [pins]="pins()"
+      [circle]="circle()"
+      [simulatorEnabled]="true"
+      [explorerPosition]="explorerPosition()"
+      (explorerMoved)="onExplorerMoved($event)"
+    />
+
+    @if (moveError()) {
+      <p class="error">{{ moveError() }}</p>
+    } @else if (loadError()) {
+      <p class="error">{{ loadError() }}</p>
+    } @else if (explorerPosition() === null) {
+      <p class="meta">Click on the map to set your position.</p>
+    }
+
+    @if (activeChallenge(); as challenge) {
+      <section class="card stack">
+        <h2>{{ challenge.name }}</h2>
+
+        @if (attempt.isLoading()) {
+          <p>Loading the attempt...</p>
+        } @else if (attemptError()) {
+          <p class="error">{{ attemptError() }}</p>
+        } @else if (attempt.hasValue()) {
+          @if (attempt.value(); as active) {
+            @if (active.completedAt !== null) {
+              <p class="notice notice--success">
+                Challenge solved! You earned {{ active.earnedXp }} XP.
+              </p>
+            } @else {
+              <p class="meta">
+                Find the places where these photos were taken. They are all inside the circle.
+              </p>
+            }
+
+            <div class="grid">
+              @for (point of active.hiddenPoints; track point.id) {
+                <figure class="hidden-point">
+                  <img class="photo" [src]="point.image" alt="" />
+                  <figcaption>
+                    @if (point.isRevealed) {
+                      <span class="badge badge--success">Revealed</span>
+                    } @else {
+                      <span class="badge">Hidden</span>
+                    }
+                  </figcaption>
+                </figure>
+              }
+            </div>
+
+            @if (active.completedAt === null) {
+              <div class="actions">
+                <button
+                  class="button button--primary"
+                  type="button"
+                  [disabled]="explorerPosition() === null || checking()"
+                  (click)="checkLocation()"
+                >
+                  Check location
+                </button>
+                @if (checkError()) {
+                  <p class="error">{{ checkError() }}</p>
+                }
+              </div>
+            }
+          }
+        }
+
+        <div class="actions">
+          <button class="button" type="button" [disabled]="checking()" (click)="closeSection()">
+            Back to challenges
+          </button>
+        </div>
+      </section>
+    } @else if (challenges.isLoading()) {
+      <p>Loading location challenges...</p>
+    } @else if (challenges.error()) {
+      <p class="error">
+        Location challenges were not loaded. Log in as an explorer and try again.
+      </p>
+    } @else {
+      @for (challenge of challenges.value()?.items ?? []; track challenge.id) {
+        <app-available-challenge-card
+          [challenge]="challenge"
+          [canActivate]="explorerPosition() !== null"
+          [pending]="activatingId() !== null"
+          [error]="cardError(challenge.id)"
+          (activate)="activate(challenge)"
+        />
+      } @empty {
+        <p>There are no location challenges to solve right now.</p>
+      }
+    }
+  </div>
+}

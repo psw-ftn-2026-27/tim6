@@ -12,6 +12,9 @@ import { Auth } from '../../../core/auth/auth';
       <a class="button" routerLink="/games/quizzes">Upravljanje kvizovima</a>
       <a class="button" routerLink="/games/location-challenges">Manage location challenges</a>
     }
+    @if (isExplorer()) {
+      <a class="button" routerLink="/games/location-challenges/available">Location challenges</a>
+    }
   `,
 })
 export class GamesHome {
@@ -19,5 +22,9 @@ export class GamesHome {
 
   protected readonly isAdministrator = computed(
     () => this.auth.user()?.roles.includes('administrator') ?? false,
+  );
+
+  protected readonly isExplorer = computed(
+    () => this.auth.user()?.roles.includes('explorer') ?? false,
   );
 }

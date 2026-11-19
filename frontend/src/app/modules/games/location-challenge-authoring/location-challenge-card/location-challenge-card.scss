@@ -4,6 +4,11 @@
   justify-content: space-between;
 }
 
+// A long name without spaces wraps instead of widening the card.
+.header h2 {
+  overflow-wrap: anywhere;
+}
+
 .details {
   display: flex;
   flex-wrap: wrap;
@@ -29,4 +34,10 @@
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   margin: 0;
+}
+
+// The shared map is 24rem high by default; the card shows a small one.
+app-geographic-map {
+  height: 12rem;
+  min-height: 12rem;
 }

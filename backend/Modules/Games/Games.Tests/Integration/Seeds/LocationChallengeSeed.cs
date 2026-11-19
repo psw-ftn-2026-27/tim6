@@ -13,6 +13,8 @@ internal static class LocationChallengeSeed
 
     public static readonly LocationChallenge LocatedDraftFortressCorners;
     public static readonly LocationChallenge PublishedRiversideDetails;
+    public static readonly LocationChallenge PublishedBridgeViews;
+    public static readonly LocationChallenge PublishedSquareStatues;
     public static readonly LocationChallenge RetiredParkSculptures;
     public static readonly LocationChallenge ArchivedOldGates;
 
@@ -31,6 +33,21 @@ internal static class LocationChallengeSeed
         ]);
         PublishedRiversideDetails.PlaceAt(new Location(45.2551, 19.8547));
         PublishedRiversideDetails.Publish();
+
+        PublishedBridgeViews = new("Pogledi sa mosta", 140,
+        [
+            new HiddenPoint("/api/shared/images/most-1.jpg", new Location(45.2580, 19.8612)),
+            new HiddenPoint("/api/shared/images/most-2.jpg", new Location(45.2586, 19.8601))
+        ]);
+        PublishedBridgeViews.PlaceAt(new Location(45.2583, 19.8607));
+        PublishedBridgeViews.Publish();
+
+        PublishedSquareStatues = new("Statue na trgu", 80,
+        [
+            new HiddenPoint("/api/shared/images/trg-1.jpg", new Location(45.2554, 19.8452))
+        ]);
+        PublishedSquareStatues.PlaceAt(new Location(45.2551, 19.8451));
+        PublishedSquareStatues.Publish();
 
         RetiredParkSculptures = new("Skulpture u parku", 90,
         [
@@ -51,5 +68,5 @@ internal static class LocationChallengeSeed
         ArchivedOldGates.Archive();
     }
 
-    public static LocationChallenge[] All => [DraftHiddenFacades, LocatedDraftFortressCorners, PublishedRiversideDetails, RetiredParkSculptures, ArchivedOldGates];
+    public static LocationChallenge[] All => [DraftHiddenFacades, LocatedDraftFortressCorners, PublishedRiversideDetails, PublishedBridgeViews, PublishedSquareStatues, RetiredParkSculptures, ArchivedOldGates];
 }

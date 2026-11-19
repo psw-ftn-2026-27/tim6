@@ -1,6 +1,8 @@
 using Games.Application;
 using Games.Application.LocationChallengeAuthoring;
+using Games.Application.LocationChallengeAttempts;
 using Games.Application.LocationChallengePublishing;
+using Games.Application.LocationChallengeSolving;
 using Games.Application.LocationChallenges;
 using Games.Application.QuizAuthoring;
 using Games.Application.QuizPublishing;
@@ -8,7 +10,9 @@ using Games.Application.Quizzes;
 using Games.Application.SocialChallengeAuthoring;
 using Games.Application.SocialChallengePublishing;
 using Games.Application.SocialChallenges;
+using Games.Domain.LocationChallengeAttempts;
 using Games.Infrastructure.Persistence;
+using Games.Infrastructure.Persistence.LocationChallengeAttempts;
 using Games.Infrastructure.Persistence.LocationChallenges;
 using Games.Infrastructure.Persistence.Quizzes;
 using Games.Infrastructure.Persistence.SocialChallenges;
@@ -33,6 +37,8 @@ public static class GamesModuleExtensions
         services.AddScoped<IQuizReadRepository, QuizReadRepository>();
         services.AddScoped<ILocationChallengeRepository, LocationChallengeRepository>();
         services.AddScoped<ILocationChallengeReadRepository, LocationChallengeReadRepository>();
+        services.AddScoped<ILocationChallengeAttemptRepository, LocationChallengeAttemptRepository>();
+        services.AddScoped<ILocationChallengeAttemptReadRepository, LocationChallengeAttemptReadRepository>();
 
         services.AddScoped<SocialChallengeAuthoringService>();
         services.AddScoped<SocialChallengeAuthoringQueries>();
@@ -43,6 +49,9 @@ public static class GamesModuleExtensions
         services.AddScoped<LocationChallengeAuthoringService>();
         services.AddScoped<LocationChallengeAuthoringQueries>();
         services.AddScoped<LocationChallengePublishingService>();
+        services.AddScoped<LocationChallengeSolver>();
+        services.AddScoped<LocationChallengeSolvingService>();
+        services.AddScoped<LocationChallengeSolvingQueries>();
 
         return services;
     }
