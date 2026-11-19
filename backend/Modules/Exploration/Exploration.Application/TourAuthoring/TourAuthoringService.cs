@@ -1,6 +1,7 @@
 using AutoMapper;
 using Exploration.Application.Tours;
 using Exploration.Domain.Tours;
+using Payment.Contracts;
 using Shared.Domain.Exceptions;
 
 namespace Exploration.Application.TourAuthoring;
@@ -10,12 +11,15 @@ public sealed class TourAuthoringService
     private readonly ITourRepository _tourRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IPaymentApi _paymentApi;
 
-    public TourAuthoringService(ITourRepository tourRepository, IUnitOfWork unitOfWork, IMapper mapper)
+    public TourAuthoringService(ITourRepository tourRepository, IUnitOfWork unitOfWork, IMapper mapper,
+        IPaymentApi paymentApi)
     {
         _tourRepository = tourRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _paymentApi = paymentApi;
     }
 
     public async Task<TourDto> CreateAsync(Guid authorId, CreateTourDto dto)
@@ -43,6 +47,7 @@ public sealed class TourAuthoringService
         var price = dto.Price is null ? null : new TourPrice(dto.Price.IsFree, dto.Price.Amount);
 
         tour.Publish(price);
+        await _paymentApi.PutProductInOfferAsync(tour.Id, tour.Name, tour.AuthorId, price!.GetOfferPrice());
         await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<TourPriceDto>(price);
@@ -53,6 +58,10 @@ public sealed class TourAuthoringService
         var tour = await GetOwnedTourAsync(tourId, authorId);
 
         tour.Archive();
+        if (tour.HasOfferProduct)
+        {
+            await _paymentApi.WithdrawProductFromOfferAsync(tour.Id);
+        }
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -61,6 +70,10 @@ public sealed class TourAuthoringService
         var tour = await GetOwnedTourAsync(tourId, authorId);
 
         tour.Activate();
+        if (tour.HasOfferProduct)
+        {
+            await _paymentApi.ReturnProductToOfferAsync(tour.Id);
+        }
         await _unitOfWork.SaveChangesAsync();
     }
 
