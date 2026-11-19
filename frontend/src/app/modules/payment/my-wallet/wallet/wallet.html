@@ -21,6 +21,13 @@
         <p class="balance__amount">{{ current.balance }} EC</p>
       </div>
 
+      <p class="actions">
+        <a class="button button--primary" routerLink="/payment/gift-cards/new">
+          Gift Explorer coins
+        </a>
+        <a class="button" routerLink="/payment/gift-cards">Gift cards</a>
+      </p>
+
       <h2>Transakcije</h2>
 
       @if (current.transactions.length === 0 && current.payments.length === 0) {

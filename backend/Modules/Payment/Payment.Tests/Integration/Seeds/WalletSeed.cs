@@ -8,6 +8,9 @@ internal static class WalletSeed
 {
     public static readonly Guid IdentityDemoExplorer = Guid.Parse("20000000-0000-0000-0000-000000000001");
     public const string IdentityDemoExplorerEmail = "explorer1@explorer.dev";
+    public static readonly Guid IdentityDemoSecondExplorer = Guid.Parse("20000000-0000-0000-0000-000000000002");
+    public const string IdentityDemoSecondExplorerEmail = "explorer2@explorer.dev";
+    public const string IdentityDemoExplorerWithoutWalletEmail = "explorer3@explorer.dev";
     public static readonly Guid ReturningBuyer = Guid.Parse("40000000-0000-0000-0000-000000000001");
     public static readonly Guid UnderfundedBuyer = Guid.Parse("40000000-0000-0000-0000-000000000002");
     public static readonly Guid WalletlessBuyer = Guid.Parse("40000000-0000-0000-0000-000000000003");
@@ -16,6 +19,7 @@ internal static class WalletSeed
 
     public static readonly Wallet ExplorersNewWallet = new(WellKnownUsers.Explorer);
     public static readonly Wallet DemoExplorersFundedWallet;
+    public static readonly Wallet DemoSecondExplorersWallet = new(IdentityDemoSecondExplorer);
     public static readonly Transaction ExpiredDeposit;
     public static readonly Transaction CancelledDeposit;
     public static readonly Transaction RecentDeposit;
@@ -55,5 +59,6 @@ internal static class WalletSeed
         UnderfundedBuyersWallet.Deposit(WellKnownUsers.Administrator, 100, DateTime.UtcNow.AddHours(-5));
     }
 
-    public static Wallet[] All => [ExplorersNewWallet, DemoExplorersFundedWallet, ReturningBuyersWalletWithPayments, UnderfundedBuyersWallet];
+    public static Wallet[] All =>
+        [ExplorersNewWallet, DemoExplorersFundedWallet, DemoSecondExplorersWallet, ReturningBuyersWalletWithPayments, UnderfundedBuyersWallet];
 }

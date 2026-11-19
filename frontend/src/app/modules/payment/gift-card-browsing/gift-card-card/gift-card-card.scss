@@ -1,0 +1,23 @@
+.card-heading {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.status {
+  border-radius: var(--radius);
+  font-size: var(--font-size-sm);
+  padding: var(--space-1) var(--space-2);
+}
+
+.status--valid {
+  background: var(--color-bg);
+  color: var(--color-success);
+}
+
+.status--redeemed,
+.status--expired {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}

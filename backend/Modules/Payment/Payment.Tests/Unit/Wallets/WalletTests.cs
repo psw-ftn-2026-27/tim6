@@ -142,6 +142,28 @@ public class WalletTests
         cancellation.Should().Throw<DomainException>();
     }
 
+    [Fact]
+    public void Spending_more_than_the_available_balance_is_rejected_without_changing_the_wallet()
+    {
+        var wallet = CreateWalletWithOneDeposit();
+        var balanceBefore = wallet.Balance();
+
+        var spending = () => wallet.Spend(101, DepositedAt.AddHours(1));
+
+        spending.Should().Throw<DomainException>();
+        wallet.Balance().Should().Be(balanceBefore);
+    }
+
+    [Fact]
+    public void Spending_reduces_the_wallet_balance_by_the_exact_amount()
+    {
+        var wallet = CreateWalletWithOneDeposit();
+
+        wallet.Spend(40, DepositedAt.AddHours(1));
+
+        wallet.Balance().Should().Be(60);
+    }
+
     private static Wallet CreateWalletWithOneDeposit()
     {
         var wallet = new Wallet(WellKnownUsers.Explorer);
