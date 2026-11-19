@@ -19,7 +19,7 @@ internal sealed class ProductReadRepository : IProductReadRepository
             .Where(product => product.OwnerId == ownerId)
             .OrderBy(product => product.Name)
             .ThenBy(product => product.Id)
-            .Select(product => new ProductDto(product.Id, product.Name, product.Price))
+            .Select(product => new ProductDto(product.Id, product.EntityId, product.Name, product.Price))
             .ToListAsync();
     }
 

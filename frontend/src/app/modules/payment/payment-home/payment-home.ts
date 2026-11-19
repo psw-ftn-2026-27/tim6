@@ -19,10 +19,6 @@ export class PaymentHome {
   protected readonly isAdministrator = computed(
     () => this.auth.user()?.roles.includes('administrator') ?? false,
   );
-  protected readonly isExplorer = computed(
-    () => this.auth.user()?.roles.includes('explorer') ?? false,
-  );
-
   // Only an explorer buys, so only an explorer sees "Korpa" and "Kupljene ture".
   protected readonly isExplorer = computed(
     () => this.auth.user()?.roles.includes('explorer') ?? false,
