@@ -54,6 +54,13 @@ public sealed class ClubModerationController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:guid}/members/{memberId:guid}/transfer-ownership")]
+    public async Task<ActionResult> TransferOwnership(Guid id, Guid memberId)
+    {
+        await _moderationService.TransferOwnershipAsync(id, User.GetUserId(), memberId);
+        return NoContent();
+    }
+
     [HttpDelete("{id:guid}/members/{memberId:guid}")]
     public async Task<ActionResult> RemoveMember(Guid id, Guid memberId)
     {

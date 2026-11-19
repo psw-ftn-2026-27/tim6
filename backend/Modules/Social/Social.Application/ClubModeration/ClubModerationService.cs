@@ -47,6 +47,14 @@ public sealed class ClubModerationService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task TransferOwnershipAsync(Guid clubId, Guid userId, Guid newOwnerId)
+    {
+        var club = await GetClubAsync(clubId);
+
+        club.TransferOwnership(userId, newOwnerId);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     private async Task<Club> GetClubAsync(Guid clubId)
     {
         var club = await _clubRepository.GetByIdAsync(clubId);

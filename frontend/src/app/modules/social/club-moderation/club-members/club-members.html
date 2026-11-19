@@ -55,6 +55,29 @@
                       Remove
                     </button>
                   }
+                  @if (confirmingMemberId() === member.userId) {
+                    <span>Are you sure?</span>
+                    <button
+                      class="button button--primary"
+                      type="button"
+                      [disabled]="pending()"
+                      (click)="transferOwnership(member.userId)"
+                    >
+                      Confirm
+                    </button>
+                    <button class="button" type="button" (click)="confirmingMemberId.set(null)">
+                      Cancel
+                    </button>
+                  } @else if (canTransferOwnership(member)) {
+                    <button
+                      class="button"
+                      type="button"
+                      [disabled]="pending()"
+                      (click)="confirmingMemberId.set(member.userId)"
+                    >
+                      Transfer ownership
+                    </button>
+                  }
                 </div>
               </td>
             </tr>

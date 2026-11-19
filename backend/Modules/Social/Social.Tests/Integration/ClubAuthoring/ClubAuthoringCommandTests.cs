@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using Shared.Tests;
 using Social.Application.ClubAuthoring;
+using Social.Domain.Clubs;
 using Social.Infrastructure.Persistence;
 using Social.Tests.Integration.Seeds;
 using Xunit;
@@ -162,6 +163,65 @@ public class ClubAuthoringCommandTests : BaseIntegrationTest
         var client = Factory.CreateClient();
 
         var response = await client.DeleteAsync($"/api/social/clubs/{ClubSeed.HikingClub.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Closed_club_is_stored_as_closed_without_pending_requests_and_with_its_members()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var clubId = ClubSeed.ClubWithSecondExplorerAsMemberAndDemoExplorersJoinRequest.Id;
+        using var arrangeContext = Factory.CreateContext<SocialDbContext>();
+        var memberIdsBefore = arrangeContext.Clubs.Single(club => club.Id == clubId)
+            .Members.Select(member => member.UserId).ToList();
+
+        var response = await client.PostAsync($"/api/social/clubs/{clubId}/close", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.Clubs.Single(club => club.Id == clubId);
+        stored.Status.Should().Be(ClubStatus.Closed);
+        stored.JoinRequests.Should().BeEmpty();
+        stored.Members.Select(member => member.UserId).Should().BeEquivalentTo(memberIdsBefore);
+    }
+
+    [Fact]
+    public async Task Already_closed_club_cannot_be_closed_again_and_keeps_its_members()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var clubId = ClubSeed.ClosedClubWithSecondExplorerAsMember.Id;
+        using var arrangeContext = Factory.CreateContext<SocialDbContext>();
+        var memberCountBefore = arrangeContext.Clubs.Single(club => club.Id == clubId).Members.Count;
+
+        var response = await client.PostAsync($"/api/social/clubs/{clubId}/close", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        var stored = assertContext.Clubs.Single(club => club.Id == clubId);
+        stored.Status.Should().Be(ClubStatus.Closed);
+        stored.Members.Should().HaveCount(memberCountBefore);
+    }
+
+    [Fact]
+    public async Task Unknown_club_cannot_be_closed()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var unknownClubId = Guid.NewGuid();
+
+        var response = await client.PostAsync($"/api/social/clubs/{unknownClubId}/close", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        using var assertContext = Factory.CreateContext<SocialDbContext>();
+        assertContext.Clubs.Any(club => club.Id == unknownClubId).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Anonymous_user_cannot_close_a_club()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await client.PostAsync($"/api/social/clubs/{ClubSeed.HikingClub.Id}/close", null);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

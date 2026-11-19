@@ -112,6 +112,31 @@ public sealed class Club : AggregateRoot
         _members.Remove(member);
     }
 
+    public void TransferOwnership(Guid userId, Guid newOwnerId)
+    {
+        EnsureActive();
+        if (userId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can transfer ownership.");
+        }
+
+        GetMember(newOwnerId).TakeOverOwnership();
+        GetMember(userId).HandOverOwnership();
+        OwnerId = newOwnerId;
+    }
+
+    public void Close(Guid userId)
+    {
+        if (userId != OwnerId)
+        {
+            throw new DomainException("Only the owner of the club can close it.");
+        }
+        EnsureActive();
+
+        Status = ClubStatus.Closed;
+        _joinRequests.Clear();
+    }
+
     public bool CanResolveJoinRequests(Guid userId)
     {
         var member = FindMember(userId);

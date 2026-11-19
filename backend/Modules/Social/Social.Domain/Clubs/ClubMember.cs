@@ -25,4 +25,19 @@ public sealed class ClubMember : Entity
 
         Role = ClubRole.Moderator;
     }
+
+    public void TakeOverOwnership()
+    {
+        if (Role == ClubRole.Owner)
+        {
+            throw new DomainException("The owner cannot take over ownership again.");
+        }
+
+        Role = ClubRole.Owner;
+    }
+
+    public void HandOverOwnership()
+    {
+        Role = ClubRole.Moderator;
+    }
 }

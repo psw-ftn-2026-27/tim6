@@ -249,6 +249,136 @@ public class ClubTests
         club.Members.Should().ContainSingle(member => member.UserId == applicant && member.Role == ClubRole.Member);
     }
 
+    [Fact]
+    public void Ownership_cannot_be_transferred_to_a_user_who_is_not_a_member()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+        var outsider = Guid.NewGuid();
+
+        var transfer = () => club.TransferOwnership(WellKnownUsers.Explorer, outsider);
+
+        transfer.Should().Throw<DomainException>();
+        club.OwnerId.Should().Be(WellKnownUsers.Explorer);
+    }
+
+    [Fact]
+    public void Owner_cannot_transfer_ownership_to_themselves_and_remains_the_only_owner()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+
+        var transfer = () => club.TransferOwnership(WellKnownUsers.Explorer, WellKnownUsers.Explorer);
+
+        transfer.Should().Throw<DomainException>();
+        club.OwnerId.Should().Be(WellKnownUsers.Explorer);
+        club.Members.Should().ContainSingle(member => member.Role == ClubRole.Owner)
+            .Which.UserId.Should().Be(WellKnownUsers.Explorer);
+    }
+
+    [Fact]
+    public void Moderator_cannot_transfer_ownership_and_the_owner_stays_the_same()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+
+        var transfer = () => club.TransferOwnership(WellKnownUsers.SecondExplorer, FirstPlainMember);
+
+        transfer.Should().Throw<DomainException>();
+        club.OwnerId.Should().Be(WellKnownUsers.Explorer);
+        club.Members.Should().ContainSingle(member => member.Role == ClubRole.Owner)
+            .Which.UserId.Should().Be(WellKnownUsers.Explorer);
+    }
+
+    [Fact]
+    public void Moderator_cannot_close_the_club_and_the_club_stays_active()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+
+        var closing = () => club.Close(WellKnownUsers.SecondExplorer);
+
+        closing.Should().Throw<DomainException>();
+        club.Status.Should().Be(ClubStatus.Active);
+    }
+
+    [Fact]
+    public void Closing_removes_all_pending_requests_and_keeps_all_members()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+        club.RequestToJoin(Guid.NewGuid());
+        club.RequestToJoin(Guid.NewGuid());
+        var memberIdsBefore = club.Members.Select(member => member.UserId).ToList();
+
+        club.Close(WellKnownUsers.Explorer);
+
+        club.JoinRequests.Should().BeEmpty();
+        club.Members.Select(member => member.UserId).Should().BeEquivalentTo(memberIdsBefore);
+    }
+
+    [Fact]
+    public void Ownership_cannot_be_transferred_in_a_closed_club()
+    {
+        var club = CreateClosedClubWithTwoModeratorsAndTwoPlainMembers();
+
+        var transfer = () => club.TransferOwnership(WellKnownUsers.Explorer, FirstPlainMember);
+
+        transfer.Should().Throw<DomainException>();
+        club.OwnerId.Should().Be(WellKnownUsers.Explorer);
+        club.Members.Should().ContainSingle(member => member.UserId == FirstPlainMember && member.Role == ClubRole.Member);
+    }
+
+    [Fact]
+    public void Closed_club_does_not_accept_a_join_request()
+    {
+        var club = CreateClosedClubWithTwoModeratorsAndTwoPlainMembers();
+        var applicant = Guid.NewGuid();
+
+        var request = () => club.RequestToJoin(applicant);
+
+        request.Should().Throw<DomainException>();
+        club.JoinRequests.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Join_request_cannot_be_accepted_in_a_closed_club()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+        var applicant = Guid.NewGuid();
+        club.RequestToJoin(applicant);
+        club.Close(WellKnownUsers.Explorer);
+
+        var acceptance = () => club.AcceptJoinRequest(WellKnownUsers.Explorer, applicant);
+
+        acceptance.Should().Throw<DomainException>();
+        club.Members.Should().NotContain(member => member.UserId == applicant);
+    }
+
+    [Fact]
+    public void Member_cannot_be_promoted_in_a_closed_club()
+    {
+        var club = CreateClosedClubWithTwoModeratorsAndTwoPlainMembers();
+
+        var promotion = () => club.PromoteToModerator(WellKnownUsers.Explorer, FirstPlainMember);
+
+        promotion.Should().Throw<DomainException>();
+        club.Members.Should().ContainSingle(member => member.UserId == FirstPlainMember && member.Role == ClubRole.Member);
+    }
+
+    [Fact]
+    public void Member_cannot_be_removed_from_a_closed_club()
+    {
+        var club = CreateClosedClubWithTwoModeratorsAndTwoPlainMembers();
+
+        var removal = () => club.RemoveMember(WellKnownUsers.Explorer, FirstPlainMember);
+
+        removal.Should().Throw<DomainException>();
+        club.Members.Should().ContainSingle(member => member.UserId == FirstPlainMember);
+    }
+
+    private static Club CreateClosedClubWithTwoModeratorsAndTwoPlainMembers()
+    {
+        var club = CreateClubWithTwoModeratorsAndTwoPlainMembers();
+        club.Close(WellKnownUsers.Explorer);
+        return club;
+    }
+
     private static Club CreateClubWithTwoModeratorsAndTwoPlainMembers()
     {
         var club = CreateClub();
