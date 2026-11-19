@@ -32,24 +32,52 @@ internal sealed class ConversationReadRepository : IConversationReadRepository
         Guid conversationId, MessageCursorDto? cursor, bool afterCursor, int pageSize)
     {
         var query = _dbContext.ChatMessages.Where(message => message.ConversationId == conversationId);
-        if (cursor is not null)
-        {
-            query = afterCursor
-                ? query.Where(message => message.CreatedAt > cursor.CreatedAt ||
-                    message.CreatedAt == cursor.CreatedAt && message.Id.CompareTo(cursor.Id) > 0)
-                : query.Where(message => message.CreatedAt < cursor.CreatedAt ||
-                    message.CreatedAt == cursor.CreatedAt && message.Id.CompareTo(cursor.Id) < 0);
-        }
-        var rows = afterCursor
-            ? await query.OrderBy(message => message.CreatedAt).ThenBy(message => message.Id).Take(pageSize + 1).ToListAsync()
-            : await query.OrderByDescending(message => message.CreatedAt).ThenByDescending(message => message.Id).Take(pageSize + 1).ToListAsync();
+        query = ApplyCursor(query, cursor, afterCursor);
+        var rows = await LoadPageAsync(query, afterCursor, pageSize);
         var hasMore = rows.Count > pageSize;
         rows = rows.Take(pageSize).ToList();
-        if (!afterCursor) rows.Reverse();
-        var next = rows.Count == 0 ? null : afterCursor
-            ? new MessageCursorDto(rows[^1].CreatedAt, rows[^1].Id)
-            : new MessageCursorDto(rows[0].CreatedAt, rows[0].Id);
-        return new MessagePageDto(rows.Select(Map).ToList(), next, hasMore);
+        if (!afterCursor)
+        {
+            rows.Reverse();
+        }
+
+        return new MessagePageDto(rows.Select(Map).ToList(),
+            CreateNextCursor(rows, afterCursor), hasMore);
+    }
+
+    private static IQueryable<ChatMessage> ApplyCursor(
+        IQueryable<ChatMessage> query, MessageCursorDto? cursor, bool afterCursor)
+    {
+        if (cursor is null)
+        {
+            return query;
+        }
+
+        return afterCursor
+            ? query.Where(message => message.CreatedAt > cursor.CreatedAt ||
+                message.CreatedAt == cursor.CreatedAt && message.Id.CompareTo(cursor.Id) > 0)
+            : query.Where(message => message.CreatedAt < cursor.CreatedAt ||
+                message.CreatedAt == cursor.CreatedAt && message.Id.CompareTo(cursor.Id) < 0);
+    }
+
+    private static async Task<List<ChatMessage>> LoadPageAsync(
+        IQueryable<ChatMessage> query, bool afterCursor, int pageSize) =>
+        afterCursor
+            ? await query.OrderBy(message => message.CreatedAt)
+                .ThenBy(message => message.Id).Take(pageSize + 1).ToListAsync()
+            : await query.OrderByDescending(message => message.CreatedAt)
+                .ThenByDescending(message => message.Id).Take(pageSize + 1).ToListAsync();
+
+    private static MessageCursorDto? CreateNextCursor(
+        IReadOnlyList<ChatMessage> rows, bool afterCursor)
+    {
+        if (rows.Count == 0)
+        {
+            return null;
+        }
+
+        var boundary = afterCursor ? rows[^1] : rows[0];
+        return new MessageCursorDto(boundary.CreatedAt, boundary.Id);
     }
 
     private static ConversationDto Map(Conversation value) => new(value.Id, value.Context.Type,

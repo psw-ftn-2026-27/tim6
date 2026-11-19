@@ -25,7 +25,38 @@ public class TourConversationMessagingCommandTests : BaseIntegrationTest
         response.EnsureSuccessStatusCode();
         (await response.Content.ReadFromJsonAsync<Guid>()).Should().Be(ConversationSeed.TourConversation.Id);
         using var context = Factory.CreateContext<ExplorationDbContext>();
-        context.Conversations.Should().ContainSingle();
+        context.Conversations.ToList().Count(value => value.Context.ContextId == TourSeed.FortressWalk.Id)
+            .Should().Be(1);
+    }
+
+    [Fact]
+    public async Task buyer_joins_the_tour_conversation_as_an_ordinary_participant()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+
+        var response = await client.PostAsync(
+            $"/api/exploration/conversations/tour/{TourSeed.PublishedVineyards.Id}", null);
+
+        response.EnsureSuccessStatusCode();
+        using var context = Factory.CreateContext<ExplorationDbContext>();
+        var conversation = context.Conversations.ToList()
+            .Single(value => value.Context.ContextId == TourSeed.PublishedVineyards.Id);
+        conversation.Participants.Single(value => value.UserId == WellKnownUsers.SecondExplorer)
+            .Role.Should().Be(ConversationRole.Participant);
+    }
+
+    [Fact]
+    public async Task user_who_has_not_purchased_the_tour_cannot_open_its_conversation()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Administrator, "explorer");
+
+        var response = await client.PostAsync(
+            $"/api/exploration/conversations/tour/{TourSeed.PublishedVineyards.Id}", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var context = Factory.CreateContext<ExplorationDbContext>();
+        context.Conversations.ToList().Should().NotContain(value =>
+            value.Context.ContextId == TourSeed.PublishedVineyards.Id);
     }
 
     [Fact]
@@ -44,45 +75,85 @@ public class TourConversationMessagingCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task author_can_mute_and_unmute_an_unprivileged_participant()
+    public async Task author_can_mute_an_unprivileged_participant()
     {
         var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "author");
 
-        var mute = await client.PutAsJsonAsync(
+        var response = await client.PutAsJsonAsync(
             $"/api/exploration/conversations/{ConversationSeed.TourConversation.Id}/mute",
             new MuteParticipantDto(WellKnownUsers.SecondExplorer, MuteDuration.OneHour));
-        var unmute = await client.DeleteAsync(
-            $"/api/exploration/conversations/{ConversationSeed.TourConversation.Id}/mute/{WellKnownUsers.SecondExplorer}");
 
-        mute.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        unmute.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         using var context = Factory.CreateContext<ExplorationDbContext>();
-        context.Conversations.Single().Participants
-            .Single(participant => participant.UserId == WellKnownUsers.SecondExplorer).Mute.Should().BeNull();
+        context.Conversations.Single(value => value.Id == ConversationSeed.TourConversation.Id).Participants
+            .Single(participant => participant.UserId == WellKnownUsers.SecondExplorer).Mute.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task permanently_muted_participant_can_read_but_cannot_send()
+    public async Task ordinary_participant_cannot_mute_another_participant()
     {
-        var author = Factory.CreateClientFor(WellKnownUsers.Explorer, "author");
-        var participant = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
 
-        var mute = await author.PutAsJsonAsync(
+        var response = await client.PutAsJsonAsync(
             $"/api/exploration/conversations/{ConversationSeed.TourConversation.Id}/mute",
-            new MuteParticipantDto(WellKnownUsers.SecondExplorer, MuteDuration.Permanent));
-        var read = await participant.GetAsync(
-            $"/api/exploration/conversations/{ConversationSeed.TourConversation.Id}/messages");
-        var send = await participant.PostAsJsonAsync(
-            $"/api/exploration/conversations/{ConversationSeed.TourConversation.Id}/messages",
-            new SendMessageDto("Poruka utišanog učesnika"));
+            new MuteParticipantDto(WellKnownUsers.Explorer, MuteDuration.OneHour));
 
-        mute.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        read.StatusCode.Should().Be(HttpStatusCode.OK);
-        send.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task author_can_unmute_a_muted_participant()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "author");
+
+        var response = await client.DeleteAsync(
+            $"/api/exploration/conversations/{ConversationSeed.MutedTourConversation.Id}" +
+            $"/mute/{WellKnownUsers.SecondExplorer}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         using var context = Factory.CreateContext<ExplorationDbContext>();
-        context.Conversations.Single().Participants
-            .Single(value => value.UserId == WellKnownUsers.SecondExplorer)
-            .Mute!.IsPermanent.Should().BeTrue();
+        context.Conversations.Single(value => value.Id == ConversationSeed.MutedTourConversation.Id)
+            .Participants.Single(value => value.UserId == WellKnownUsers.SecondExplorer)
+            .Mute.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ordinary_participant_cannot_unmute_a_participant()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+
+        var response = await client.DeleteAsync(
+            $"/api/exploration/conversations/{ConversationSeed.MutedTourConversation.Id}" +
+            $"/mute/{WellKnownUsers.SecondExplorer}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task permanently_muted_participant_can_read_messages()
+    {
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+
+        var response = await client.GetAsync(
+            $"/api/exploration/conversations/{ConversationSeed.PermanentlyMutedTourConversation.Id}/messages");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task permanently_muted_participant_cannot_send_messages()
+    {
+        const string content = "Poruka utišanog učesnika";
+        var client = Factory.CreateClientFor(WellKnownUsers.SecondExplorer, "explorer");
+
+        var response = await client.PostAsJsonAsync(
+            $"/api/exploration/conversations/{ConversationSeed.PermanentlyMutedTourConversation.Id}/messages",
+            new SendMessageDto(content));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        using var context = Factory.CreateContext<ExplorationDbContext>();
+        context.ChatMessages.ToList().Should().NotContain(message =>
+            message.Content != null && message.Content.Value == content);
     }
 
     [Fact]

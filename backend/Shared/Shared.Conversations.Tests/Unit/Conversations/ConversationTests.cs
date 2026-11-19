@@ -144,16 +144,48 @@ public class ConversationTests
     }
 
     [Fact]
-    public void ordinary_participant_cannot_mute_and_privileged_participant_cannot_be_muted()
+    public void ordinary_participant_cannot_mute_another_participant()
     {
         var conversation = CreateContextualConversation();
         conversation.AddParticipant(SecondUser);
 
-        var ordinaryModerator = () => conversation.Mute(SecondUser, FirstUser, MuteDuration.OneHour, Now);
-        var privilegedTarget = () => conversation.Mute(FirstUser, FirstUser, MuteDuration.OneHour, Now);
+        var muting = () => conversation.Mute(SecondUser, FirstUser, MuteDuration.OneHour, Now);
 
-        ordinaryModerator.Should().Throw<DomainException>();
-        privilegedTarget.Should().Throw<DomainException>();
+        muting.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void privileged_participant_cannot_be_muted()
+    {
+        var conversation = CreateContextualConversation();
+
+        var muting = () => conversation.Mute(FirstUser, FirstUser, MuteDuration.OneHour, Now);
+
+        muting.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void ordinary_participant_cannot_unmute_another_participant()
+    {
+        var conversation = CreateContextualConversation();
+        conversation.AddParticipant(SecondUser);
+        conversation.AddParticipant(ThirdUser);
+        conversation.Mute(FirstUser, SecondUser, MuteDuration.Permanent, Now);
+
+        var unmuting = () => conversation.Unmute(ThirdUser, SecondUser);
+
+        unmuting.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void participant_without_a_mute_cannot_be_unmuted()
+    {
+        var conversation = CreateContextualConversation();
+        conversation.AddParticipant(SecondUser);
+
+        var unmuting = () => conversation.Unmute(FirstUser, SecondUser);
+
+        unmuting.Should().Throw<DomainException>();
     }
 
     [Fact]
