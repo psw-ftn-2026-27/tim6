@@ -1,6 +1,8 @@
+using Games.Application.ChallengeMap;
 using Games.Application.Challenges;
 using Games.Application.SocialChallengeAuthoring;
 using Games.Application.SocialChallenges;
+using Games.Domain.Challenges;
 using Microsoft.EntityFrameworkCore;
 
 namespace Games.Infrastructure.Persistence.SocialChallenges;
@@ -31,6 +33,23 @@ internal sealed class SocialChallengeReadRepository : ISocialChallengeReadReposi
                 challenge.Location == null
                     ? null
                     : new LocationDto(challenge.Location.Latitude, challenge.Location.Longitude)))
+            .ToListAsync();
+    }
+
+    public Task<List<SocialChallengeOnMapDto>> GetPublishedForMapAsync(Guid touristId)
+    {
+        return _dbContext.SocialChallenges
+            .Where(challenge => challenge.Status == ChallengeStatus.Published)
+            .Select(challenge => new SocialChallengeOnMapDto(
+                challenge.Id,
+                challenge.Name,
+                challenge.Xp,
+                new LocationDto(challenge.Location!.Latitude, challenge.Location.Longitude),
+                challenge.RangeInMeters,
+                challenge.TimeWindow.Start,
+                challenge.TimeWindow.End,
+                _dbContext.ChallengeProgresses.Any(progress =>
+                    progress.ChallengeId == challenge.Id && progress.TouristId == touristId && progress.SolvedAt != null)))
             .ToListAsync();
     }
 }

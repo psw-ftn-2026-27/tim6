@@ -1,4 +1,5 @@
 using Games.Application;
+using Games.Application.ChallengeMap;
 using Games.Application.ChallengeProgresses;
 using Games.Application.LocationChallengeAuthoring;
 using Games.Application.LocationChallengePublishing;
@@ -53,6 +54,7 @@ public static class GamesModuleExtensions
         services.AddScoped<LocationChallengeAuthoringService>();
         services.AddScoped<LocationChallengeAuthoringQueries>();
         services.AddScoped<LocationChallengePublishingService>();
+        services.AddScoped<ChallengeMapQueries>();
 
         return services;
     }

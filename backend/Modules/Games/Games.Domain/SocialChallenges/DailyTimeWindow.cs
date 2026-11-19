@@ -35,4 +35,11 @@ public sealed record DailyTimeWindow
         Start = start;
         End = end;
     }
+
+    // The start belongs to the window and the end does not; a window that crosses midnight
+    // holds the moments before and after it.
+    public bool Contains(TimeOnly moment)
+    {
+        return moment.IsBetween(Start, End);
+    }
 }

@@ -78,15 +78,6 @@ export interface UpdateQuizDto {
   location: LocationDto | null;
 }
 
-export interface PublishedQuizDto {
-  id: string;
-  name: string;
-  xp: number;
-  distanceInMeters: number;
-  activationRadiusInMeters: number;
-  isSolved: boolean;
-}
-
 export interface QuestionForSolvingDto {
   text: string;
   options: string[];
@@ -144,4 +135,18 @@ export interface UpdateLocationChallengeDto {
   xp: number;
   hiddenPoints: HiddenPointDto[];
   location: LocationDto | null;
+}
+
+export type ChallengeKind = 'Quiz' | 'SocialChallenge';
+
+export interface ChallengeOnMapDto {
+  id: string;
+  kind: ChallengeKind;
+  name: string;
+  xp: number;
+  location: LocationDto;
+  activationRadiusInMeters: number;
+  isSolved: boolean;
+  distanceInMeters: number | null;
+  canActivate: boolean;
 }

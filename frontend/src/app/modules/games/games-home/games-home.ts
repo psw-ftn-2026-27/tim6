@@ -13,7 +13,7 @@ import { Auth } from '../../../core/auth/auth';
       <a class="button" routerLink="/games/location-challenges">Manage location challenges</a>
     }
     @if (isExplorer()) {
-      <a class="button" routerLink="/games/quizzes/published">Challenges</a>
+      <a class="button" routerLink="/games/challenge-map">Challenges</a>
     }
   `,
 })

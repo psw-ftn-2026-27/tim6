@@ -20,12 +20,6 @@ public sealed class QuizSolvingController : ControllerBase
         _solvingQueries = solvingQueries;
     }
 
-    [HttpGet("published")]
-    public async Task<ActionResult<List<PublishedQuizDto>>> GetPublished([FromQuery] LocationDto position)
-    {
-        return await _solvingQueries.GetPublishedQuizzesAsync(User.GetUserId(), position);
-    }
-
     [HttpGet("{id:guid}/solving")]
     public async Task<ActionResult<QuizForSolvingDto>> GetForSolving(Guid id, [FromQuery] LocationDto position)
     {

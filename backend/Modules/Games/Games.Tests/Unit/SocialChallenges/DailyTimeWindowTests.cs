@@ -46,4 +46,34 @@ public class DailyTimeWindowTests
 
         timeWindow.Duration.Should().Be(TimeSpan.FromHours(hours));
     }
+
+    [Theory]
+    [InlineData(18, 0, true)]
+    [InlineData(19, 59, true)]
+    [InlineData(20, 0, false)]
+    [InlineData(17, 59, false)]
+    public void Daily_time_window_holds_its_start_but_not_its_end(int hour, int minute, bool contained)
+    {
+        var timeWindow = new DailyTimeWindow(new TimeOnly(18, 0), new TimeOnly(20, 0));
+
+        var contains = timeWindow.Contains(new TimeOnly(hour, minute));
+
+        contains.Should().Be(contained);
+    }
+
+    [Theory]
+    [InlineData(23, 30, true)]
+    [InlineData(0, 0, true)]
+    [InlineData(1, 30, true)]
+    [InlineData(2, 0, false)]
+    [InlineData(12, 0, false)]
+    [InlineData(21, 59, false)]
+    public void Daily_time_window_across_midnight_holds_moments_before_and_after_midnight_only(int hour, int minute, bool contained)
+    {
+        var timeWindow = new DailyTimeWindow(new TimeOnly(22, 0), new TimeOnly(2, 0));
+
+        var contains = timeWindow.Contains(new TimeOnly(hour, minute));
+
+        contains.Should().Be(contained);
+    }
 }
