@@ -1,0 +1,22 @@
+<form class="card stack" (submit)="submit($event)">
+  <fieldset class="stack">
+    <legend>Question {{ number() }} of {{ total() }}: {{ question().text }}</legend>
+
+    @for (option of question().options; track $index) {
+      <label class="option">
+        <input type="radio" value="{{ $index }}" [formField]="form.option" />
+        {{ option }}
+      </label>
+    }
+  </fieldset>
+
+  <div>
+    <button class="button button--primary" type="submit" [disabled]="!form().valid() || pending()">
+      Next
+    </button>
+  </div>
+
+  @if (pending()) {
+    <p>Sending your answers...</p>
+  }
+</form>

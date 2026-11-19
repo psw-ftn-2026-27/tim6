@@ -251,4 +251,84 @@ public class QuizTests
 
         edit.Should().Throw<DomainException>();
     }
+
+    private static Quiz CreateQuizWithThreeQuestions() =>
+        new("Istorija tvrđave", "Prošetajte tvrđavom.", 100, CreateQuestions(3));
+
+    [Theory]
+    [InlineData(0, 0, 0, 1)]
+    [InlineData(0, 0, 2, 0)]
+    [InlineData(0, 0, 1, 2)]
+    [InlineData(0, 0, 1, -1)]
+    public void Grading_rejects_answers_that_do_not_cover_each_question_once_or_pick_a_missing_option(
+        int firstQuestion, int firstOption, int secondQuestion, int secondOption)
+    {
+        var quiz = new Quiz("Istorija tvrđave", "Prošetajte tvrđavom.", 100, CreateQuestions(2));
+
+        var grading = () => quiz.Grade([new SelectedAnswer(firstQuestion, firstOption), new SelectedAnswer(secondQuestion, secondOption)]);
+
+        grading.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Grading_rejects_answers_that_leave_a_question_out()
+    {
+        var quiz = new Quiz("Istorija tvrđave", "Prošetajte tvrđavom.", 100, CreateQuestions(2));
+
+        var grading = () => quiz.Grade([new SelectedAnswer(0, 0)]);
+
+        grading.Should().Throw<DomainException>();
+    }
+
+    [Theory]
+    [InlineData(0, 0, false)]
+    [InlineData(1, 33, false)]
+    [InlineData(2, 66, false)]
+    [InlineData(3, 100, true)]
+    public void Attempt_xp_is_proportional_to_the_correct_answers_and_rounded_down(int correctAnswers, int expectedXp,
+        bool expectedAllCorrect)
+    {
+        var quiz = CreateQuizWithThreeQuestions();
+        var answers = Enumerable.Range(0, 3)
+            .Select(questionIndex => new SelectedAnswer(questionIndex, questionIndex < correctAnswers ? 0 : 1))
+            .ToList();
+
+        var score = quiz.Grade(answers);
+
+        score.CorrectAnswers.Should().Be(correctAnswers);
+        score.Xp.Should().Be(expectedXp);
+        score.AllCorrect.Should().Be(expectedAllCorrect);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(0.0004)]
+    public void Published_quiz_is_activated_within_fifty_meters(double latitudeOffset)
+    {
+        var quiz = CreatePublishedQuiz();
+
+        var canBeActivated = quiz.CanBeActivatedFrom(new Location(45.2517 + latitudeOffset, 19.8619));
+
+        canBeActivated.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Published_quiz_is_not_activated_farther_than_fifty_meters()
+    {
+        var quiz = CreatePublishedQuiz();
+
+        var canBeActivated = quiz.CanBeActivatedFrom(new Location(45.2517 + 0.0005, 19.8619));
+
+        canBeActivated.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Retired_quiz_is_not_activated_even_on_its_location()
+    {
+        var quiz = CreateRetiredQuiz();
+
+        var canBeActivated = quiz.CanBeActivatedFrom(new Location(45.2517, 19.8619));
+
+        canBeActivated.Should().BeFalse();
+    }
 }

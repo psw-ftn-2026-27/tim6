@@ -1,6 +1,8 @@
 using Games.Application.Challenges;
 using Games.Application.QuizAuthoring;
+using Games.Application.QuizSolving;
 using Games.Application.Quizzes;
+using Games.Domain.Challenges;
 using Microsoft.EntityFrameworkCore;
 
 namespace Games.Infrastructure.Persistence.Quizzes;
@@ -41,5 +43,21 @@ internal sealed class QuizReadRepository : IQuizReadRepository
                     .ToList(),
                 quiz.Location is null ? null : new LocationDto(quiz.Location.Latitude, quiz.Location.Longitude)))
             .ToList();
+    }
+
+    public Task<List<PublishedQuizLocationDto>> GetPublishedAsync(Guid touristId)
+    {
+        return _dbContext.Quizzes
+            .Where(quiz => quiz.Status == ChallengeStatus.Published)
+            .OrderByDescending(quiz => quiz.CreatedAt)
+            .ThenBy(quiz => quiz.Id)
+            .Select(quiz => new PublishedQuizLocationDto(
+                quiz.Id,
+                quiz.Name,
+                quiz.Xp,
+                new LocationDto(quiz.Location!.Latitude, quiz.Location.Longitude),
+                _dbContext.ChallengeProgresses.Any(progress =>
+                    progress.ChallengeId == quiz.Id && progress.TouristId == touristId && progress.SolvedAt != null)))
+            .ToListAsync();
     }
 }

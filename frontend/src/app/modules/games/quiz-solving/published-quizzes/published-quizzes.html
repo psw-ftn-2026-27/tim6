@@ -1,0 +1,53 @@
+<div class="stack">
+  <p><a routerLink="/games">Back to games</a></p>
+
+  <h1>Challenges</h1>
+
+  <app-geographic-map
+    [simulatorEnabled]="true"
+    [explorerPosition]="explorerPosition()"
+    [circle]="activationCircle()"
+    (explorerMoved)="onExplorerMoved($event)"
+  />
+
+  @if (moveError()) {
+    <p class="error">{{ moveError() }}</p>
+  } @else if (loadError()) {
+    <p class="error">{{ loadError() }}</p>
+  }
+
+  @if (explorerPosition() === null) {
+    @if (position.isLoading()) {
+      <p>Loading your position...</p>
+    } @else if (!loadError()) {
+      <p>Click the map to mark where you are.</p>
+    }
+  } @else {
+    @if (quizzes.isLoading()) {
+      <p>Loading quizzes...</p>
+    } @else if (quizzes.error()) {
+      <p class="error">{{ listError() }}</p>
+    } @else if ((quizzes.value() ?? []).length === 0) {
+      <p>There are no published quizzes yet.</p>
+    } @else {
+      <ul class="quizzes stack">
+        @for (quiz of quizzes.value() ?? []; track quiz.id) {
+          <li class="card quiz">
+            <div>
+              <h2>{{ quiz.name }}</h2>
+              <p class="meta">
+                {{ quiz.xp }} XP · {{ quiz.distanceInMeters.toFixed(0) }} m away
+                @if (quiz.isSolved) {
+                  · Solved
+                }
+              </p>
+            </div>
+            @if (!quiz.isSolved) {
+              <a class="button" [routerLink]="['/games/quizzes', quiz.id, 'solve']">Activate</a>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

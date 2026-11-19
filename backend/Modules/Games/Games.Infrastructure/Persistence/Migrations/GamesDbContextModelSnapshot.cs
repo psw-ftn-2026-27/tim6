@@ -23,6 +23,64 @@ namespace Games.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Games.Domain.ChallengeProgresses.ChallengeProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChallengeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("EarnedXp")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("SolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TouristId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChallengeId", "TouristId")
+                        .IsUnique();
+
+                    b.ToTable("ChallengeProgresses", "games");
+                });
+
+            modelBuilder.Entity("Games.Domain.QuizAttempts.QuizAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AwardedXp")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CorrectAnswers")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FinishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("QuestionCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("SolvedQuiz")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TouristId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("QuizAttempts", "games");
+                });
+
             modelBuilder.Entity("Games.Domain.Quizzes.Quiz", b =>
                 {
                     b.Property<Guid>("Id")
@@ -89,6 +147,34 @@ namespace Games.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SocialChallenges", "games");
+                });
+
+            modelBuilder.Entity("Games.Domain.QuizAttempts.QuizAttempt", b =>
+                {
+                    b.OwnsMany("Games.Domain.Quizzes.SelectedAnswer", "Answers", b1 =>
+                        {
+                            b1.Property<Guid>("QuizAttemptId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<int>("OptionIndex");
+
+                            b1.Property<int>("QuestionIndex");
+
+                            b1.HasKey("QuizAttemptId", "__synthesizedOrdinal");
+
+                            b1.ToTable("QuizAttempts", "games");
+
+                            b1
+                                .ToJson("Answers")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("QuizAttemptId");
+                        });
+
+                    b.Navigation("Answers");
                 });
 
             modelBuilder.Entity("Games.Domain.Quizzes.Quiz", b =>

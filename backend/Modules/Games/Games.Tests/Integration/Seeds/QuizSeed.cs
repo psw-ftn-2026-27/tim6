@@ -20,6 +20,8 @@ internal static class QuizSeed
     public static readonly Quiz PublishedOldTown;
     public static readonly Quiz RetiredRiversideParks;
     public static readonly Quiz ArchivedWinterFair;
+    public static readonly Quiz PublishedFortressGates;
+    public static readonly Quiz PublishedMuseumStreet;
 
     static QuizSeed()
     {
@@ -52,7 +54,22 @@ internal static class QuizSeed
         ArchivedWinterFair.Publish();
         ArchivedWinterFair.Retire();
         ArchivedWinterFair.Archive();
+
+        PublishedFortressGates = new("Kapije tvrđave", "Prođite kroz kapije tvrđave i odgovorite na pitanja.", 100,
+        [
+            new Question("Koliko kapija ima tvrđava?", [new AnswerOption("Dvanaest", true), new AnswerOption("Tri", false)]),
+            new Question("Kako se zove glavna kapija?", [new AnswerOption("Leopoldova kapija", true), new AnswerOption("Zlatna kapija", false)])
+        ]);
+        PublishedFortressGates.PlaceAt(new Location(45.2520, 19.8610));
+        PublishedFortressGates.Publish();
+
+        PublishedMuseumStreet = new("Ulica muzeja", "Prošetajte ulicom muzeja i odgovorite na pitanje.", 70,
+        [
+            new Question("Koji muzej je u ulici?", [new AnswerOption("Muzej Vojvodine", true), new AnswerOption("Muzej grada", false)])
+        ]);
+        PublishedMuseumStreet.PlaceAt(new Location(45.2560, 19.8470));
+        PublishedMuseumStreet.Publish();
     }
 
-    public static Quiz[] All => [DraftFortressHistory, DraftCityCenter, LocatedDraftDanubeBridges, PublishedOldTown, RetiredRiversideParks, ArchivedWinterFair];
+    public static Quiz[] All => [DraftFortressHistory, DraftCityCenter, LocatedDraftDanubeBridges, PublishedOldTown, RetiredRiversideParks, ArchivedWinterFair, PublishedFortressGates, PublishedMuseumStreet];
 }
