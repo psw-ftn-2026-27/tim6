@@ -1,6 +1,8 @@
+using Games.Application.ChallengeProgresses;
 using Games.Application.Challenges;
 using Games.Application.LocationChallengeAttempts;
 using Games.Application.LocationChallenges;
+using Games.Domain.ChallengeProgresses;
 using Games.Domain.Challenges;
 using Games.Domain.LocationChallengeAttempts;
 using Games.Domain.LocationChallenges;
@@ -12,17 +14,20 @@ public sealed class LocationChallengeSolvingService
 {
     private readonly ILocationChallengeRepository _challengeRepository;
     private readonly ILocationChallengeAttemptRepository _attemptRepository;
+    private readonly IChallengeProgressRepository _progressRepository;
     private readonly LocationChallengeSolver _solver;
     private readonly IUnitOfWork _unitOfWork;
 
     public LocationChallengeSolvingService(
         ILocationChallengeRepository challengeRepository,
         ILocationChallengeAttemptRepository attemptRepository,
+        IChallengeProgressRepository progressRepository,
         LocationChallengeSolver solver,
         IUnitOfWork unitOfWork)
     {
         _challengeRepository = challengeRepository;
         _attemptRepository = attemptRepository;
+        _progressRepository = progressRepository;
         _solver = solver;
         _unitOfWork = unitOfWork;
     }
@@ -54,6 +59,18 @@ public sealed class LocationChallengeSolvingService
         }
 
         _solver.CheckLocation(challenge, attempt, new Location(position.Latitude, position.Longitude));
+        // The check that reveals the last hidden point completes the attempt; its XP is recorded
+        // in the explorer's progress, like for every other kind of challenge.
+        if (attempt.CompletedAt is DateTime completedAt)
+        {
+            var progress = await _progressRepository.GetAsync(challenge.Id, explorerId);
+            if (progress is null)
+            {
+                progress = new ChallengeProgress(challenge.Id, explorerId);
+                _progressRepository.Add(progress);
+            }
+            progress.RecordResult(challenge.Xp, true, completedAt);
+        }
         await _unitOfWork.SaveChangesAsync();
     }
 

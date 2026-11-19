@@ -114,7 +114,7 @@ public class LocationChallengeSolvingCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Check_at_the_last_unrevealed_hidden_point_stores_it_and_completes_the_attempt_with_the_challenge_xp()
+    public async Task Check_at_the_last_unrevealed_hidden_point_stores_it_and_completes_the_attempt()
     {
         var challenge = LocationChallengeSeed.PublishedBridgeViews;
         var lastPoint = challenge.HiddenPoints[1];
@@ -129,7 +129,24 @@ public class LocationChallengeSolvingCommandTests : BaseIntegrationTest
             attempt.Id == LocationChallengeAttemptSeed.ExplorersOpenBridgeViewsWithFirstPointRevealed.Id);
         stored.RevealedHiddenPointIds.Should().BeEquivalentTo(challenge.HiddenPoints.Select(point => point.Id));
         stored.CompletedAt.Should().NotBeNull();
-        stored.EarnedXp.Should().Be(challenge.Xp);
+    }
+
+    [Fact]
+    public async Task Completing_a_location_challenge_records_the_explorers_progress_as_solved_with_the_challenge_xp()
+    {
+        var challenge = LocationChallengeSeed.PublishedBridgeViews;
+        var lastPoint = challenge.HiddenPoints[1];
+        var client = Factory.CreateClientFor(WellKnownUsers.Explorer, "explorer");
+        var position = new LocationDto(lastPoint.Location.Latitude, lastPoint.Location.Longitude);
+
+        var response = await client.PostAsJsonAsync($"/api/games/location-challenges/{challenge.Id}/check-location", position);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var assertContext = Factory.CreateContext<GamesDbContext>();
+        var progress = assertContext.ChallengeProgresses.Single(stored =>
+            stored.ChallengeId == challenge.Id && stored.TouristId == WellKnownUsers.Explorer);
+        progress.EarnedXp.Should().Be(challenge.Xp);
+        progress.IsSolved().Should().BeTrue();
     }
 
     [Fact]
@@ -145,7 +162,7 @@ public class LocationChallengeSolvingCommandTests : BaseIntegrationTest
         var stored = assertContext.LocationChallengeAttempts.Single(attempt => attempt.Id == openAttempt.Id);
         stored.RevealedHiddenPointIds.Should().Equal(openAttempt.RevealedHiddenPointIds);
         stored.CompletedAt.Should().BeNull();
-        stored.EarnedXp.Should().BeNull();
+        assertContext.ChallengeProgresses.Any(progress => progress.ChallengeId == openAttempt.LocationChallengeId).Should().BeFalse();
     }
 
     [Fact]

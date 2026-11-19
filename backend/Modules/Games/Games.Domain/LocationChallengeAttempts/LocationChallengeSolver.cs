@@ -9,7 +9,6 @@ namespace Games.Domain.LocationChallengeAttempts;
 public sealed class LocationChallengeSolver
 {
     public const double MaxExtraMeters = 100;
-    private const double MaxActivationDistanceInMeters = 50;
     private const double MaxRevealDistanceInMeters = 5;
 
     public LocationChallengeAttempt Activate(LocationChallenge challenge, LocationChallengeAttempt? existingAttempt,
@@ -25,18 +24,15 @@ public sealed class LocationChallengeSolver
             return existingAttempt;
         }
 
-        // A published challenge always has a start location.
-        var start = challenge.Location!;
-        if (start.DistanceTo(position) > MaxActivationDistanceInMeters)
-        {
-            throw new DomainException(
-                $"Come within {MaxActivationDistanceInMeters} m of the start location to activate this challenge.");
-        }
+        // Only a new attempt checks proximity; an open one is continued from anywhere.
+        challenge.EnsureCanBeActivatedFrom(position);
         if (extraMeters < 0 || extraMeters > MaxExtraMeters)
         {
             throw new DomainException($"The extra radius is between 0 and {MaxExtraMeters} m.");
         }
 
+        // A published challenge always has a start location.
+        var start = challenge.Location!;
         var farthestPointDistance = challenge.HiddenPoints.Max(point => start.DistanceTo(point.Location));
         return new LocationChallengeAttempt(challenge.Id, explorerId, farthestPointDistance + extraMeters);
     }
@@ -56,7 +52,7 @@ public sealed class LocationChallengeSolver
         attempt.Reveal(foundPoint.Id);
         if (challenge.HiddenPoints.All(point => attempt.RevealedHiddenPointIds.Contains(point.Id)))
         {
-            attempt.Complete(challenge.Xp);
+            attempt.Complete();
         }
     }
 

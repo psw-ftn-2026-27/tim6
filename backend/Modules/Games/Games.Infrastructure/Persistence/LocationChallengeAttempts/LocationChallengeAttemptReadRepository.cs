@@ -35,7 +35,10 @@ internal sealed class LocationChallengeAttemptReadRepository : ILocationChalleng
                                 : null))
                         .ToList(),
                     attempt.CompletedAt,
-                    attempt.EarnedXp))
+                    _dbContext.ChallengeProgresses
+                        .Where(progress => progress.ChallengeId == challengeId && progress.TouristId == explorerId)
+                        .Select(progress => (int?)progress.EarnedXp)
+                        .FirstOrDefault()))
             .FirstOrDefaultAsync();
     }
 }

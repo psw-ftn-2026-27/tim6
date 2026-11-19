@@ -15,7 +15,7 @@ internal static class LocationChallengeAttemptSeed
 
         ExplorersCompletedSquareStatues = new(LocationChallengeSeed.PublishedSquareStatues.Id, WellKnownUsers.Explorer, 90);
         ExplorersCompletedSquareStatues.Reveal(LocationChallengeSeed.PublishedSquareStatues.HiddenPoints[0].Id);
-        ExplorersCompletedSquareStatues.Complete(LocationChallengeSeed.PublishedSquareStatues.Xp);
+        ExplorersCompletedSquareStatues.Complete();
     }
 
     public static LocationChallengeAttempt[] All => [ExplorersOpenBridgeViewsWithFirstPointRevealed, ExplorersCompletedSquareStatues];

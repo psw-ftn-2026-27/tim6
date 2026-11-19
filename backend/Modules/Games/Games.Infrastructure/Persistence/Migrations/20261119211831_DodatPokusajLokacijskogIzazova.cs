@@ -22,7 +22,6 @@ namespace Games.Infrastructure.Persistence.Migrations
                     RadiusInMeters = table.Column<double>(type: "double precision", nullable: false),
                     ActivatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    EarnedXp = table.Column<int>(type: "integer", nullable: true),
                     RevealedHiddenPointIds = table.Column<Guid[]>(type: "uuid[]", nullable: false)
                 },
                 constraints: table =>

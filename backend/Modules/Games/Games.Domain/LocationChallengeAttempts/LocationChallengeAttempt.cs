@@ -5,6 +5,7 @@ namespace Games.Domain.LocationChallengeAttempts;
 
 // One explorer's attempt at one location challenge. It refers to both only by ID and
 // keeps the circle and the revealed hidden points until the challenge is completed.
+// The XP for completing it is recorded in the explorer's ChallengeProgress, not here.
 public sealed class LocationChallengeAttempt : AggregateRoot
 {
     private readonly List<Guid> _revealedHiddenPointIds = [];
@@ -14,7 +15,6 @@ public sealed class LocationChallengeAttempt : AggregateRoot
     public double RadiusInMeters { get; private set; }
     public DateTime ActivatedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
-    public int? EarnedXp { get; private set; }
     public IReadOnlyList<Guid> RevealedHiddenPointIds => _revealedHiddenPointIds;
 
     private LocationChallengeAttempt() { }
@@ -42,7 +42,7 @@ public sealed class LocationChallengeAttempt : AggregateRoot
         _revealedHiddenPointIds.Add(hiddenPointId);
     }
 
-    public void Complete(int xp)
+    public void Complete()
     {
         if (CompletedAt is not null)
         {
@@ -50,6 +50,5 @@ public sealed class LocationChallengeAttempt : AggregateRoot
         }
 
         CompletedAt = DateTime.UtcNow;
-        EarnedXp = xp;
     }
 }

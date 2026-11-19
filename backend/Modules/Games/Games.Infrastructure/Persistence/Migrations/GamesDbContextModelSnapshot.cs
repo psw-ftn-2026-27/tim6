@@ -61,9 +61,6 @@ namespace Games.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("EarnedXp")
-                        .HasColumnType("integer");
-
                     b.Property<Guid>("ExplorerId")
                         .HasColumnType("uuid");
 

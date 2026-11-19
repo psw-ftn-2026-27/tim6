@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Games.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(GamesDbContext))]
-    [Migration("20261119192737_DodatPokusajLokacijskogIzazova")]
+    [Migration("20261119211831_DodatPokusajLokacijskogIzazova")]
     partial class DodatPokusajLokacijskogIzazova
     {
         /// <inheritdoc />
@@ -63,9 +63,6 @@ namespace Games.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("EarnedXp")
-                        .HasColumnType("integer");
 
                     b.Property<Guid>("ExplorerId")
                         .HasColumnType("uuid");

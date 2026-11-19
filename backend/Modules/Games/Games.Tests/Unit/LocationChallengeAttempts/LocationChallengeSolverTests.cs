@@ -200,7 +200,7 @@ public class LocationChallengeSolverTests
     }
 
     [Fact]
-    public void Revealing_the_last_hidden_point_completes_the_attempt_and_awards_the_challenge_xp()
+    public void Revealing_the_last_hidden_point_completes_the_attempt()
     {
         var challenge = CreatePublishedChallenge();
         var attempt = ActivateAtStart(challenge);
@@ -210,11 +210,10 @@ public class LocationChallengeSolverTests
 
         attempt.RevealedHiddenPointIds.Should().BeEquivalentTo(challenge.HiddenPoints.Select(point => point.Id));
         attempt.CompletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
-        attempt.EarnedXp.Should().Be(challenge.Xp);
     }
 
     [Fact]
-    public void Check_on_a_completed_attempt_is_rejected_and_does_not_award_xp_again()
+    public void Check_on_a_completed_attempt_is_rejected_and_leaves_it_completed()
     {
         var challenge = CreatePublishedChallenge();
         var attempt = ActivateAtStart(challenge);
@@ -226,6 +225,5 @@ public class LocationChallengeSolverTests
 
         check.Should().Throw<DomainException>();
         attempt.CompletedAt.Should().Be(completedAtBefore);
-        attempt.EarnedXp.Should().Be(challenge.Xp);
     }
 }
