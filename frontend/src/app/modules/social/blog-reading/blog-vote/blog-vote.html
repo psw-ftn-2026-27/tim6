@@ -1,0 +1,22 @@
+<section class="vote">
+  <p class="meta">Score: {{ score() }}</p>
+
+  @if (canVote()) {
+    <button
+      class="button"
+      type="button"
+      [class.vote-button--up]="mySign() === 'Up'"
+      (click)="vote.emit('Up')"
+    >
+      Upvote
+    </button>
+    <button
+      class="button"
+      type="button"
+      [class.vote-button--down]="mySign() === 'Down'"
+      (click)="vote.emit('Down')"
+    >
+      Downvote
+    </button>
+  }
+</section>

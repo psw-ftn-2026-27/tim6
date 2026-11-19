@@ -23,7 +23,7 @@
 
       <h2>Transakcije</h2>
 
-      @if (current.transactions.length === 0) {
+      @if (current.transactions.length === 0 && current.payments.length === 0) {
         <div class="empty">
           <p>Još nema transakcija.</p>
         </div>
@@ -32,15 +32,17 @@
           <table class="table">
             <thead>
               <tr>
+                <th scope="col">Opis</th>
                 <th scope="col">Iznos</th>
-                <th scope="col">Vreme uplate</th>
+                <th scope="col">Vreme</th>
                 <th scope="col">Storniranje</th>
               </tr>
             </thead>
             <tbody>
               @for (transaction of current.transactions; track transaction.id) {
-                <tr [class.cancelled]="transaction.isCancelled">
-                  <td>{{ transaction.amount }} EC</td>
+                <tr>
+                  <td>Uplata</td>
+                  <td [class.cancelled]="transaction.isCancelled">{{ transaction.amount }} EC</td>
                   <td>{{ time(transaction.createdAt) }}</td>
                   <td>
                     @if (transaction.isCancelled) {
@@ -51,6 +53,14 @@
                       <p class="meta">{{ transaction.cancellationReason }}</p>
                     }
                   </td>
+                </tr>
+              }
+              @for (payment of current.payments; track payment.id) {
+                <tr>
+                  <td>Plaćanje: {{ payment.name }}</td>
+                  <td>{{ payment.price }} EC</td>
+                  <td>{{ time(payment.paidAt) }}</td>
+                  <td></td>
                 </tr>
               }
             </tbody>

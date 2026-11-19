@@ -1,5 +1,6 @@
 using Exploration.Application.Tours;
 using Shared.Domain;
+using Shared.Domain.Exceptions;
 
 namespace Exploration.Application.TourBrowsing;
 
@@ -18,5 +19,15 @@ public sealed class TourBrowsingQueries
         pageSize = Math.Clamp(pageSize, 1, 100);
 
         return _tourReadRepository.GetPublishedAsync(page, pageSize);
+    }
+
+    public async Task<TourPreviewDto> GetPreviewAsync(Guid tourId)
+    {
+        var preview = await _tourReadRepository.GetPublishedPreviewAsync(tourId);
+        if (preview is null)
+        {
+            throw new NotFoundException($"Tour {tourId} does not exist.");
+        }
+        return preview;
     }
 }

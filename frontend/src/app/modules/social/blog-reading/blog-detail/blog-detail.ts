@@ -4,13 +4,14 @@ import { RouterLink } from '@angular/router';
 import { MarkdownComponent } from 'ngx-markdown';
 import { Auth } from '../../../../core/auth/auth';
 import { serverMessage } from '../../../../shared/util/server-message';
-import { BlogDto, FollowStatusDto } from '../../api/social-api-types';
+import { BlogDto, FollowStatusDto, MyVoteDto, VoteSign } from '../../api/social-api-types';
 import { BlogComments, CommentEdit } from '../blog-comments/blog-comments';
 import { BlogReading } from '../blog-reading';
+import { BlogVote } from '../blog-vote/blog-vote';
 import { FollowButton } from '../follow-button/follow-button';
 
 @Component({
-  imports: [BlogComments, FollowButton, MarkdownComponent, RouterLink],
+  imports: [BlogComments, BlogVote, FollowButton, MarkdownComponent, RouterLink],
   selector: 'app-blog-detail',
   styleUrl: './blog-detail.scss',
   templateUrl: './blog-detail.html',
@@ -29,6 +30,10 @@ export class BlogDetail {
       this.auth.isLoggedIn() && authorId !== undefined && authorId !== this.auth.user()?.id;
     return canFollowAuthor ? `/api/social/users/${authorId}/follow-status` : undefined;
   });
+
+  protected readonly myVote = httpResource<MyVoteDto>(() =>
+    this.auth.isLoggedIn() ? `/api/social/blogs/${this.id()}/votes/mine` : undefined,
+  );
 
   // The moment the blog was last loaded. Reading the blog makes this recompute whenever a load
   // or reload delivers it, so the edit and delete buttons are re-evaluated then, not by a clock.
@@ -52,6 +57,18 @@ export class BlogDetail {
       this.error.set(serverMessage(failure, 'Could not send the follow request.'));
     } finally {
       this.followPending.set(false);
+    }
+  }
+
+  // The score and the highlighted button change only when the reloads bring them from the server.
+  protected async vote(sign: VoteSign): Promise<void> {
+    this.error.set(null);
+    try {
+      await this.blogReading.castVote(this.id(), { sign });
+      this.detail.reload();
+      this.myVote.reload();
+    } catch (failure) {
+      this.error.set(serverMessage(failure, 'Could not cast the vote.'));
     }
   }
 
