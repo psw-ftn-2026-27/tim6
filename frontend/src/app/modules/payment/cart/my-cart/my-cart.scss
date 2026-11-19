@@ -3,3 +3,15 @@
   font-weight: 600;
   margin: 0;
 }
+
+// The wallet balance stands next to the total price, so the explorer sees whether the EC suffice.
+.totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+}
+
+.links {
+  display: flex;
+  gap: var(--space-4);
+}

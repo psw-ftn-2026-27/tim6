@@ -1,5 +1,6 @@
 using Payment.Application.Carts;
 using Payment.Application.Products;
+using Payment.Application.PurchaseTokens;
 using Payment.Domain.Carts;
 using Payment.Domain.Products;
 using Shared.Domain.Exceptions;
@@ -10,17 +11,20 @@ public sealed class CartService
 {
     private readonly ICartRepository _cartRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IPurchaseTokenRepository _purchaseTokenRepository;
     private readonly CartFiller _cartFiller;
     private readonly IUnitOfWork _unitOfWork;
 
     public CartService(
         ICartRepository cartRepository,
         IProductRepository productRepository,
+        IPurchaseTokenRepository purchaseTokenRepository,
         CartFiller cartFiller,
         IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
         _productRepository = productRepository;
+        _purchaseTokenRepository = purchaseTokenRepository;
         _cartFiller = cartFiller;
         _unitOfWork = unitOfWork;
     }
@@ -35,8 +39,9 @@ public sealed class CartService
         }
 
         var product = await GetProductAsync(entityId);
+        var isAlreadyPurchased = await _purchaseTokenRepository.ExistsAsync(userId, entityId);
 
-        _cartFiller.AddProduct(cart, product);
+        _cartFiller.AddProduct(cart, product, isAlreadyPurchased);
         await _unitOfWork.SaveChangesAsync();
     }
 

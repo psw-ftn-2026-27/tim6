@@ -43,4 +43,26 @@ public class CartTests
 
         removal.Should().Throw<NotFoundException>();
     }
+
+    [Fact]
+    public void Empty_cart_cannot_be_purchased()
+    {
+        var cart = new Cart(WellKnownUsers.Explorer);
+
+        var checkout = () => cart.Checkout();
+
+        checkout.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Purchased_cart_is_left_without_items()
+    {
+        var cart = new Cart(WellKnownUsers.Explorer);
+        cart.AddItem(Guid.NewGuid(), "Šetnja tvrđavom", 0);
+        cart.AddItem(Guid.NewGuid(), "Vinogradi Sremskih Karlovaca", 300);
+
+        cart.Checkout();
+
+        cart.Items.Should().BeEmpty();
+    }
 }
