@@ -46,6 +46,14 @@ await this.clubMembership.join(clubId);
 this.analytics.clubJoined(clubId);
 ```
 
+Kada ishod komande nije poznat odmah, nego ga server javlja tek u stanju koje stranica
+ponovo pročita (tura je završena, izazov rešen), događaj se šalje kada se to stanje
+pojavi posle komande. Stranica posle uspešne komande postavi obično polje (npr.
+`awaitingCheckResult = true`), a `effect` nad resursom pošalje događaj kada resurs
+pokaže ishod i polje vrati na `false`. Tako ponovno otvaranje već završene ture ili
+rešenog izazova ne šalje ništa. Primeri su `tour-execution.ts` u Exploration-u i
+stranice za rešavanje izazova u Games-u.
+
 Servis sam proverava saglasnost i ID merenja, pa stranica ne proverava ništa. Neuspeh
 slanja je tih: stranica ne hvata greške i korisnik ništa ne primećuje. Dodavanje metode
 menja deljeni kod, pa ide kroz PR koji pregleda platformski tim.
@@ -118,12 +126,13 @@ pre saglasnosti nema zahteva ka `googletagmanager.com` ni `google-analytics.com`
 
 ## Planirani funnel
 
-Funnel u GA4 ima tri koraka:
+Funnel u GA4 ima tri koraka, i svaki je vezan za jedan događaj:
 
-1. pregled ture,
-2. dodavanje u korpu,
-3. kupovina.
+1. pregled ture: `page_view` čiji `page_location` sadrži `/exploration/tours/:id`
+   (servis ga šalje sam, pa ne treba poseban događaj);
+2. dodavanje u korpu: `product_added_to_cart`, sa stranice kataloga u modulu Payment;
+3. kupovina: `cart_purchased`, sa stranice korpe u modulu Payment.
 
-Događaje ovih koraka dodaje tim koji pravi tu funkcionalnost (Exploration za stranicu
-ture, Payment za korpu i kupovinu), po uputstvu iznad. Funnel se podešava u GA4 i
-proverava kada svi koraci postanu dostupni.
+Funnel se pravi u GA4: Explore → Funnel exploration, po jedan korak za svaki red iznad.
+Ko menja jednu od ovih stranica ili ruta, pazi da događaj ostane, inače se funnel
+prekida.

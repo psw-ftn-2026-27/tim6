@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Auth } from '../../../../core/auth/auth';
+import { Analytics } from '../../../../shared/analytics/analytics';
 import { CoordinatesDto } from '../../../../shared/api/coordinates-dto';
 import { PageResult } from '../../../../shared/api/page-result';
 import { ExplorerPositioning } from '../../../../shared/explorer-positioning/explorer-positioning';
@@ -26,6 +27,7 @@ import { LocationChallengeSolving } from '../location-challenge-solving';
 })
 export class AvailableChallenges {
   private readonly locationChallengeSolving = inject(LocationChallengeSolving);
+  private readonly analytics = inject(Analytics);
   private readonly explorerPositioning = inject(ExplorerPositioning);
   private readonly auth = inject(Auth);
 
@@ -73,6 +75,21 @@ export class AvailableChallenges {
 
   protected readonly checking = signal(false);
   protected readonly checkError = signal<string | null>(null);
+
+  // True after a check, until the reloaded attempt shows whether it solved the challenge.
+  // Opening an already solved attempt sends nothing.
+  private awaitingCheckResult = false;
+
+  constructor() {
+    effect(() => {
+      const challenge = this.activeChallenge();
+      const attempt = this.attempt.hasValue() ? this.attempt.value() : null;
+      if (this.awaitingCheckResult && challenge !== null && attempt?.completedAt) {
+        this.awaitingCheckResult = false;
+        this.analytics.challengeSolved(challenge.id, 'location');
+      }
+    });
+  }
 
   // Start locations of the listed challenges, plus the revealed points of the active attempt.
   protected readonly pins = computed<MapPin[]>(() => {
@@ -149,6 +166,7 @@ export class AvailableChallenges {
     this.checkError.set(null);
     try {
       await this.locationChallengeSolving.checkLocation(challenge.id, position);
+      this.awaitingCheckResult = true;
       this.attempt.reload();
       // The server decides whether this check solved the challenge; its card then shows it as solved.
       this.challenges.reload();
@@ -162,6 +180,7 @@ export class AvailableChallenges {
   // Closes the active section and shows the list again. The attempt stays saved on the server,
   // so the reloaded list marks it and offers Continue.
   protected closeSection(): void {
+    this.awaitingCheckResult = false;
     this.activeChallenge.set(null);
     this.checkError.set(null);
     this.activateError.set(null);

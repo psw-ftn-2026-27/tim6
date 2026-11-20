@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { Analytics } from '../../../../shared/analytics/analytics';
 import { CoordinatesDto } from '../../../../shared/api/coordinates-dto';
 import { ExplorerPositioning } from '../../../../shared/explorer-positioning/explorer-positioning';
 import {
@@ -39,6 +40,7 @@ export class TourExecution {
   private readonly tourExecuting = inject(TourExecuting);
   private readonly explorerPositioning = inject(ExplorerPositioning);
   private readonly router = inject(Router);
+  private readonly analytics = inject(Analytics);
 
   // The tour id from the route /exploration/execution/:tourId.
   readonly tourId = input.required<string>();
@@ -155,6 +157,9 @@ export class TourExecution {
   protected readonly abandonError = signal<string | null>(null);
 
   private intervalId: number | null = null;
+  // True once this page has shown the session as active. Completion is recorded only when an
+  // active session turns completed here, so reopening an already completed tour sends nothing.
+  private sawActiveSession = false;
   protected readonly checking = signal(false);
   protected readonly checkError = signal<string | null>(null);
 
@@ -167,9 +172,15 @@ export class TourExecution {
     // stops when the session is completed, abandoned or can no longer be read.
     effect(() => {
       if (this.isActive()) {
+        this.sawActiveSession = true;
         this.startChecking();
       } else {
         this.stopChecking();
+        // The server completes the session on a position report; the page learns it on reload.
+        if (this.sawActiveSession && this.isCompleted()) {
+          this.sawActiveSession = false;
+          this.analytics.tourCompleted(this.tourId());
+        }
       }
     });
   }
@@ -202,6 +213,7 @@ export class TourExecution {
     this.startError.set(null);
     try {
       await this.tourExecuting.start(this.tourId(), position);
+      this.analytics.tourStarted(this.tourId());
       this.session.reload();
     } catch (failure) {
       this.startError.set(serverMessage(failure, 'The tour could not be started.'));

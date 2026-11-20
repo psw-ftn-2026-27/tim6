@@ -2,6 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Auth } from '../../../../core/auth/auth';
+import { Analytics } from '../../../../shared/analytics/analytics';
 import { PageResult } from '../../../../shared/api/page-result';
 import { serverMessage } from '../../../../shared/util/server-message';
 import { ProductDto } from '../../api/payment-api-types';
@@ -18,6 +19,7 @@ const PAGE_SIZE = 20;
 export class ProductList {
   private readonly catalog = inject(Catalog);
   private readonly auth = inject(Auth);
+  private readonly analytics = inject(Analytics);
 
   // Only an explorer buys, so only an explorer sees "Dodaj u korpu" and "Korpa".
   protected readonly isExplorer = computed(
@@ -58,6 +60,7 @@ export class ProductList {
     this.addOutcome.set(null);
     try {
       await this.catalog.addToCart(product.entityId);
+      this.analytics.productAddedToCart(product.id);
       this.addOutcome.set({ productId: product.id, added: true, message: 'Dodato u korpu.' });
     } catch (failure) {
       // The server says why it refused: already in the cart, already purchased, not in the offer,

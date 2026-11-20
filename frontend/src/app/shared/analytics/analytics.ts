@@ -109,6 +109,29 @@ export class Analytics {
     this.send('tour_published', { tour_id: tourId });
   }
 
+  // Funnel step 2. The product belongs to the offer, not to one user (P11).
+  productAddedToCart(productId: string): void {
+    this.send('product_added_to_cart', { product_id: productId });
+  }
+
+  // Funnel step 3. No amount or balance is sent (P12).
+  cartPurchased(): void {
+    this.send('cart_purchased', {});
+  }
+
+  tourStarted(tourId: string): void {
+    this.send('tour_started', { tour_id: tourId });
+  }
+
+  tourCompleted(tourId: string): void {
+    this.send('tour_completed', { tour_id: tourId });
+  }
+
+  // One event for every kind of challenge; the kind tells them apart in GA4.
+  challengeSolved(challengeId: string, challengeType: 'quiz' | 'location' | 'social'): void {
+    this.send('challenge_solved', { challenge_id: challengeId, challenge_type: challengeType });
+  }
+
   // GA4 itself. Nothing below runs without consent and a measurement ID.
 
   private isActive(): boolean {
