@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Analytics } from '../../../../shared/analytics/analytics';
 import { CoordinatesDto } from '../../../../shared/api/coordinates-dto';
 import { serverMessage } from '../../../../shared/util/server-message';
 import {
@@ -20,6 +21,7 @@ import { QuizSolving } from '../quiz-solving';
 })
 export class SolveQuiz {
   private readonly quizSolving = inject(QuizSolving);
+  private readonly analytics = inject(Analytics);
 
   // The quiz id from the route /games/quizzes/:id/solve.
   readonly id = input.required<string>();
@@ -70,6 +72,16 @@ export class SolveQuiz {
       ? serverMessage(this.result.error(), 'The result could not be loaded.')
       : null,
   );
+
+  constructor() {
+    // Whether the attempt solved the quiz is known only from its result, read after the submit.
+    // The result is read once per attempt, so a solved quiz is recorded once.
+    effect(() => {
+      if (this.result.hasValue() && this.result.value().solvedQuiz) {
+        this.analytics.challengeSolved(this.id(), 'quiz');
+      }
+    });
+  }
 
   protected async next(optionIndex: number): Promise<void> {
     const quiz = this.quiz.hasValue() ? this.quiz.value() : null;

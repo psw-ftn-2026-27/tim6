@@ -2,6 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
+import { Analytics } from '../../../../shared/analytics/analytics';
 import { PageResult } from '../../../../shared/api/page-result';
 import { serverMessage } from '../../../../shared/util/server-message';
 import { CartDto, GiftCardDto } from '../../api/payment-api-types';
@@ -19,6 +20,7 @@ const GIFT_CARD_PAGE_SIZE = 5;
 })
 export class MyCart {
   private readonly cartService = inject(Cart);
+  private readonly analytics = inject(Analytics);
 
   protected readonly benefitForm = form(signal({ couponCode: '' }));
   protected readonly appliedCouponCode = signal<string | null>(null);
@@ -139,6 +141,7 @@ export class MyCart {
     this.purchased.set(false);
     try {
       await this.cartService.purchase(this.appliedCouponCode(), this.selectedGiftCardId());
+      this.analytics.cartPurchased();
       this.purchased.set(true);
       this.benefitForm().reset({ couponCode: '' });
       this.previousCart.set(null);

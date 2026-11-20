@@ -1,6 +1,7 @@
 import { httpResource } from '@angular/common/http';
-import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Analytics } from '../../../../shared/analytics/analytics';
 import { CoordinatesDto } from '../../../../shared/api/coordinates-dto';
 import { ExplorerPositioning } from '../../../../shared/explorer-positioning/explorer-positioning';
 import {
@@ -24,6 +25,7 @@ import { SocialChallengeSolving } from '../social-challenge-solving';
 export class SolveSocialChallenge {
   private readonly explorerPositioning = inject(ExplorerPositioning);
   private readonly socialChallengeSolving = inject(SocialChallengeSolving);
+  private readonly analytics = inject(Analytics);
 
   // The challenge id from the route /games/social-challenges/:id/solve.
   readonly id = input.required<string>();
@@ -63,6 +65,9 @@ export class SolveSocialChallenge {
   });
 
   private intervalId: number | null = null;
+  // True after a position check, until the reloaded run state shows whether the run was solved.
+  // Opening an already solved run sends nothing.
+  private awaitingCheckResult = false;
   protected readonly checking = signal(false);
   protected readonly checkError = signal<string | null>(null);
 
@@ -74,6 +79,13 @@ export class SolveSocialChallenge {
     this.startChecking();
     // Leaving the page stops the check.
     inject(DestroyRef).onDestroy(() => this.stopChecking());
+
+    effect(() => {
+      if (this.awaitingCheckResult && this.state()?.status === 'Solved') {
+        this.awaitingCheckResult = false;
+        this.analytics.challengeSolved(this.id(), 'social');
+      }
+    });
   }
 
   protected async onExplorerMoved(coordinates: MapCoordinate): Promise<void> {
@@ -150,6 +162,7 @@ export class SolveSocialChallenge {
         latitude: position.latitude,
         longitude: position.longitude,
       });
+      this.awaitingCheckResult = true;
       this.runState.reload();
     } catch (failure) {
       this.checkError.set(serverMessage(failure, 'Your position could not be checked.'));
