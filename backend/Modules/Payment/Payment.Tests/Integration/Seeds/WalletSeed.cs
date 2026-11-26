@@ -10,7 +10,6 @@ internal static class WalletSeed
     public const string IdentityDemoExplorerEmail = "explorer1@explorer.dev";
     public static readonly Guid IdentityDemoSecondExplorer = Guid.Parse("20000000-0000-0000-0000-000000000002");
     public const string IdentityDemoSecondExplorerEmail = "explorer2@explorer.dev";
-    public const string IdentityDemoExplorerWithoutWalletEmail = "explorer3@explorer.dev";
     public static readonly Guid ReturningBuyer = Guid.Parse("40000000-0000-0000-0000-000000000001");
     public static readonly Guid UnderfundedBuyer = Guid.Parse("40000000-0000-0000-0000-000000000002");
     public static readonly Guid WalletlessBuyer = Guid.Parse("40000000-0000-0000-0000-000000000003");

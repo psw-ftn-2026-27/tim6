@@ -59,25 +59,6 @@ public class GiftCardSendingCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Recipient_without_a_wallet_prevents_a_gift_card_and_leaves_payment_data_unchanged()
-    {
-        var client = Factory.CreateClientFor(WalletSeed.IdentityDemoExplorer, "explorer");
-        var dto = new CreateGiftCardDto(WalletSeed.IdentityDemoExplorerWithoutWalletEmail, 100, "Srećan put!");
-        await using var arrangeContext = Factory.CreateContext<PaymentDbContext>();
-        var giftCardCountBefore = arrangeContext.GiftCards.Count();
-        var balanceBefore = arrangeContext.Wallets.Single(
-            wallet => wallet.UserId == WalletSeed.IdentityDemoExplorer).Balance();
-
-        var response = await client.PostAsJsonAsync("/api/payment/gift-cards", dto);
-
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        await using var assertContext = Factory.CreateContext<PaymentDbContext>();
-        assertContext.GiftCards.Count().Should().Be(giftCardCountBefore);
-        assertContext.Wallets.Single(
-            wallet => wallet.UserId == WalletSeed.IdentityDemoExplorer).Balance().Should().Be(balanceBefore);
-    }
-
-    [Fact]
     public async Task Insufficient_balance_prevents_a_gift_card_and_leaves_payment_data_unchanged()
     {
         var client = Factory.CreateClientFor(WalletSeed.IdentityDemoExplorer, "explorer");

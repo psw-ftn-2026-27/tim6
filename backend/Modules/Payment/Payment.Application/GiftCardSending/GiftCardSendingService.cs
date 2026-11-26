@@ -11,20 +11,17 @@ public sealed class GiftCardSendingService
     private readonly IIdentityApi _identityApi;
     private readonly IWalletRepository _walletRepository;
     private readonly IGiftCardRepository _giftCardRepository;
-    private readonly GiftCardIssuer _giftCardIssuer;
     private readonly IUnitOfWork _unitOfWork;
 
     public GiftCardSendingService(
         IIdentityApi identityApi,
         IWalletRepository walletRepository,
         IGiftCardRepository giftCardRepository,
-        GiftCardIssuer giftCardIssuer,
         IUnitOfWork unitOfWork)
     {
         _identityApi = identityApi;
         _walletRepository = walletRepository;
         _giftCardRepository = giftCardRepository;
-        _giftCardIssuer = giftCardIssuer;
         _unitOfWork = unitOfWork;
     }
 
@@ -35,16 +32,10 @@ public sealed class GiftCardSendingService
         var senderWallet = await _walletRepository.GetByUserIdAsync(senderId)
             ?? throw new NotFoundException("The sender does not have an open wallet.");
 
-        var recipientWallet = await _walletRepository.GetByUserIdAsync(recipient.UserId);
-
-        var giftCard = _giftCardIssuer.Issue(
-            senderWallet,
-            recipientWallet,
-            dto.Amount,
-            dto.Message,
-            DateTime.UtcNow);
-
+        senderWallet.Spend(dto.Amount, DateTime.UtcNow);
+        var giftCard = new GiftCard(senderWallet.UserId, recipient.UserId, dto.Amount, dto.Message, DateTime.UtcNow);
         _giftCardRepository.Add(giftCard);
+
         await _unitOfWork.SaveChangesAsync();
 
         return giftCard.Id;

@@ -70,10 +70,10 @@ internal sealed class PaymentModuleInitializer : IHostedService
         }
 
         var senderWallet = await dbContext.Wallets.SingleAsync(wallet => wallet.UserId == FirstDemoExplorer);
-        var recipientWallet = await dbContext.Wallets.SingleAsync(wallet => wallet.UserId == SecondDemoExplorer);
-        var giftCard = new GiftCardIssuer().Issue(
-            senderWallet,
-            recipientWallet,
+        senderWallet.Spend(50, createdAt);
+        var giftCard = new GiftCard(
+            senderWallet.UserId,
+            SecondDemoExplorer,
             50,
             "Srećan put!",
             createdAt);

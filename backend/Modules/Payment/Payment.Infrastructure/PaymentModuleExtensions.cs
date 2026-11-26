@@ -58,7 +58,6 @@ public static class PaymentModuleExtensions
         services.AddScoped<MyWalletQueries>();
         services.AddScoped<WalletManagementService>();
         services.AddScoped<WalletManagementQueries>();
-        services.AddScoped<GiftCardIssuer>();
         services.AddScoped<GiftCardSendingService>();
         services.AddScoped<GiftCardBrowsingQueries>();
         services.AddScoped<CatalogService>();
