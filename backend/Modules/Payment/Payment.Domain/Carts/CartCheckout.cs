@@ -9,25 +9,17 @@ namespace Payment.Domain.Carts;
 
 public sealed class CartCheckout
 {
-    public CartCalculation CalculateTotal(
+    public CartPrice CalculatePrice(
         Cart cart,
         IReadOnlyList<Product> products,
         Coupon? coupon,
         GiftCard? giftCard,
         DateTime calculatedAt)
     {
-        var discountedProduct = FindDiscountedProduct(cart, products, coupon, calculatedAt);
-        giftCard?.EnsureCanBeRedeemed(cart.UserId, calculatedAt);
-        var items = CalculateItems(cart, discountedProduct, coupon, giftCard);
-
-        var totalAfterCoupon = items.Sum(item => item.PriceAfterCoupon);
-        var giftCardCoverage = Math.Min(totalAfterCoupon, giftCard?.Amount ?? 0);
-        return new CartCalculation(
-            items,
-            totalAfterCoupon,
-            giftCardCoverage,
-            totalAfterCoupon - giftCardCoverage,
-            Math.Max((giftCard?.Amount ?? 0) - totalAfterCoupon, 0));
+        EnsureBenefitsCanBeUsed(cart.UserId, coupon, giftCard, calculatedAt);
+        var discountedProduct = FindDiscountedProduct(cart, products, coupon);
+        var itemPrices = CalculateItemPrices(cart, discountedProduct, coupon, giftCard);
+        return CreateCartPrice(itemPrices, giftCard?.Amount ?? 0);
     }
 
     public List<PurchaseToken> Purchase(
@@ -38,11 +30,15 @@ public sealed class CartCheckout
         GiftCard? giftCard,
         DateTime purchasedAt)
     {
-        var productsInOffer = GetProductsInOffer(cart, products);
-        var calculation = CalculateTotal(cart, products, coupon, giftCard, purchasedAt);
-        var ownerIds = productsInOffer.ToDictionary(product => product.EntityId, product => product.OwnerId);
-        wallet.Pay(calculation.Items, ownerIds, purchasedAt);
-        var tokens = CreatePurchaseTokens(cart.UserId, calculation.Items, purchasedAt);
+        var productsInCart = GetProductsInCart(cart, products);
+        EnsureProductsAreInOffer(cart, productsInCart);
+
+        var cartPrice = CalculatePrice(cart, productsInCart, coupon, giftCard, purchasedAt);
+        var ownerIds = productsInCart.ToDictionary(product => product.EntityId, product => product.OwnerId);
+        wallet.Pay(cartPrice.Items, ownerIds, purchasedAt);
+
+        var tokens = CreatePurchaseTokens(cart.UserId, cartPrice.Items, purchasedAt);
+
         coupon?.Redeem(cart.UserId, purchasedAt);
         giftCard?.Redeem(cart.UserId, purchasedAt);
         cart.Checkout();
@@ -50,50 +46,104 @@ public sealed class CartCheckout
         return tokens;
     }
 
-    private static List<CartItemCalculation> CalculateItems(
+    private static List<CartItemPrice> CalculateItemPrices(
         Cart cart,
         Product? discountedProduct,
         Coupon? coupon,
         GiftCard? giftCard)
     {
+        var prices = new List<CartItemPrice>();
         var remainingGiftCardAmount = giftCard?.Amount ?? 0;
-        return cart.Items.Select(item =>
-        {
-            var couponDiscount = discountedProduct?.EntityId == item.EntityId
-                ? (int)Math.Ceiling(item.Price * coupon!.DiscountPercentage / 100m)
-                : 0;
-            var priceAfterCoupon = item.Price - couponDiscount;
-            var coveredByGiftCard = Math.Min(priceAfterCoupon, remainingGiftCardAmount);
-            remainingGiftCardAmount -= coveredByGiftCard;
 
-            return new CartItemCalculation(
-                item.EntityId,
-                item.Name,
-                item.Price,
-                couponDiscount,
-                priceAfterCoupon,
-                priceAfterCoupon - coveredByGiftCard,
-                discountedProduct?.EntityId == item.EntityId ? coupon!.Id : null);
-        }).ToList();
-    }
-
-    private static List<Product> GetProductsInOffer(Cart cart, IReadOnlyList<Product> products)
-    {
-        var productsInOffer = products.Where(product => product.IsInOffer).ToList();
-        if (cart.Items.Any(item => productsInOffer.All(product => product.EntityId != item.EntityId)))
+        foreach (var item in cart.Items)
         {
-            throw new DomainException("A cart with a product that is not in the offer cannot be purchased.");
+            var price = CalculateItemPrice(item, discountedProduct, coupon, remainingGiftCardAmount);
+            prices.Add(price);
+            remainingGiftCardAmount -= price.PriceAfterCoupon - price.WalletCharge;
         }
 
-        return productsInOffer;
+        return prices;
+    }
+
+    private static CartItemPrice CalculateItemPrice(
+        CartItem item,
+        Product? discountedProduct,
+        Coupon? coupon,
+        int remainingGiftCardAmount)
+    {
+        var isDiscounted = discountedProduct?.EntityId == item.EntityId;
+        var couponDiscount = CalculateCouponDiscount(item.Price, coupon, isDiscounted);
+
+        var priceAfterCoupon = item.Price - couponDiscount;
+        var giftCardCoverage = Math.Min(priceAfterCoupon, remainingGiftCardAmount);
+
+        return new CartItemPrice(
+            item.EntityId,
+            item.Name,
+            item.Price,
+            couponDiscount,
+            priceAfterCoupon,
+            priceAfterCoupon - giftCardCoverage,
+            isDiscounted && coupon is not null ? coupon.Id : null);
+    }
+
+    private static int CalculateCouponDiscount(int price, Coupon? coupon, bool isDiscounted)
+    {
+        if (!isDiscounted)
+        {
+            return 0;
+        }
+
+        return (int)Math.Ceiling(price * coupon!.DiscountPercentage / 100m);
+    }
+
+    private static CartPrice CreateCartPrice(
+        IReadOnlyList<CartItemPrice> itemPrices,
+        int giftCardAmount)
+    {
+        var totalAfterCoupon = itemPrices.Sum(item => item.PriceAfterCoupon);
+        var giftCardCoverage = Math.Min(totalAfterCoupon, giftCardAmount);
+
+        return new CartPrice(
+            itemPrices,
+            totalAfterCoupon,
+            giftCardCoverage,
+            totalAfterCoupon - giftCardCoverage,
+            Math.Max(giftCardAmount - totalAfterCoupon, 0));
+    }
+
+    private static void EnsureBenefitsCanBeUsed(
+        Guid userId,
+        Coupon? coupon,
+        GiftCard? giftCard,
+        DateTime calculatedAt)
+    {
+        coupon?.EnsureCanBeRedeemed(userId, calculatedAt);
+        giftCard?.EnsureCanBeRedeemed(userId, calculatedAt);
+    }
+
+    private static List<Product> GetProductsInCart(Cart cart, IEnumerable<Product> products)
+    {
+        return products
+            .Where(product => cart.Items.Any(item => item.EntityId == product.EntityId))
+            .ToList();
+    }
+
+    private static void EnsureProductsAreInOffer(Cart cart, IReadOnlyList<Product> productsInCart)
+    {
+        var allProductsAreInOffer = cart.Items.All(item =>
+            productsInCart.Any(product => product.EntityId == item.EntityId && product.IsInOffer));
+
+        if (!allProductsAreInOffer)
+            throw new DomainException("A cart with a product that is not in the offer cannot be purchased.");
     }
 
     private static List<PurchaseToken> CreatePurchaseTokens(
         Guid userId,
-        IReadOnlyList<CartItemCalculation> items,
+        IReadOnlyList<CartItemPrice> itemPrices,
         DateTime purchasedAt)
     {
-        return items
+        return itemPrices
             .Select(item => new PurchaseToken(
                 userId,
                 item.EntityId,
@@ -107,35 +157,24 @@ public sealed class CartCheckout
     private static Product? FindDiscountedProduct(
         Cart cart,
         IReadOnlyList<Product> products,
-        Coupon? coupon,
-        DateTime calculatedAt)
+        Coupon? coupon)
     {
-        if (coupon is null)
-        {
-            return null;
-        }
+        if (coupon is null) return null;
 
-        coupon.EnsureCanBeRedeemed(cart.UserId, calculatedAt);
-        var productsInCart = products
-            .Where(product => cart.Items.Any(item => item.EntityId == product.EntityId))
-            .ToList();
+        var applicableProducts = GetProductsInCart(cart, products)
+            .Where(coupon.AppliesTo);
 
         var discountedProduct = coupon.ProductId is null
-            ? FindMostExpensiveProduct(cart, productsInCart, coupon.OwnerId)
-            : productsInCart.FirstOrDefault(product => product.Id == coupon.ProductId);
+            ? FindMostExpensiveProduct(cart, applicableProducts)
+            : applicableProducts.FirstOrDefault();
 
-        if (discountedProduct is null)
-        {
-            throw new DomainException("This coupon can't be applied to any of the items in the cart.");
-        }
-
-        return discountedProduct;
+        return discountedProduct
+            ?? throw new DomainException("This coupon can't be applied to any of the items in the cart.");
     }
 
-    private static Product? FindMostExpensiveProduct(Cart cart, IEnumerable<Product> products, Guid ownerId)
+    private static Product? FindMostExpensiveProduct(Cart cart, IEnumerable<Product> products)
     {
         return products
-            .Where(product => product.OwnerId == ownerId)
             .OrderByDescending(product => cart.Items.Single(item => item.EntityId == product.EntityId).Price)
             .FirstOrDefault();
     }

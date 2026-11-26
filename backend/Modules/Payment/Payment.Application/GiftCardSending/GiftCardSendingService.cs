@@ -34,8 +34,8 @@ public sealed class GiftCardSendingService
             ?? throw new NotFoundException("No user exists with that email.");
         var senderWallet = await _walletRepository.GetByUserIdAsync(senderId)
             ?? throw new NotFoundException("The sender does not have an open wallet.");
-        var recipientWallet = await _walletRepository.GetByUserIdAsync(recipient.UserId)
-            ?? throw new NotFoundException("The recipient does not have an open wallet.");
+
+        var recipientWallet = await _walletRepository.GetByUserIdAsync(recipient.UserId);
 
         var giftCard = _giftCardIssuer.Issue(
             senderWallet,

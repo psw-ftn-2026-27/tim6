@@ -29,6 +29,14 @@ public class CouponTests
         coupon.DiscountPercentage.Should().Be(100);
     }
 
+    [Fact]
+    public void Coupon_generates_an_eight_character_uppercase_hexadecimal_code()
+    {
+        var coupon = CreateCoupon(20, CreatedAt.AddDays(1));
+
+        coupon.Code.Should().MatchRegex("^[0-9A-F]{8}$");
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -64,14 +72,13 @@ public class CouponTests
             new[] { WellKnownUsers.Explorer, WellKnownUsers.SecondExplorer });
     }
 
-    private static Coupon CreateCoupon(int discountPercentage, DateTime validUntil)
+    private static Coupon CreateCoupon(int discountPercentage, DateTime expiresAt)
     {
         return new Coupon(
             WellKnownUsers.Explorer,
             Guid.NewGuid(),
             discountPercentage,
-            validUntil,
-            "ABC12345",
+            expiresAt,
             CreatedAt);
     }
 }

@@ -10,7 +10,6 @@ internal static class CouponSeed
         null,
         10,
         DateTime.UtcNow.AddDays(10),
-        "SAVE0010",
         DateTime.UtcNow);
 
     public static readonly Coupon SecondExplorersProductCoupon = new(
@@ -18,7 +17,6 @@ internal static class CouponSeed
         ProductSeed.WithdrawnTour.Id,
         20,
         DateTime.UtcNow.AddDays(20),
-        "SAVE0020",
         DateTime.UtcNow);
 
     public static Coupon[] All => [ExplorersAllProductsCoupon, SecondExplorersProductCoupon];

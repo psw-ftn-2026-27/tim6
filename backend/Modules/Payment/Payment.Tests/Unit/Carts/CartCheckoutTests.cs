@@ -22,17 +22,17 @@ public class CartCheckoutTests
         var product = new Product(Guid.NewGuid(), "Vinogradi Sremskih Karlovaca", WellKnownUsers.SecondExplorer, 300);
         var cart = new Cart(WellKnownUsers.Explorer);
         cart.AddItem(product.EntityId, product.Name, product.Price);
-        var coupon = new Coupon(product.OwnerId, product.Id, 10, PurchasedAt.AddDays(1), "SAVE0010", PurchasedAt.AddDays(-1));
+        var coupon = new Coupon(product.OwnerId, product.Id, 10, PurchasedAt.AddDays(1), PurchasedAt.AddDays(-1));
         var giftCard = new GiftCard(WellKnownUsers.SecondExplorer, cart.UserId, 500, "Srećan put!", PurchasedAt.AddDays(-1));
 
-        var calculation = _cartCheckout.CalculateTotal(cart, [product], coupon, giftCard, PurchasedAt);
+        var cartPrice = _cartCheckout.CalculatePrice(cart, [product], coupon, giftCard, PurchasedAt);
 
-        var item = calculation.Items.Should().ContainSingle().Which;
+        var item = cartPrice.Items.Should().ContainSingle().Which;
         item.CouponDiscount.Should().Be(30);
-        calculation.TotalAfterCoupon.Should().Be(270);
-        calculation.GiftCardCoverage.Should().Be(270);
-        calculation.WalletCharge.Should().Be(0);
-        calculation.GiftCardWaste.Should().Be(230);
+        cartPrice.TotalAfterCoupon.Should().Be(270);
+        cartPrice.GiftCardCoverage.Should().Be(270);
+        cartPrice.WalletCharge.Should().Be(0);
+        cartPrice.GiftCardWaste.Should().Be(230);
     }
 
     [Fact]
@@ -44,12 +44,12 @@ public class CartCheckoutTests
         var cart = new Cart(WellKnownUsers.Explorer);
         cart.AddItem(cheaperProduct.EntityId, cheaperProduct.Name, cheaperProduct.Price);
         cart.AddItem(expensiveProduct.EntityId, expensiveProduct.Name, expensiveProduct.Price);
-        var coupon = new Coupon(ownerId, null, 20, PurchasedAt.AddDays(1), "SAVE0020", PurchasedAt.AddDays(-1));
+        var coupon = new Coupon(ownerId, null, 20, PurchasedAt.AddDays(1), PurchasedAt.AddDays(-1));
 
-        var calculation = _cartCheckout.CalculateTotal(cart, [cheaperProduct, expensiveProduct], coupon, null, PurchasedAt);
+        var cartPrice = _cartCheckout.CalculatePrice(cart, [cheaperProduct, expensiveProduct], coupon, null, PurchasedAt);
 
-        calculation.Items.Single(item => item.EntityId == cheaperProduct.EntityId).CouponDiscount.Should().Be(0);
-        calculation.Items.Single(item => item.EntityId == expensiveProduct.EntityId).CouponDiscount.Should().Be(60);
+        cartPrice.Items.Single(item => item.EntityId == cheaperProduct.EntityId).CouponDiscount.Should().Be(0);
+        cartPrice.Items.Single(item => item.EntityId == expensiveProduct.EntityId).CouponDiscount.Should().Be(60);
     }
 
     [Fact]
@@ -62,17 +62,17 @@ public class CartCheckoutTests
         cart.AddItem(changedProduct.EntityId, changedProduct.Name, changedProduct.Price);
         cart.AddItem(mostExpensiveCartProduct.EntityId, mostExpensiveCartProduct.Name, mostExpensiveCartProduct.Price);
         changedProduct.PutInOfferAgain(changedProduct.Name, 400);
-        var coupon = new Coupon(ownerId, null, 20, PurchasedAt.AddDays(1), "SAVE0020", PurchasedAt.AddDays(-1));
+        var coupon = new Coupon(ownerId, null, 20, PurchasedAt.AddDays(1), PurchasedAt.AddDays(-1));
 
-        var calculation = _cartCheckout.CalculateTotal(
+        var cartPrice = _cartCheckout.CalculatePrice(
             cart,
             [changedProduct, mostExpensiveCartProduct],
             coupon,
             null,
             PurchasedAt);
 
-        calculation.Items.Single(item => item.EntityId == changedProduct.EntityId).CouponDiscount.Should().Be(0);
-        calculation.Items.Single(item => item.EntityId == mostExpensiveCartProduct.EntityId).CouponDiscount.Should().Be(60);
+        cartPrice.Items.Single(item => item.EntityId == changedProduct.EntityId).CouponDiscount.Should().Be(0);
+        cartPrice.Items.Single(item => item.EntityId == mostExpensiveCartProduct.EntityId).CouponDiscount.Should().Be(60);
     }
 
     [Fact]
@@ -81,11 +81,11 @@ public class CartCheckoutTests
         var product = new Product(Guid.NewGuid(), "Vinogradi", WellKnownUsers.SecondExplorer, 99);
         var cart = new Cart(WellKnownUsers.Explorer);
         cart.AddItem(product.EntityId, product.Name, product.Price);
-        var coupon = new Coupon(product.OwnerId, product.Id, 15, PurchasedAt.AddDays(1), "SAVE0015", PurchasedAt.AddDays(-1));
+        var coupon = new Coupon(product.OwnerId, product.Id, 15, PurchasedAt.AddDays(1), PurchasedAt.AddDays(-1));
 
-        var calculation = _cartCheckout.CalculateTotal(cart, [product], coupon, null, PurchasedAt);
+        var cartPrice = _cartCheckout.CalculatePrice(cart, [product], coupon, null, PurchasedAt);
 
-        calculation.Items.Should().ContainSingle().Which.CouponDiscount.Should().Be(15);
+        cartPrice.Items.Should().ContainSingle().Which.CouponDiscount.Should().Be(15);
     }
 
     [Fact]
@@ -95,11 +95,11 @@ public class CartCheckoutTests
         var otherProduct = new Product(Guid.NewGuid(), "Vinogradi", WellKnownUsers.SecondExplorer, 300);
         var cart = new Cart(WellKnownUsers.Explorer);
         cart.AddItem(cartProduct.EntityId, cartProduct.Name, cartProduct.Price);
-        var coupon = new Coupon(otherProduct.OwnerId, otherProduct.Id, 20, PurchasedAt.AddDays(1), "SAVE0020", PurchasedAt.AddDays(-1));
+        var coupon = new Coupon(otherProduct.OwnerId, otherProduct.Id, 20, PurchasedAt.AddDays(1), PurchasedAt.AddDays(-1));
 
-        var calculation = () => _cartCheckout.CalculateTotal(cart, [cartProduct, otherProduct], coupon, null, PurchasedAt);
+        var calculatePrice = () => _cartCheckout.CalculatePrice(cart, [cartProduct, otherProduct], coupon, null, PurchasedAt);
 
-        calculation.Should().Throw<DomainException>();
+        calculatePrice.Should().Throw<DomainException>();
     }
 
     [Fact]

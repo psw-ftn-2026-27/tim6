@@ -1,3 +1,4 @@
+using Payment.Domain.Products;
 using Shared.Domain;
 using Shared.Domain.Exceptions;
 
@@ -5,12 +6,15 @@ namespace Payment.Domain.Coupons;
 
 public sealed class Coupon : AggregateRoot
 {
-    public Guid OwnerId { get; private set; }
-    public Guid? ProductId { get; private set; }
+    public Guid OwnerId { get; private init; }
+    public Guid? ProductId { get; private init; }
     public int DiscountPercentage { get; private set; }
-    public DateTime ValidUntil { get; private set; }
-    public string Code { get; private set; } = string.Empty;
-    public List<Guid> RedeemedByUserIds { get; private set; } = [];
+    public DateTime ExpiresAt { get; private init; }
+    public DateTime CreatedAt { get; private set; }
+    public string Code { get; private init; } = string.Empty;
+
+    private readonly List<Guid> _redeemedByUserIds = [];
+    public IReadOnlyList<Guid> RedeemedByUserIds => _redeemedByUserIds.AsReadOnly();
 
     private Coupon() { }
 
@@ -18,8 +22,7 @@ public sealed class Coupon : AggregateRoot
         Guid ownerId,
         Guid? productId,
         int discountPercentage,
-        DateTime validUntil,
-        string code,
+        DateTime expiresAt,
         DateTime createdAt) : base(Guid.NewGuid())
     {
         if (discountPercentage is <= 0 or > 100)
@@ -27,7 +30,7 @@ public sealed class Coupon : AggregateRoot
             throw new DomainException("Enter a discount between 1% and 100%.");
         }
 
-        if (validUntil <= createdAt)
+        if (expiresAt <= createdAt)
         {
             throw new DomainException("Choose a coupon expiry date in the future.");
         }
@@ -35,24 +38,35 @@ public sealed class Coupon : AggregateRoot
         OwnerId = ownerId;
         ProductId = productId;
         DiscountPercentage = discountPercentage;
-        ValidUntil = validUntil;
-        Code = code;
+        ExpiresAt = expiresAt;
+        CreatedAt = createdAt;
+        Code = CreateUniqueCode();
     }
+
+    private static string CreateUniqueCode() => Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
 
     public void Redeem(Guid userId, DateTime redeemedAt)
     {
         EnsureCanBeRedeemed(userId, redeemedAt);
-        RedeemedByUserIds.Add(userId);
+        _redeemedByUserIds.Add(userId);
+    }
+
+    public bool AppliesTo(Product product)
+    {
+        if (ProductId is not null)
+            return product.Id == ProductId;
+
+        return product.OwnerId == OwnerId;
     }
 
     public void EnsureCanBeRedeemed(Guid userId, DateTime redeemedAt)
     {
-        if (redeemedAt > ValidUntil)
+        if (redeemedAt > ExpiresAt)
         {
             throw new DomainException("The coupon has expired.");
         }
 
-        if (RedeemedByUserIds.Contains(userId))
+        if (_redeemedByUserIds.Contains(userId))
         {
             throw new DomainException("You have already used this coupon.");
         }

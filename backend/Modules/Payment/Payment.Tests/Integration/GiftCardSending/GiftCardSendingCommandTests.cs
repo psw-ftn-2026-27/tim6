@@ -70,7 +70,7 @@ public class GiftCardSendingCommandTests : BaseIntegrationTest
 
         var response = await client.PostAsJsonAsync("/api/payment/gift-cards", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         await using var assertContext = Factory.CreateContext<PaymentDbContext>();
         assertContext.GiftCards.Count().Should().Be(giftCardCountBefore);
         assertContext.Wallets.Single(

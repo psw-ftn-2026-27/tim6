@@ -48,17 +48,17 @@ public sealed class CartQueries
         var products = await _productRepository.GetByEntityIdsAsync(cart.Items.Select(item => item.EntityId).ToList());
         var coupon = await GetCouponAsync(couponCode);
         var giftCard = await GetGiftCardAsync(giftCardId);
-        var calculation = _cartCheckout.CalculateTotal(cart, products, coupon, giftCard, DateTime.UtcNow);
-        return ToDto(cart, products, walletBalance, calculation);
+        var cartPrice = _cartCheckout.CalculatePrice(cart, products, coupon, giftCard, DateTime.UtcNow);
+        return ToDto(cart, products, walletBalance, cartPrice);
     }
 
     private static CartDto ToDto(
         Payment.Domain.Carts.Cart cart,
         IReadOnlyList<Product> products,
         int walletBalance,
-        CartCalculation calculation)
+        CartPrice cartPrice)
     {
-        var items = calculation.Items.Select(item => new CartItemDto(
+        var items = cartPrice.Items.Select(item => new CartItemDto(
             item.EntityId,
             item.Name,
             item.OriginalPrice,
@@ -70,31 +70,25 @@ public sealed class CartQueries
             items,
             cart.TotalPrice(),
             walletBalance,
-            calculation.TotalAfterCoupon,
-            calculation.GiftCardCoverage,
-            calculation.WalletCharge,
-            calculation.GiftCardWaste);
+            cartPrice.TotalAfterCoupon,
+            cartPrice.GiftCardCoverage,
+            cartPrice.WalletCharge,
+            cartPrice.GiftCardWaste);
     }
 
     private async Task<Payment.Domain.Coupons.Coupon?> GetCouponAsync(string? code)
     {
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            return null;
-        }
+        if (string.IsNullOrWhiteSpace(code)) return null;
 
         return await _couponRepository.GetByCodeAsync(code)
-            ?? throw new NotFoundException($"Coupon does not exist.");
+            ?? throw new NotFoundException("Coupon does not exist.");
     }
 
     private async Task<Payment.Domain.GiftCards.GiftCard?> GetGiftCardAsync(Guid? id)
     {
-        if (id is null)
-        {
-            return null;
-        }
+        if (id is null) return null;
 
         return await _giftCardRepository.GetByIdAsync(id.Value)
-            ?? throw new NotFoundException($"Gift card does not exist.");
+            ?? throw new NotFoundException("Gift card does not exist.");
     }
 }

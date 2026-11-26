@@ -35,7 +35,7 @@ internal sealed class CouponReadRepository : ICouponReadRepository
                         .Select(product => product.Name)
                         .FirstOrDefault(),
                 coupon.DiscountPercentage,
-                coupon.ValidUntil,
+                coupon.ExpiresAt,
                 coupon.Code))
             .ToListAsync();
 
