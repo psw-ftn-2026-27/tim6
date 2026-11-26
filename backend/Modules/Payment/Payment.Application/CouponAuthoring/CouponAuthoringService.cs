@@ -27,7 +27,7 @@ public sealed class CouponAuthoringService
     {
         var products = await _productRepository.GetByOwnerIdAsync(ownerId);
 
-        var details = new CouponIssueDetails(
+        var details = new CouponIssuingDetails(
             ownerId,
             dto.ProductId,
             dto.DiscountPercentage,

@@ -1,6 +1,6 @@
 namespace Payment.Domain.Coupons;
 
-public sealed record CouponIssueDetails(
+public sealed record CouponIssuingDetails(
     Guid OwnerId,
     Guid? ProductId,
     int DiscountPercentage,

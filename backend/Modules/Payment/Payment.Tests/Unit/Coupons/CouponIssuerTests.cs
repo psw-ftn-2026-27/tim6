@@ -14,7 +14,7 @@ public class CouponIssuerTests
     {
         var ownedProduct = new Product(Guid.NewGuid(), "Šetnja tvrđavom", WellKnownUsers.Explorer, 200);
         var anotherOwnersProduct = new Product(Guid.NewGuid(), "Bački salaši", WellKnownUsers.SecondExplorer, 150);
-        var details = new CouponIssueDetails(
+        var details = new CouponIssuingDetails(
             WellKnownUsers.Explorer,
             anotherOwnersProduct.Id,
             20,
@@ -31,7 +31,7 @@ public class CouponIssuerTests
     public void Owner_without_products_cannot_receive_a_coupon()
     {
         var anotherOwnersProduct = new Product(Guid.NewGuid(), "Bački salaši", WellKnownUsers.SecondExplorer, 150);
-        var details = new CouponIssueDetails(
+        var details = new CouponIssuingDetails(
             WellKnownUsers.Explorer,
             null,
             20,

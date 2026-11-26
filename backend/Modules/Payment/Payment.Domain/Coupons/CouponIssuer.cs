@@ -7,7 +7,7 @@ public sealed class CouponIssuer
 {
     public Coupon Issue(
         IReadOnlyCollection<Product> ownedProducts,
-        CouponIssueDetails details)
+        CouponIssuingDetails details)
     {
         EnsureCanBeIssued(ownedProducts, details);
 
@@ -22,7 +22,7 @@ public sealed class CouponIssuer
 
     private static void EnsureCanBeIssued(
         IReadOnlyCollection<Product> products,
-        CouponIssueDetails details)
+        CouponIssuingDetails details)
     {
         var ownedProducts = products.Where(product => product.OwnerId == details.OwnerId).ToList();
         if (ownedProducts.Count == 0)
