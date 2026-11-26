@@ -5,7 +5,8 @@ using Payment.Application.Products;
 using Payment.Application.PurchaseTokens;
 using Payment.Application.Wallets;
 using Payment.Domain.Carts;
-using Payment.Domain.Wallets;
+using Payment.Domain.Coupons;
+using Payment.Domain.GiftCards;
 using Shared.Domain.Exceptions;
 
 namespace Payment.Application.Purchase;
@@ -49,51 +50,31 @@ public sealed class PurchaseService
             throw new NotFoundException($"User {userId} has no cart.");
         }
 
-        var wallet = await GetOrCreateWalletAsync(userId);
+        var wallet = await _walletRepository.GetByUserIdAsync(userId)
+            ?? throw new NotFoundException("You must open a wallet before continuing.");
+
         var products = await _productRepository.GetByEntityIdsAsync(cart.Items.Select(item => item.EntityId).ToList());
         var coupon = await GetCouponAsync(couponCode);
         var giftCard = await GetGiftCardAsync(giftCardId);
+
         var tokens = _cartCheckout.Purchase(cart, wallet, products, coupon, giftCard, DateTime.UtcNow);
         foreach (var token in tokens)
-        {
             _purchaseTokenRepository.Add(token);
-        }
 
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private async Task<Wallet> GetOrCreateWalletAsync(Guid userId)
+    private async Task<Coupon?> GetCouponAsync(string? code)
     {
-        var wallet = await _walletRepository.GetByUserIdAsync(userId);
-        if (wallet is not null)
-        {
-            return wallet;
-        }
-
-        wallet = new Wallet(userId);
-        _walletRepository.Add(wallet);
-        return wallet;
-    }
-
-    private async Task<Payment.Domain.Coupons.Coupon?> GetCouponAsync(string? code)
-    {
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            return null;
-        }
-
+        if (string.IsNullOrWhiteSpace(code)) return null;
         return await _couponRepository.GetByCodeAsync(code)
-            ?? throw new NotFoundException($"Coupon does not exist.");
+            ?? throw new NotFoundException("Coupon does not exist.");
     }
 
-    private async Task<Payment.Domain.GiftCards.GiftCard?> GetGiftCardAsync(Guid? id)
+    private async Task<GiftCard?> GetGiftCardAsync(Guid? id)
     {
-        if (id is null)
-        {
-            return null;
-        }
-
+        if (id is null) return null;
         return await _giftCardRepository.GetByIdAsync(id.Value)
-            ?? throw new NotFoundException($"Gift card does not exist.");
+            ?? throw new NotFoundException("Gift card does not exist.");
     }
 }

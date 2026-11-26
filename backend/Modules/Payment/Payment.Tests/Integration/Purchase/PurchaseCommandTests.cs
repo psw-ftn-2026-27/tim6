@@ -77,20 +77,23 @@ public class PurchaseCommandTests : BaseIntegrationTest
     }
 
     [Fact]
-    public async Task Buyer_without_a_wallet_purchasing_a_free_tour_gets_a_purchase_token()
+    public async Task Buyer_without_a_wallet_cannot_purchase_their_cart()
     {
         var client = Factory.CreateClientFor(WalletSeed.WalletlessBuyer, "explorer");
-        var product = ProductSeed.FreeTourInOffer;
         using var arrangeContext = Factory.CreateContext<PaymentDbContext>();
         var tokenCountBefore = arrangeContext.PurchaseTokens.Count();
+        var walletCountBefore = arrangeContext.Wallets.Count();
+        var itemCountBefore = arrangeContext.Carts
+            .Single(cart => cart.Id == CartSeed.WalletlessBuyersCartWithFreeTour.Id).Items.Count;
 
         var response = await client.PostAsync("/api/payment/purchases/mine", null);
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         using var assertContext = Factory.CreateContext<PaymentDbContext>();
-        assertContext.PurchaseTokens.Count().Should().Be(tokenCountBefore + 1);
-        assertContext.PurchaseTokens.Should().ContainSingle(token => token.UserId == WalletSeed.WalletlessBuyer && token.EntityId == product.EntityId);
-        assertContext.Wallets.Should().ContainSingle(wallet => wallet.UserId == WalletSeed.WalletlessBuyer);
+        assertContext.PurchaseTokens.Count().Should().Be(tokenCountBefore);
+        assertContext.Wallets.Count().Should().Be(walletCountBefore);
+        assertContext.Carts.Single(cart => cart.Id == CartSeed.WalletlessBuyersCartWithFreeTour.Id)
+            .Items.Count.Should().Be(itemCountBefore);
     }
 
     [Fact]

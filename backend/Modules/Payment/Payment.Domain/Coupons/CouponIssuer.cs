@@ -9,17 +9,18 @@ public sealed class CouponIssuer
         IReadOnlyCollection<Product> ownedProducts,
         CouponIssueDetails details)
     {
-        EnsureCanIssueCoupon(ownedProducts, details);
+        EnsureCanBeIssued(ownedProducts, details);
 
         return new Coupon(
             details.OwnerId,
             details.ProductId,
             details.DiscountPercentage,
             details.ExpiresAt,
-            details.CreatedAt);
+            details.CreatedAt
+        );
     }
 
-    private static void EnsureCanIssueCoupon(
+    private static void EnsureCanBeIssued(
         IReadOnlyCollection<Product> products,
         CouponIssueDetails details)
     {
@@ -29,6 +30,5 @@ public sealed class CouponIssuer
 
         if (details.ProductId is not null && ownedProducts.All(product => product.Id != details.ProductId))
             throw new DomainException("You can only create coupons for your own products.");
-
     }
 }
