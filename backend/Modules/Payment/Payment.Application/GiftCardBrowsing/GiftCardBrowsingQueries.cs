@@ -46,6 +46,6 @@ public sealed class GiftCardBrowsingQueries
             })
             .ToList();
 
-        return new PageResult<GiftCardDto>(items, giftCards.TotalCount);
+        return giftCards with { Items = items };
     }
 }

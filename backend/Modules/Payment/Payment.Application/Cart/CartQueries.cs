@@ -4,6 +4,8 @@ using Payment.Application.GiftCards;
 using Payment.Application.Products;
 using Payment.Application.Wallets;
 using Payment.Domain.Carts;
+using Payment.Domain.Coupons;
+using Payment.Domain.GiftCards;
 using Payment.Domain.Products;
 using Shared.Domain.Exceptions;
 
@@ -76,7 +78,7 @@ public sealed class CartQueries
             cartPrice.GiftCardWaste);
     }
 
-    private async Task<Payment.Domain.Coupons.Coupon?> GetCouponAsync(string? code)
+    private async Task<Coupon?> GetCouponAsync(string? code)
     {
         if (string.IsNullOrWhiteSpace(code)) return null;
 
@@ -84,7 +86,7 @@ public sealed class CartQueries
             ?? throw new NotFoundException("Coupon does not exist.");
     }
 
-    private async Task<Payment.Domain.GiftCards.GiftCard?> GetGiftCardAsync(Guid? id)
+    private async Task<GiftCard?> GetGiftCardAsync(Guid? id)
     {
         if (id is null) return null;
 
