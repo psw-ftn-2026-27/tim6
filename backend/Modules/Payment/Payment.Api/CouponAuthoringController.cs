@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Payment.Application.CouponAuthoring;
+using Payment.Application.Coupons;
 using Payment.Application.Products;
 using Shared.Api;
 using Shared.Domain;

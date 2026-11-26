@@ -13,7 +13,7 @@ internal sealed class ProductRepository : IProductRepository
         _dbContext = dbContext;
     }
 
-    public async Task<IReadOnlyCollection<Product>> GetOwnedAsync(Guid ownerId)
+    public async Task<IReadOnlyCollection<Product>> GetByOwnerIdAsync(Guid ownerId)
     {
         return await _dbContext.Products
             .Where(product => product.OwnerId == ownerId)

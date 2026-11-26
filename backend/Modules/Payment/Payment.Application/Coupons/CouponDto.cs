@@ -1,4 +1,4 @@
-namespace Payment.Application.CouponAuthoring;
+namespace Payment.Application.Coupons;
 
 public sealed record CouponDto(
     Guid Id,

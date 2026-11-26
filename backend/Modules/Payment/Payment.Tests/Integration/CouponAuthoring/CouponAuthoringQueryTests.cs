@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using FluentAssertions;
 using Payment.Application.CouponAuthoring;
+using Payment.Application.Coupons;
 using Payment.Application.Products;
 using Payment.Tests.Integration.Seeds;
 using Shared.Domain;

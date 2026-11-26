@@ -25,7 +25,7 @@ export class CreateCoupon {
     signal({
       productId: '',
       discountPercentage: null as number | null,
-      validUntil: '',
+      expiresAt: '',
     }),
     (path) => {
       required(path.discountPercentage, { message: 'Discount percentage is required.' });
@@ -38,10 +38,10 @@ export class CreateCoupon {
         }
         return { kind: 'wholeNumber', message: 'Discount must be a whole number.' };
       });
-      required(path.validUntil, { message: 'Valid until date is required.' });
-      validate(path.validUntil, ({ value }) => {
-        const validUntil = value();
-        if (validUntil === '' || validUntil > localDate(new Date())) {
+      required(path.expiresAt, { message: 'Valid until date is required.' });
+      validate(path.expiresAt, ({ value }) => {
+        const expiresAt = value();
+        if (expiresAt === '' || expiresAt > localDate(new Date())) {
           return null;
         }
         return { kind: 'futureDate', message: 'Valid until date must be in the future.' };
@@ -70,7 +70,7 @@ export class CreateCoupon {
       await this.couponAuthoring.create({
         productId: this.form.productId().value() || null,
         discountPercentage,
-        validUntil: endOfDayUtc(this.form.validUntil().value()),
+        expiresAt: endOfDayUtc(this.form.expiresAt().value()),
       });
       await this.router.navigate(['/payment/coupons']);
     } catch (failure) {

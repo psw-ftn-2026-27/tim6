@@ -33,9 +33,9 @@
 
     <div class="field">
       <label for="valid-until">Valid until</label>
-      <input id="valid-until" type="date" [formField]="form.validUntil" />
-      @if (form.validUntil().touched()) {
-        @for (message of form.validUntil().errors(); track $index) {
+      <input id="valid-until" type="date" [formField]="form.expiresAt" />
+      @if (form.expiresAt().touched()) {
+        @for (message of form.expiresAt().errors(); track $index) {
           <p class="error">{{ message.message }}</p>
         }
       }

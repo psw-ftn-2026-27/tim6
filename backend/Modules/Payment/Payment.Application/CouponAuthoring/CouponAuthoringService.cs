@@ -25,16 +25,17 @@ public sealed class CouponAuthoringService
 
     public async Task<Guid> CreateCouponAsync(Guid ownerId, CreateCouponDto dto)
     {
-        var ownedProducts = await _productRepository.GetOwnedAsync(ownerId);
+        var products = await _productRepository.GetByOwnerIdAsync(ownerId);
+
         var details = new CouponIssueDetails(
             ownerId,
             dto.ProductId,
             dto.DiscountPercentage,
-            dto.ValidUntil,
+            dto.ExpiresAt,
             DateTime.UtcNow);
-        var coupon = _couponIssuer.Issue(ownedProducts, details);
-
+        var coupon = _couponIssuer.Issue(products, details);
         _couponRepository.Add(coupon);
+
         await _unitOfWork.SaveChangesAsync();
 
         return coupon.Id;

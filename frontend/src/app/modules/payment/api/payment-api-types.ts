@@ -73,7 +73,7 @@ export interface ProductDto {
 export interface CreateCouponDto {
   productId: string | null;
   discountPercentage: number;
-  validUntil: string;
+  expiresAt: string;
 }
 
 export interface CouponDto {
